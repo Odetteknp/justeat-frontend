@@ -16,12 +16,12 @@ import s6 from "../assets/Restaurants/res7.svg";
 class MockPopularStoresProvider implements PopularStoresProvider {
   async list(): Promise<PopularStore[]> {
     return [
-      { id: "st1", name: "กะทิหวาน",          cover: s1, rating: 4.7, to: "/shop/st1" },
-      { id: "st2", name: "ส้มตำปรีชา บางแค",   cover: s2, rating: 4.7, to: "/shop/st2" },
-      { id: "st3", name: "นมอร่อย",           cover: s3, rating: 4.7, to: "/shop/st3" },
+      { id: "st1", name: "คลายหิว",          cover: s1, rating: 4.7, to: "/shop/st1" },
+      { id: "st2", name: "ส้มตำปริญญา มทส.",   cover: s2, rating: 4.7, to: "/shop/st2" },
+      { id: "st3", name: "มุมอร่อย",           cover: s3, rating: 4.7, to: "/shop/st3" },
       { id: "st4", name: "TteokDam",           cover: s4, rating: 4.7, to: "/shop/st4" },
-      { id: "st5", name: "อิ่มอร่อย 365",      cover: s5, rating: 4.7, to: "/shop/st5" },
-      { id: "st6", name: "สตีฟก๋วยเตี๋ยว",     cover: s6, rating: 4.7, to: "/shop/st6" },
+      { id: "st5", name: "ช้อนชา 茶匙",      cover: s5, rating: 4.7, to: "/shop/st5" },
+      { id: "st6", name: "สเต็กเด็กแนว",     cover: s6, rating: 4.7, to: "/shop/st6" },
     ];
   }
 }

@@ -157,13 +157,16 @@
 /* เนื้อหา */
 .ps-meta {
     /* ใช้ Flexbox เพื่อจัดเรียงเนื้อหาในแนวนอน */
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     /* จัดองค์ประกอบให้อยู่กึ่งกลางในแนวตั้ง */
     align-items: center;
     /* จัดองค์ประกอบให้ชิดขอบซ้าย-ขวา */
     justify-content: space-between;
     /* กำหนด padding ภายใน */
-    padding: 14px 18px 18px;
+    padding: 14px 18px 18px;    
+    /* ช่วยคั่น ชื่อกับคะแนน */
+    gap: 12px;
 }
 
 .ps-name {
@@ -182,13 +185,15 @@
     /* กำหนดระยะห่างด้านขวา 12px */
     margin-right: 12px;
     /* ทำให้องค์ประกอบนี้ขยายเพื่อเติมพื้นที่ที่เหลือ */
-    flex: 1;
+    flex: 1 1 auto;
     /* ซ่อนข้อความที่เกินขอบเขต */
     overflow: hidden;
     /* แสดง ... เมื่อข้อความถูกซ่อน */
     text-overflow: ellipsis;
     /* ป้องกันไม่ให้ข้อความขึ้นบรรทัดใหม่ */
     white-space: nowrap;
+
+    min-width: 0;
 }
 
 /* ⭐ single */
@@ -199,6 +204,10 @@
     align-items: center;
     /* กำหนดระยะห่างระหว่างองค์ประกอบย่อย 8px */
     gap: 8px;
+
+    justify-self: end;
+    flex: 0 0 auto;
+    white-space: nowrap;
 }
 
 .ps-ratingSingle__icon {

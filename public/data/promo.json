@@ -1,0 +1,21 @@
+{
+  "hero": {
+    "image": "/img/promo/free-delivery-hero.webp",
+    "href": "/promotions/free-delivery",
+    "alt": "FREE DELIVERY • ใช้โค้ด JustDrink"
+  },
+  "promos": [
+    {
+      "id": "p1",
+      "image": "/img/promo/deal-hot.webp",
+      "href": "/promotions/hot-deal",
+      "alt": "ดีลร้านเด็ด ลดแรง! ใส่โค้ด JustEat"
+    },
+    {
+      "id": "p2",
+      "image": "/img/promo/add-10.webp",
+      "href": "/promotions/add-10",
+      "alt": "พิเศษเฉพาะเดือนนี้ ลดเพิ่ม 10% เมื่อสั่ง JustEat"
+    }
+  ]
+}

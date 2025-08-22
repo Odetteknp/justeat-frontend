@@ -1,0 +1,25 @@
+/* src/index.css */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0 !important; /* กันพลาด */
+  font-family: sans-serif;
+  background: #fff;
+  color: #333;
+}
+
+.container {
+  max-width: 1200px;   /* กำหนดความกว้างสูงสุด */
+  margin: 0 auto;      /* จัดให้อยู่ตรงกลาง */
+  padding: 16px;       /* เว้นขอบซ้ายขวา */
+}

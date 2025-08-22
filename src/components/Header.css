@@ -121,7 +121,7 @@
 /* Hover effect */
 .header-signin:hover {
   background: #f2f2f2;
-  color: #565656 !important;
+  color: #ef664b !important;
 }
 
 /* ทุกลิงก์ใน header */
@@ -133,6 +133,46 @@
 .header a:hover {
   text-decoration: underline; /* ถ้าอยากให้มีเส้นตอน hover */
 }
+
+
+/* partner */
+/* ทำให้ back button ดูเป็นส่วนหนึ่งของ header */
+.header-left { display: flex; align-items: center;}
+
+/* ปุ่มย้อนกลับใน partner header */
+.partner-header .header-back {
+  color: #fff;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  border-radius: 9999px;
+}
+
+.partner-header .header-back:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ถ้าอยากให้ไอคอนชัดขึ้น */
+.partner-header .header-back .anticon {
+  font-size: 18px;
+  margin-right: 6px;
+}
+
+.header-menu.ant-menu-horizontal {
+  background: transparent;  /* โปร่งใส เอาสี header มาแทน */
+  border-bottom: none;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.header-item a {
+  color: #fff !important; 
+  padding: 0 14px;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {

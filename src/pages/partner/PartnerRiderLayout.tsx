@@ -26,9 +26,13 @@ export default function PartnerRiderLayout() {
       <NavSidebar
         items={items}
         activeKey={activeKey}
-        header={<div>ไรเดอร์</div>}
+        header={<div>Rider</div>}
         footer={
-          <button type="button" className="sidenav__link">
+          <button 
+            type="button" 
+            className="navSidebar_Btn navSidebar_Logout"
+            onClick={() => console.log("logout")}
+          >
             <LogoutOutlined />
             <span className="sidenav__label">ออกจากระบบ</span>
           </button>

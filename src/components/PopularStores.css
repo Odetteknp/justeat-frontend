@@ -1,0 +1,232 @@
+/* คลาสหลักของคอมโพเนนต์ */
+.ps {
+    /* กำหนดระยะห่างด้านบน 8px */
+    margin-top: 8px;
+}
+
+/* หัวข้อ */
+.ps-title {
+    /* กำหนดความหนาของตัวอักษรเป็น 700 (bold) */
+    font-weight: 700;
+    /* กำหนดระยะห่างรอบนอก: บน-ล่าง 8px, ซ้าย-ขวา 0 */
+    margin: 8px 0 12px;
+    /* กำหนดสีตัวอักษรเป็นสีเทาเข้มเกือบดำ */
+    color: #111;
+    /* กำหนดขนาดตัวอักษร 14px */
+    font-size: 14px;
+}
+
+/* แถวเลื่อน */
+.ps-scroll {
+    /* ใช้ Grid Layout เพื่อจัดเรียงองค์ประกอบ */
+    display: grid;
+    /* จัดเรียงรายการย่อยในแนวคอลัมน์ (แนวนอน) */
+    grid-auto-flow: column;
+    /* กำหนดระยะห่างระหว่างรายการย่อย 20px */
+    gap: 20px;
+    /* อนุญาตให้เลื่อนได้ในแนวนอน หากเนื้อหาเกินขอบเขต */
+    overflow-x: auto;
+    /* กำหนดระยะห่างภายใน: บน 10px, ซ้าย-ขวา 10px, ล่าง 15px */
+    padding: 10px 10px 15px;
+    /* กำหนดให้การเลื่อนหยุดที่ขอบของแต่ละการ์ดอย่างนุ่มนวล */
+    scroll-snap-type: x proximity;
+}
+
+/* ซ่อน scrollbar ในเบราว์เซอร์ WebKit (Chrome, Safari) */
+.ps-scroll::-webkit-scrollbar {
+    /* ซ่อน scrollbar ทั้งหมด */
+    display: none;
+
+    /* ซ่อน scrollbar สำหรับ Firefox */
+    scrollbar-width: none;
+
+    /* ซ่อน scrollbar สำหรับ Internet Explorer และ Edge */
+    -ms-overflow-style: none;
+}
+
+/* กำหนดให้การ์ดแต่ละใบหยุดที่จุดเริ่มต้นเมื่อเลื่อน */
+.ps-scroll>.ps-link {
+    /* จัดตำแหน่งการหยุดของ scroll ให้ตรงกับจุดเริ่มต้นขององค์ประกอบ */
+    scroll-snap-align: start;
+}
+
+/* กริดหลายแถว (ยังเลื่อนได้ถ้ากว้างเกิน) */
+.ps-grid {
+    /* ใช้ Grid Layout */
+    display: grid;
+    /* จัดเรียงรายการย่อยในแนวคอลัมน์ (แนวนอน) */
+    grid-auto-flow: column;
+    /* กำหนดระยะห่างระหว่างรายการย่อย 12px */
+    gap: 12px;
+    /* อนุญาตให้เลื่อนได้ในแนวนอน */
+    overflow-x: auto;
+    /* กำหนดระยะห่างภายใน: บน 2px, ซ้าย-ขวา 2px, ล่าง 10px */
+    padding: 2px 2px 10px;
+}
+
+/* ลิงก์ */
+.ps-link {
+    /* ลบเส้นใต้จากลิงก์ */
+    text-decoration: none;
+    /* สืบทอดสีตัวอักษรมาจาก parent element */
+    color: inherit;
+}
+
+/* การ์ด */
+.ps-card {
+    /* กำหนดสีพื้นหลังเป็นสีขาว */
+    background: #fff;
+    /* กำหนดมุมโค้งมน 18px */
+    border-radius: 18px;
+    /* สร้างเงาให้การ์ด */
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    /* ใช้ Grid Layout */
+    display: grid;
+    /* กำหนดการแบ่งแถว: แถวแรกสูงตามเนื้อหา, แถวสองสูงตามเนื้อหา */
+    grid-template-rows: auto auto;
+    /* กำหนดการเปลี่ยนผ่านอย่างราบรื่นสำหรับ transform และ box-shadow */
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.ps-card:hover {
+    /* เมื่อเมาส์ชี้ การ์ดจะเลื่อนขึ้น 4px */
+    transform: translateY(-4px);
+}
+
+/* skeleton (ถ้ามี) */
+.ps-skeleton {
+    /* กำหนดความกว้าง 220px */
+    width: 220px;
+    /* กำหนดความสูง 180px */
+    height: 180px;
+    /* กำหนดมุมโค้งมน 18px */
+    border-radius: 18px;
+    /* สร้าง gradient สำหรับ shimmer effect */
+    background: linear-gradient(90deg, #eee 25%, #f5f5f5 37%, #eee 63%);
+    /* กำหนดขนาดพื้นหลังเพื่อควบคุม animation */
+    background-size: 400% 100%;
+    /* เรียกใช้ animation ที่ชื่อ ps-shimmer, 1.2 วินาที, แบบ ease-in-out, วนซ้ำไม่สิ้นสุด */
+    animation: ps-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes ps-shimmer {
+
+    /* จุดเริ่มต้นของ animation */
+    0% {
+        /* กำหนดตำแหน่งพื้นหลังเริ่มต้นที่ 100% (ขวาสุด) */
+        background-position: 100% 0;
+    }
+
+    /* จุดสิ้นสุดของ animation */
+    100% {
+        /* กำหนดตำแหน่งพื้นหลังสิ้นสุดที่ 0% (ซ้ายสุด) */
+        background-position: 0 0;
+    }
+}
+
+/* รูป */
+.ps-coverOuter {
+    /* กำหนด padding เป็น 0 */
+    padding: 0;
+}
+
+.ps-coverInner {
+    /* กำหนดความกว้าง 220px */
+    width: 220px;
+    /* กำหนดความสูง 170px */
+    height: 170px;
+    /* กำหนดมุมโค้งมนเฉพาะมุมบนซ้ายและบนขวา */
+    border-radius: 16px 16px 0 0;
+    /* ซ่อนเนื้อหาที่เกินขอบเขต */
+    overflow: hidden;
+    /* กำหนดสีพื้นหลังเมื่อรูปยังไม่โหลด */
+    background: #f5f5f5;
+}
+
+.ps-coverInner img {
+    /* กำหนดความกว้าง 100% ของ parent container */
+    width: 100%;
+    /* กำหนดความสูง 100% ของ parent container */
+    height: 100%;
+    /* ปรับขนาดรูปภาพให้ครอบคลุมพื้นที่โดยไม่บิดเบี้ยว */
+    object-fit: cover;
+    /* กำหนดให้รูปภาพเป็นองค์ประกอบแบบ block */
+    display: block;
+}
+
+/* เนื้อหา */
+.ps-meta {
+    /* ใช้ Flexbox เพื่อจัดเรียงเนื้อหาในแนวนอน */
+    display: flex;
+    /* จัดองค์ประกอบให้อยู่กึ่งกลางในแนวตั้ง */
+    align-items: center;
+    /* จัดองค์ประกอบให้ชิดขอบซ้าย-ขวา */
+    justify-content: space-between;
+    /* กำหนด padding ภายใน */
+    padding: 14px 18px 18px;
+}
+
+.ps-name {
+    /* กำหนดความหนาของตัวอักษร 700 (bold) */
+    font-weight: 700;
+    /* กำหนดขนาดตัวอักษร 16px */
+    font-size: 16px;
+    /* กำหนดสีตัวอักษร */
+    color: #1f1f1f;
+    /* ซ่อนข้อความที่เกินขอบเขต */
+    overflow: hidden;
+    /* แสดง ... เมื่อข้อความยาวเกิน */
+    text-overflow: ellipsis;
+    /* ป้องกันการขึ้นบรรทัดใหม่ */
+    white-space: nowrap;
+    /* กำหนดระยะห่างด้านขวา 12px */
+    margin-right: 12px;
+    /* ทำให้องค์ประกอบนี้ขยายเพื่อเติมพื้นที่ที่เหลือ */
+    flex: 1;
+    /* ซ่อนข้อความที่เกินขอบเขต */
+    overflow: hidden;
+    /* แสดง ... เมื่อข้อความถูกซ่อน */
+    text-overflow: ellipsis;
+    /* ป้องกันไม่ให้ข้อความขึ้นบรรทัดใหม่ */
+    white-space: nowrap;
+}
+
+/* ⭐ single */
+.ps-ratingSingle {
+    /* ใช้ inline-flexbox เพื่อให้องค์ประกอบอยู่บรรทัดเดียวกันและจัดเรียงแบบยืดหยุ่น */
+    display: inline-flex;
+    /* จัดองค์ประกอบให้อยู่กึ่งกลางในแนวตั้ง */
+    align-items: center;
+    /* กำหนดระยะห่างระหว่างองค์ประกอบย่อย 8px */
+    gap: 8px;
+}
+
+.ps-ratingSingle__icon {
+    /* กำหนดความกว้าง 20px */
+    width: 20px;
+    /* กำหนดความสูง 20px */
+    height: 20px;
+    /* กำหนดสีเป็นสีเหลืองทอง */
+    color: #f4b400;
+}
+
+.ps-ratingSingle__icon path { fill: #f4b400; }
+
+.ps-ratingSingle__num {
+    /* กำหนดขนาดตัวอักษร 16px */
+    font-size: 16px;
+    /* กำหนดสีตัวอักษร */
+    color: #333;
+    /* กำหนดความหนาของตัวอักษร 500 */
+    font-weight: 500;
+}
+
+/* กำหนด breakpoint สำหรับหน้าจอที่มีความกว้างไม่เกิน 768px */
+@media (max-width: 768px) {
+
+    /* ปรับการจัดเรียงของ Grid Card */
+    .ps-card {
+        /* กำหนดให้แถวแรกสูง 110px และแถวที่สองสูงตามเนื้อหา */
+        grid-template-rows: 110px auto;
+    }
+}

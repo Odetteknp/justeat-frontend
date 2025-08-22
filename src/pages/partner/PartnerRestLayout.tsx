@@ -27,7 +27,7 @@ export default function PartnerRestLayout() {
       <NavSidebar
         items={items}
         activeKey={activeKey}
-        header={<div>ร้านของฉัน</div>}
+        header={<div>Restaurant</div>}
         footer={
           <button 
             type="button" 

@@ -26,7 +26,7 @@ export default function CategoriesRowAntd({
           style={
             scroll
               ? { display: "grid", gridAutoFlow: "column", gap, overflowX: "auto", paddingBottom: 8 }
-              : { display: "flex", flexWrap: "wrap", gap, alignItems: "center" }
+              : { display: "flex", flexWrap: "wrap", gap, alignItems: "center", justifyContent: "space-around", paddingTop: 10 }
           }
         >
           {items.map((c) => (
@@ -41,7 +41,6 @@ export default function CategoriesRowAntd({
                   style={{
                     borderRadius: "50%",
                     boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
-                    border: "2px solid #fff",
                     transition: "transform .12s ease",
                     width: size,
                     height: size,

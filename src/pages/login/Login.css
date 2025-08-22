@@ -1,0 +1,58 @@
+.auth--center {
+  height: 100dvh;
+  display: grid;
+  place-items: center;
+  background: #fafafa;
+}
+
+.auth__card {
+  width: min(520px, 92vw);
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 10px 28px rgba(0,0,0,.08);
+}
+
+.auth__title {
+  margin: 0 0 8px;
+  font-weight: 800;
+  font-size: clamp(28px, 3.6vw, 40px);
+}
+
+.auth__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -6px;
+  margin-bottom: 8px;
+}
+
+/* ลิงก์โทนส้ม */
+.auth__link {
+  color: #F0572F;
+  text-decoration: none;
+  font-weight: 600;
+}
+.auth__link:hover { text-decoration: underline; }
+
+/* โฟกัส input ให้โทนส้ม */
+.auth__input:focus-within,
+.auth__input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(240,87,47,.15);
+  border-color: #F0572F !important;
+}
+
+/* ปุ่มส้ม */
+.signInBtn:hover { background-color: #E0471F !important; }
+.signInBtn:disabled { opacity: .6; }
+
+/* ส่วนล่าง */
+.auth__meta {
+  margin-top: 10px;
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  font-size: 14px;
+  color: #666;
+}

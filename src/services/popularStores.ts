@@ -1,11 +1,11 @@
 import type { PopularStore } from "../types/sections";
 
-// ---- Provider interface ----
-export interface PopularStoresProvider {
+/** Provider type */
+export type PopularStoresProvider = {
   list(): Promise<PopularStore[]>;
-}
+};
 
-// ---- MOCK provider (ใช้ asset ในโปรเจกต์) ----
+/** ---- MOCK provider ---- */
 import s1 from "../assets/Restaurants/res1.svg";
 import s2 from "../assets/Restaurants/res2.svg";
 import s3 from "../assets/Restaurants/res3.svg";
@@ -13,35 +13,40 @@ import s4 from "../assets/Restaurants/res4.svg";
 import s5 from "../assets/Restaurants/res6.svg";
 import s6 from "../assets/Restaurants/res7.svg";
 
-export class MockPopularStoresProvider implements PopularStoresProvider {
+class MockPopularStoresProvider implements PopularStoresProvider {
   async list(): Promise<PopularStore[]> {
     return [
-      { id: "st1", name: "กะทิหวาน",        cover: s1, rating: 4.7, to: "/shop/st1" },
-      { id: "st2", name: "ส้มตำปรีชา บางแค", cover: s2, rating: 4.7, to: "/shop/st2" },
-      { id: "st3", name: "นมอร่อย",         cover: s3, rating: 4.7, to: "/shop/st3" },
-      { id: "st4", name: "TteokDam",         cover: s4, rating: 4.7, to: "/shop/st4" },
-      { id: "st5", name: "อิ่มอร่อย 365",    cover: s5, rating: 4.7, to: "/shop/st5" },
-      { id: "st6", name: "สตีฟก๋วยเตี๋ยว",   cover: s6, rating: 4.7, to: "/shop/st6" },
+      { id: "st1", name: "กะทิหวาน",          cover: s1, rating: 4.7, to: "/shop/st1" },
+      { id: "st2", name: "ส้มตำปรีชา บางแค",   cover: s2, rating: 4.7, to: "/shop/st2" },
+      { id: "st3", name: "นมอร่อย",           cover: s3, rating: 4.7, to: "/shop/st3" },
+      { id: "st4", name: "TteokDam",           cover: s4, rating: 4.7, to: "/shop/st4" },
+      { id: "st5", name: "อิ่มอร่อย 365",      cover: s5, rating: 4.7, to: "/shop/st5" },
+      { id: "st6", name: "สตีฟก๋วยเตี๋ยว",     cover: s6, rating: 4.7, to: "/shop/st6" },
     ];
   }
 }
 
-/*
-// ---- API provider (เผื่ออนาคตต่อ backend) ----
-export class ApiPopularStoresProvider implements PopularStoresProvider {
-  constructor(private endpoint = "/api/stores/popular") {}
+/** ---- API provider ---- */
+class ApiPopularStoresProvider implements PopularStoresProvider {
+  private endpoint: string;
+  constructor(endpoint = "/api/stores/popular") {
+    this.endpoint = endpoint;
+  }
   async list(): Promise<PopularStore[]> {
     const res = await fetch(this.endpoint, { credentials: "include" });
     if (!res.ok) throw new Error("Failed to fetch popular stores");
-    const data = await res.json();
-    return data as PopularStore[];
+    return (await res.json()) as PopularStore[];
   }
 }
 
-// ---- Factory: เลือก provider จาก env ----
+/** ---- Factory: env switch ---- */
 const useApi = import.meta.env.VITE_USE_API === "true";
 export const popularStoresProvider: PopularStoresProvider = useApi
   ? new ApiPopularStoresProvider()
   : new MockPopularStoresProvider();
 
-*/
+/** Helper: สำหรับ container/hook */
+export function fetchPopularStores(provider?: PopularStoresProvider) {
+  const p = provider ?? popularStoresProvider;
+  return p.list();
+}

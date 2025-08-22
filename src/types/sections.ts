@@ -9,9 +9,9 @@ export interface HomePromoPayload {
 export interface PopularStore {
   id: string;
   name: string;
-  cover: string;
-  href?: string;
-  to?: string;
-  rating?: number;
+  cover: string;   // URL/asset path
+  href?: string;   // external link
+  to?: string;     // internal route
+  rating?: number; // 0..5 (allow half)
   tags?: string[];
 }

@@ -1,0 +1,68 @@
+/* HomePage.css */
+
+.content {
+  background: #fee7e2;
+  flex: 1;
+  width: 100%;
+}
+
+.card-title {
+  background-color: white;
+  max-width: 1200px;
+  margin: 50px auto;            
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); /* เงานูน */
+  border-radius: 30px; /* ความมนของขอบการ์ด */
+  padding: 0px;
+}
+
+.card-heading {
+  
+  text-align: center;          
+  color: #99301b;             
+  font-size: 40px;           
+  font-weight: bold;
+  margin: 0;                 
+}
+
+.card-report {
+  background-color: white;
+  max-width: 1200px;
+  margin: 50px auto;            
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1); /* เงานูน */
+  border-radius: 30px; /* ความมนของขอบการ์ด */
+  padding: 32px;
+}
+
+.input-field {
+  width: 100% !important;
+}
+
+.submit-button {
+  background-color: #ef664b;
+  border: none;
+  font-weight: bold;
+  padding: 20px 25px;
+  font-size: 16px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+.form-submit-item {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.upload-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: center;
+  color: #99301b;
+  font-size: 14px;
+}
+
+.upload-text {
+  margin-top: 15px;
+  font-weight: 500;
+}
+
+

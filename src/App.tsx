@@ -13,6 +13,8 @@ import RegisterPage from "./pages/register/Register";
 import PartnerRestLayout from "./pages/partner/PartnerRestLayout";
 import PartnerRiderLayout from "./pages/partner/PartnerRiderLayout";
 
+import RestaurantDetailPage from "./pages/RestaurantDetailPage";
+
 function App() {
   return (
     <>
@@ -47,6 +49,8 @@ function App() {
             <Route path="settings" element={<div>⚙️ Settings</div>} />
           </Route>
         </Route>
+
+        <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
 
       </Routes>
 

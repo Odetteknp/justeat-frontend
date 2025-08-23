@@ -1,52 +1,49 @@
-import type { PopularStore } from "../types/sections";
+import type { PopularStore } from "../types/sections";           // ประเภทข้อมูลที่หน้า Section ใช้
+import { getPopularRestaurants } from "./restaurants/index";           // ดึงยอดนิยมจากบริการร้าน (ใช้ฟิกซ์เจอร์เดียวกับ detail)
 
 /** Provider type */
-export type PopularStoresProvider = {
-  list(): Promise<PopularStore[]>;
-};
+export type PopularStoresProvider = {                            // อินเตอร์เฟซ provider สำหรับ popular stores
+  list(signal?: AbortSignal): Promise<PopularStore[]>;           // ฟังก์ชันอ่านลิสต์ popular
+};                                                               // จบอินเตอร์เฟซ
 
-/** ---- MOCK provider ---- */
-import s1 from "../assets/Restaurants/res1.svg";
-import s2 from "../assets/Restaurants/res2.svg";
-import s3 from "../assets/Restaurants/res3.svg";
-import s4 from "../assets/Restaurants/res4.svg";
-import s5 from "../assets/Restaurants/res6.svg";
-import s6 from "../assets/Restaurants/res7.svg";
+/** ---- MOCK provider: reuse fixtures ผ่าน service ---- */
+class MockPopularStoresProvider implements PopularStoresProvider { // ผู้ให้บริการ mock
+  async list(signal?: AbortSignal): Promise<PopularStore[]> {     // อ่านลิสต์ popular
+    const data = await getPopularRestaurants(signal);             // ใช้บริการร้าน (mock/api ตาม env)
+    return data.map(r => ({                                       // map เป็น PopularStore
+      id: r.id,                                                   // คง id เดิม
+      name: r.name,                                               // ชื่อร้าน
+      cover: r.heroImage ?? null,                                 // รูปปก (อาจไม่มี)
+      rating: r.rating,                                           // คะแนน
+      // ไม่ใส่ 'to' — ให้ UI คำนวน route: `/restaurants/${id}`
+    }));                                                          // จบ map
+  }                                                               // จบฟังก์ชัน
+}                                                                 // จบคลาส
 
-class MockPopularStoresProvider implements PopularStoresProvider {
-  async list(): Promise<PopularStore[]> {
-    return [
-      { id: "st1", name: "คลายหิว",          cover: s1, rating: 4.7, to: "/shop/st1" },
-      { id: "st2", name: "ส้มตำปริญญา มทส.",   cover: s2, rating: 4.7, to: "/shop/st2" },
-      { id: "st3", name: "มุมอร่อย",           cover: s3, rating: 4.7, to: "/shop/st3" },
-      { id: "st4", name: "TteokDam",           cover: s4, rating: 4.7, to: "/shop/st4" },
-      { id: "st5", name: "ช้อนชา 茶匙",      cover: s5, rating: 4.7, to: "/shop/st5" },
-      { id: "st6", name: "สเต็กเด็กแนว",     cover: s6, rating: 4.7, to: "/shop/st6" },
-    ];
-  }
-}
-
-/** ---- API provider ---- */
-class ApiPopularStoresProvider implements PopularStoresProvider {
-  private endpoint: string;
-  constructor(endpoint = "/api/stores/popular") {
-    this.endpoint = endpoint;
-  }
-  async list(): Promise<PopularStore[]> {
-    const res = await fetch(this.endpoint, { credentials: "include" });
-    if (!res.ok) throw new Error("Failed to fetch popular stores");
-    return (await res.json()) as PopularStore[];
-  }
-}
+/** ---- API provider: ปล่อยให้ services/restaurants เลือกแหล่งจริง/ปลอม ---- */
+class ApiPopularStoresProvider implements PopularStoresProvider { // ผู้ให้บริการ api (เรียกผ่าน service)
+  async list(signal?: AbortSignal): Promise<PopularStore[]> {     // อ่านลิสต์ popular
+    const data = await getPopularRestaurants(signal);             // ปล่อยให้ service ตัดสินใจ (mock/api)
+    return data.map(r => ({                                       // map ให้เป็น PopularStore
+      id: r.id,                                                   // id ร้าน
+      name: r.name,                                               // ชื่อร้าน
+      cover: r.heroImage ?? null,                                 // รูปปก
+      rating: r.rating,                                           // คะแนน
+    }));                                                          // จบ map
+  }                                                               // จบฟังก์ชัน
+}                                                                 // จบคลาส
 
 /** ---- Factory: env switch ---- */
-const useApi = import.meta.env.VITE_USE_API === "true";
-export const popularStoresProvider: PopularStoresProvider = useApi
-  ? new ApiPopularStoresProvider()
-  : new MockPopularStoresProvider();
+const useApi = import.meta.env.VITE_USE_API === "true";           // อ่านแฟล็กจาก .env
+export const popularStoresProvider: PopularStoresProvider = useApi // เลือก provider ตาม env
+  ? new ApiPopularStoresProvider()                                 // ใช้ api provider (จริง/ผ่าน service)
+  : new MockPopularStoresProvider();                               // ใช้ mock provider
 
 /** Helper: สำหรับ container/hook */
-export function fetchPopularStores(provider?: PopularStoresProvider) {
-  const p = provider ?? popularStoresProvider;
-  return p.list();
-}
+export function fetchPopularStores(                               // helper สำหรับจุดเรียกใช้งาน
+  provider?: PopularStoresProvider,                               // อนุญาตส่ง provider เองเพื่อเทสต์
+  signal?: AbortSignal                                            // รองรับยกเลิกโหลด
+) {                                                               // เปิดฟังก์ชัน
+  const p = provider ?? popularStoresProvider;                    // เลือก provider ที่จะใช้
+  return p.list(signal);                                          // คืนพรอมิสของลิสต์ popular
+}                                                                 // จบฟังก์ชัน

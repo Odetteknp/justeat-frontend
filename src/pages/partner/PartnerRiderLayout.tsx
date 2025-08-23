@@ -22,7 +22,7 @@ export default function PartnerRiderLayout() {
   const activeKey = items.find(i => pathname.startsWith(i.to || ""))?.key;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 16 }}>
+    <div className="container" style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 16 }}>
       <NavSidebar
         items={items}
         activeKey={activeKey}

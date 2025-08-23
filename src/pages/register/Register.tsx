@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Form, Input, Button, Checkbox, Typography, Alert } from "antd";
 import "./Register.css";
-import { signup } from "../../services/auth";
+import { signup } from "../../services/auth/index";
 
 const { Title, Text } = Typography;
 

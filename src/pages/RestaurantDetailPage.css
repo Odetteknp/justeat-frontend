@@ -1,0 +1,193 @@
+.res-page { /* คอนเทนเนอร์หลักของหน้า */
+  background: #fafafa; /* สีพื้นหลังอ่อน */
+}
+
+/* ---------- HERO ---------- */
+.res-hero { /* กล่องรูป hero */
+  position: relative; /* ใช้วางซ้อนถ้าต้องมี overlay */
+  width: 100%; /* กว้างเต็ม */
+  height: 280px; /* สูงคงที่ */
+  overflow: hidden; /* ซ่อนส่วนรูปที่เกิน */
+}
+.res-hero img { /* รูปใน hero */
+  width: 100%; /* กว้างเต็ม */
+  height: 100%; /* สูงเต็ม */
+  object-fit: cover; /* ครอบพื้นที่แบบตัดส่วนเกิน */
+}
+
+/* ปุ่ม back arrow ที่มุมขวาบนของ hero */
+.res-backBtn {
+  position: absolute;    /* ซ้อนทับบน hero */
+  top: 16px;             /* ห่างจากขอบบน */
+  right: 16px;           /* ห่างจากขอบขวา */
+  z-index: 10;           /* อยู่เหนือรูป */
+  color: #fff;           /* ไอคอนสีขาว */
+  background: rgba(0,0,0,0.35); /* พื้นหลังโปร่งดำ */
+  border-radius: 50%;    /* กลม */
+  width: 40px;           /* ขนาดปุ่ม */
+  height: 40px;          /* ขนาดปุ่ม */
+  display: flex;         /* จัด icon กลางปุ่ม */
+  align-items: center;
+  justify-content: center;
+}
+.res-backBtn:hover {
+  background: rgba(0,0,0,0.55); /* hover มืดขึ้น */
+}
+
+/* ---------- WHITE SHEET ---------- */
+.res-sheet { /* กล่องขาวโค้งมนที่ซ้อนทับ hero */
+  max-width: 1100px; /* จำกัดความกว้างสูงสุด */
+  margin: -60px auto 40px; /* ลอยทับ hero ขึ้นมาและเว้นช่องล่าง */
+  background: #fff; /* สีพื้นขาว */
+  border-radius: 24px; /* มุมโค้งมน */
+  box-shadow: 0 10px 30px rgba(0,0,0,.08); /* เงานุ่ม ๆ */
+  padding: 20px 24px 32px; /* เว้นขอบด้านใน */
+}
+
+/* ---------- HEADER ROW ---------- */
+.res-headerRow { /* แถวบน: ชื่อ/เรตติ้ง + ปุ่มหัวใจ */
+  display: grid; /* ใช้ Grid แบ่งคอลัมน์ */
+  grid-template-columns: 1fr auto; /* ซ้ายยืด, ขวากว้างตามเนื้อหา */
+  align-items: start; /* จัดแนวบน */
+  gap: 12px; /* ช่องว่างระหว่างคอลัมน์ */
+}
+.res-titleArea { /* โซนชื่อและเรตติ้ง */
+  display: flex; /* ใช้ Flex วางแนวตั้ง */
+  flex-direction: column; /* เรียงจากบนลงล่าง */
+  gap: 4px; /* ระยะห่างแต่ละบรรทัด */
+}
+.res-title { /* ชื่อร้าน */
+  margin: 0; /* ตัด margin เริ่มต้น */
+  font-size: 24px; /* ขนาดตัวอักษรใหญ่ */
+  font-weight: 800; /* หนักมาก */
+  line-height: 1.2; /* ความสูงบรรทัดกำลังดี */
+}
+.res-ratingLine { /* แถวเรตติ้ง */
+  display: inline-flex; /* วางไอคอนกับตัวเลขในบรรทัดเดียว */
+  gap: 6px; /* เว้นช่องระหว่างดาวกับตัวเลข */
+  align-items: center; /* จัดกึ่งกลางแนวตั้ง */
+  color: #333; /* สีตัวอักษรเข้ม */
+}
+.res-ratingNum { /* ตัวเลขเรตติ้ง */
+  font-weight: 600; /* หนาพอประมาณ */
+  font-size: 16px; /* ขนาดอ่านง่าย */
+}
+.res-favBtn { /* ปุ่มหัวใจ favorite */
+  border-radius: 9999px; /* โค้งมนแบบ pill */
+  height: 40px; /* ความสูงปุ่ม */
+  width: 40px; /* ความกว้างปุ่มให้เป็นสี่เหลี่ยมจัตุรัส */
+}
+
+/* ---------- TABS (CATEGORY) ---------- */
+.res-tabsWrap { /* คอนเทนเนอร์ของแท็บ */
+  background: #fff; /* สีพื้นขาวให้ต่อเนื่องกับแผ่น */
+  border-top: 1px solid #f0f0f0; /* เส้นแบ่งด้านบนบาง ๆ */
+  position: sticky; /* ติดด้านบนเวลาสกรอลล์ */
+  top: 80px; /* ระยะยึดจากขอบบน (เผื่อ header) */
+  z-index: 10; /* ให้อยู่เหนือคอนเทนต์ */
+}
+
+/* ---------- MENU GRID ---------- */
+.res-grid { /* ตารางการ์ดเมนู */
+  display: grid; /* ใช้ Grid ทำคอลัมน์หลายช่อง */
+  grid-template-columns: repeat(3, 1fr); /* เดสก์ท็อป 3 คอลัมน์ */
+  gap: 16px; /* ระยะห่างการ์ด */
+  padding: 20px 4px 8px; /* เว้นขอบในรอบ ๆ */
+}
+@media (max-width: 992px) { /* เมื่อจอเล็กกว่า 992px */
+  .res-grid { grid-template-columns: repeat(2, 1fr); } /* เหลือ 2 คอลัมน์ */
+}
+@media (max-width: 576px) { /* เมื่อจอเล็กกว่า 576px */
+  .res-grid { grid-template-columns: 1fr; } /* เหลือ 1 คอลัมน์ */
+}
+
+.res-menuCard { /* การ์ดเมนูแต่ละใบ */
+  border-radius: 16px; /* มุมโค้งมน */
+  overflow: hidden; /* ตัดส่วนเกิน เช่น รูป */
+  box-shadow: 0 2px 8px rgba(0,0,0,.04); /* เงาบาง ๆ */
+}
+.res-menuCard .ant-card-cover img { /* รูปด้านบนของการ์ด */
+  height: 140px; /* สูงคงที่ให้เท่ากัน */
+  object-fit: cover; /* ครอบพื้นที่สวยงาม */
+}
+.res-itemName { /* ชื่อเมนูในการ์ด */
+  font-weight: 700; /* หนาเพื่อเน้นชื่อ */
+  font-size: 15px; /* ขนาดพอดี */
+  color: #1f1f1f; /* สีเข้มอ่านง่าย */
+  overflow: hidden; /* ซ่อนชื่อที่ยาวเกิน */
+  text-overflow: ellipsis; /* แสดง ... เมื่อเกิน */
+  white-space: nowrap; /* ไม่ตัดบรรทัด */
+  min-width: 0; /* อนุญาตให้ย่อเพื่อ ellipsis ทำงาน */
+}
+.res-price { /* ราคาของเมนู */
+  margin-top: 6px; /* เว้นจากชื่อเล็กน้อย */
+  font-weight: 600; /* หนากว่าปกติ */
+  color: #ef664b; /* สีตามธีม */
+}
+
+/* ---------- CART (SIDER & DRAWER) ---------- */
+.res-cartSider { /* แถบตะกร้าด้านข้าง */
+  background: #fff; /* สีพื้นขาว */
+  border-left: 1px solid #f0f0f0; /* เส้นแบ่งซ้าย */
+  padding: 16px; /* เว้นขอบภายใน */
+}
+.res-cartPanel { /* เนื้อหาในตะกร้า */
+  display: flex; /* ใช้ Flex จัดวางแนวตั้ง */
+  flex-direction: column; /* เรียงจากบนลงล่าง */
+  gap: 12px; /* ระยะห่างระหว่างบล็อก */
+}
+.res-cartEmpty { /* ข้อความเมื่อตะกร้าว่าง */
+  color: #888; /* สีเทาอ่อน */
+  text-align: center; /* จัดกลาง */
+  padding: 32px 0; /* เว้นพื้นที่รอบข้อความ */
+}
+.res-cartRow { /* แถวสินค้าแต่ละรายการ */
+  display: grid; /* ใช้ Grid แบ่งคอลัมน์ */
+  grid-template-columns: 1fr auto auto; /* ชื่อ | ปุ่มจำนวน | ราคา */
+  align-items: center; /* กึ่งกลางแนวตั้ง */
+  gap: 12px; /* ช่องว่างคอลัมน์ */
+}
+.res-cartName { /* ชื่อสินค้าในตะกร้า */
+  min-width: 0; /* ให้หดได้เพื่อ ellipsis */
+  overflow: hidden; /* ซ่อนส่วนเกิน */
+  text-overflow: ellipsis; /* แสดง ... เมื่อยาว */
+  white-space: nowrap; /* ไม่ตัดบรรทัด */
+  font-weight: 600; /* หนาขึ้นนิดหน่อย */
+}
+.res-cartCtrl { /* กลุ่มปุ่ม + - และจำนวน */
+  display: inline-flex; /* วางในบรรทัดเดียว */
+  align-items: center; /* จัดกึ่งกลางแนวตั้ง */
+  gap: 8px; /* ระยะห่างปุ่มกับจำนวน */
+}
+.res-cartQty { /* ตัวเลขจำนวน */
+  min-width: 20px; /* ความกว้างขั้นต่ำเพื่อไม่สั่น */
+  text-align: center; /* จัดกลางแนวนอน */
+}
+.res-cartPrice { /* ราคารวมของรายการ */
+  font-weight: 700; /* หนาชัด */
+}
+.res-cartFooter { /* แถวสรุปราคา */
+  display: grid; /* ใช้ Grid สองคอลัมน์ */
+  grid-template-columns: 1fr auto; /* ซ้ายข้อความ, ขวาราคา */
+  align-items: center; /* จัดกึ่งกลางแนวตั้ง */
+  padding: 12px 0; /* เว้นขอบแนวตั้ง */
+  border-top: 1px solid #f0f0f0; /* เส้นแบ่งด้านบน */
+}
+.res-cartTotal { /* ตัวเลขยอดรวม */
+  font-size: 18px; /* ขนาดใหญ่ขึ้น */
+  font-weight: 800; /* หนามากเพื่อเน้น */
+}
+
+/* ---------- FLOATING CART (MOBILE) ---------- */
+.res-floatCartBadge { /* ครอบ Badge ของปุ่มลอย */
+  position: fixed; /* วางคงที่บนจอ */
+  right: 16px; /* ชิดขวา 16px */
+  bottom: 16px; /* ชิดล่าง 16px */
+  z-index: 1000; /* อยู่เหนือคอนเทนต์อื่น */
+}
+.res-floatCart { /* ปุ่มลอยเปิดตะกร้า */
+  background: #ef664b; /* สีธีมหลัก */
+  border: none; /* ไม่โชว์เส้นขอบ */
+  color: #fff; /* ตัวอักษรขาว */
+  box-shadow: 0 6px 20px rgba(239,102,75,.35); /* เงาตามสีแบรนด์ */
+}

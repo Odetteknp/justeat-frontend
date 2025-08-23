@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Form, Input, Button, Checkbox, Typography, Alert } from "antd";
 import "./Login.css";
-import { login } from "../../services/auth";
+import { login } from "../../services/auth/index";
 
 const { Title, Text } = Typography;
 

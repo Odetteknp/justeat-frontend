@@ -21,6 +21,8 @@ import RiderProfile from "./pages/partner/rider/rider_profile";
 
 import RestaurantDetailPage from "./pages/RestaurantDetailPage";
 
+import { RiderProvider } from "./context/RiderContext";
+
 export default function App() {
   return (
     <Routes>
@@ -47,7 +49,14 @@ export default function App() {
       </Route>
 
       {/* Rider layout แยกออกมา (ไม่มี Header ของ MainLayout) */}
-      <Route path="/partner/rider" element={<RiderLayout />}>
+      <Route
+        path="/partner/rider"
+        element={
+          <RiderProvider>
+            <RiderLayout />
+          </RiderProvider>
+        }
+      >
         <Route index element={<RiderDashboard />} />
         <Route path="dashboard" element={<RiderDashboard />} />
         <Route path="work" element={<RiderWork />} />

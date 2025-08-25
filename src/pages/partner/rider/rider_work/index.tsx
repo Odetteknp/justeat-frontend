@@ -22,6 +22,7 @@ import {
   CheckCircleOutlined,
   FieldTimeOutlined,
   ThunderboltOutlined,
+  DingdingOutlined,
 } from "@ant-design/icons";
 // import axios from "axios"; // <- ใช้เมื่อเชื่อม backend จริง
 
@@ -243,7 +244,7 @@ const RiderWork: React.FC = () => {
       {contextHolder}
       <Card
         style={{
-          background: "rgb(54, 164, 197)",
+          background: "rgb(239, 102, 75)",
           color: "white",
           marginBottom: 24,
           borderRadius: 16,
@@ -253,7 +254,7 @@ const RiderWork: React.FC = () => {
           <Col>
             <Avatar
               size={64}
-              icon={<UserOutlined />}
+              icon={<DingdingOutlined />}
               style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
             />
           </Col>

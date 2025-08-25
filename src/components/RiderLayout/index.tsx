@@ -114,7 +114,7 @@ const RiderLayout: React.FC = () => {
         collapsed={collapsed}
         onCollapse={(value) => setCollapsed(value)}
         style={{
-          background: "rgb(54, 164, 197)",
+          background: "rgb(239, 102, 75)",
           boxShadow: "2px 0 8px rgba(0,0,0,0.1)",
           height: "100vh",
           overflow: "hidden",
@@ -240,7 +240,7 @@ const RiderLayout: React.FC = () => {
               icon={<LeftSquareOutlined style={{ fontSize: 20, marginRight: 2 }} />}
               style={{
                 width: "100%",
-                background: "rgb(32, 94, 113)",
+                background: "rgba(220, 60, 30, 1)",
                 border: "1px solid rgba(255, 255, 255, 0.2)",
                 color: "white",
                 borderRadius: 8,
@@ -269,7 +269,7 @@ const RiderLayout: React.FC = () => {
             justifyContent: "space-between",
           }}
         >
-          <Title level={4} style={{ margin: 0, color: "#1890ff" }}>
+          <Title level={4} style={{ margin: 0, color: "rgb(239, 102, 75)" }}>
             {KEY_TITLE_MAP[selectedKey] || "แดชบอร์ด"}
           </Title>
           <Space>

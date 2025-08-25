@@ -142,7 +142,7 @@ const RiderProfile: React.FC = () => {
 
       <Card
         style={{
-          background: "rgb(54, 164, 197)",
+          background: "rgb(239, 102, 75)",
           color: "white",
           marginBottom: 24,
           borderRadius: 16,

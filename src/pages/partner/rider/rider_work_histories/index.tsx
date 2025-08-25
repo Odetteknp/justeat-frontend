@@ -26,6 +26,7 @@ import {
   ReloadOutlined,
   DownloadOutlined,
   SearchOutlined,
+  HistoryOutlined,
 } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
@@ -356,7 +357,7 @@ const RiderWorkHistories: React.FC = () => {
       {/* Header Card */}
       <Card
         style={{
-          background: "rgb(54, 164, 197)",
+          background: "rgb(239, 102, 75)",
           color: "white",
           marginBottom: 24,
           borderRadius: 16,
@@ -366,7 +367,7 @@ const RiderWorkHistories: React.FC = () => {
           <Col>
             <Avatar
               size={64}
-              icon={<UserOutlined />}
+              icon={<HistoryOutlined /> }
               style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
             />
           </Col>

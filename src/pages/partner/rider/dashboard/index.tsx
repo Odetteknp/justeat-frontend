@@ -20,6 +20,7 @@ import {
   UserOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 
@@ -185,7 +186,7 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <Card
         style={{
-          background: "rgb(54, 164, 197)",
+          background: "rgb(239, 102, 75)",
           color: "white",
           marginBottom: 16,
           borderRadius: 16,
@@ -196,7 +197,7 @@ const Dashboard: React.FC = () => {
           <Col>
             <Avatar
               size={64}
-              icon={<UserOutlined />}
+              icon={<DashboardOutlined />}
               style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
             />
           </Col>

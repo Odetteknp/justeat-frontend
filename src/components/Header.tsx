@@ -28,6 +28,7 @@ function resolveTopKey(pathname: string) {
   // ปรับให้ตรงกับโค้ดปัจจุบันของคุณ: /restaurants คือหน้ารวมร้าน (ถ้าใช้ /rest ให้แก้ตรงนี้)
   if (pathname.startsWith("/restaurants")) return "/restaurants";
   if (pathname.startsWith("/help")) return "/help";
+  if (pathname.startsWith("/promotions")) return "/promotions";
   return "/";
 }
 

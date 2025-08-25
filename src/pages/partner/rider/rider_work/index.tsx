@@ -292,7 +292,7 @@ const RiderWork: React.FC = () => {
           </Col>
         </Row>
       </Card>
-
+      <Spin spinning={loading} size="large">            
       <div style={{ maxWidth: 920, margin: "0 auto", padding: "0 16px" }}>
         {/* แสดงงานปัจจุบัน (ถ้ามี) */}
         {currentWork ? (
@@ -382,24 +382,7 @@ const RiderWork: React.FC = () => {
           </Card>
         )}
       </div>
-
-      {/* Overlay โหลด */}
-      {loading && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(255,255,255,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            pointerEvents: "none",
-            zIndex: 999,
-          }}
-        >
-          <Spin size="large" />
-        </div>
-      )}
+      </Spin>
     </div>
   );
 };

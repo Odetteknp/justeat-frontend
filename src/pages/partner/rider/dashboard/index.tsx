@@ -191,7 +191,6 @@ const Dashboard: React.FC = () => {
           marginBottom: 16,
           borderRadius: 16,
         }}
-        bodyStyle={{ padding: 20 }}
       >
         <Row align="middle" gutter={[16, 16]}>
           <Col>
@@ -236,7 +235,7 @@ const Dashboard: React.FC = () => {
       </Card>
 
       {/* Content */}
-      <Spin spinning={loading}>
+      <Spin spinning={loading} size="large">
         <Row gutter={[16, 16]} style={{ padding: "0 12px" }}>
           {/* KPI */}
           <Col xs={24} sm={12} md={6}>

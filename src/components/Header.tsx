@@ -27,7 +27,7 @@ const AppHeader: React.FC<HeaderProps> = ({ isLoggedIn }) => {
         <Link to="/partner/rider">Rider</Link>
       </Menu.Item>
       <Menu.Item key="rest">
-        <Link to="/partner/rest">Restaurant</Link>
+        <Link to="/partner/restaurant">Restaurant</Link>
       </Menu.Item>
     </Menu>
   );

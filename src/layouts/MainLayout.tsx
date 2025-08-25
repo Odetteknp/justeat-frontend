@@ -1,13 +1,14 @@
 // MainLayout
 import { Outlet } from "react-router-dom";
-import Header from "../components/Header"
+import Header from "../components/Header";
+import { getToken } from "../services/tokenStore";
 
 export default function MainLayout() {
-    const isLoggedIn = !!localStorage.getItem("token");
-    return (
-        <>
-            <Header isLoggedIn={isLoggedIn} />
-            <Outlet />
-        </>
-    )
+  const isLoggedIn = !!getToken();
+  return (
+    <>
+      <Header isLoggedIn={isLoggedIn} />
+      <Outlet />
+    </>
+  );
 }

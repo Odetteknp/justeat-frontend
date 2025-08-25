@@ -1,55 +1,94 @@
 import React from "react";
 import { Layout, Menu, Dropdown, Input, Button, Avatar } from "antd";
-import { DownOutlined, UserOutlined, SearchOutlined, ArrowLeftOutlined } from "@ant-design/icons";
+import {
+  DownOutlined,
+  UserOutlined,
+  SearchOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import "./Header.css";
 import logoImage from "../assets/LOGO.png";
 
 const { Header } = Layout;
 
-interface HeaderProps {
-  isLoggedIn: boolean;
+type AppHeaderProps = {
+  isLoggedIn?: boolean;
+  /** บังคับให้เป็นโหมด Back-only ไม่ว่าอยู่เส้นทางไหน */
+  forceBackOnly?: boolean;
+};
+
+/** เส้นทางที่ต้องการให้ Header แสดงแค่ปุ่มย้อนกลับ */
+const BACK_ONLY_PREFIXES = ["/restaurants/", "/cart"];
+
+/** คืนค่า key ของเมนูบนแถบด้านบน เพื่อให้ active ตรงกับเส้นทางย่อย */
+function resolveTopKey(pathname: string) {
+  if (pathname === "/") return "/";
+  if (pathname.startsWith("/menu")) return "/menu";
+  // ปรับให้ตรงกับโค้ดปัจจุบันของคุณ: /restaurants คือหน้ารวมร้าน (ถ้าใช้ /rest ให้แก้ตรงนี้)
+  if (pathname.startsWith("/restaurants")) return "/restaurants";
+  if (pathname.startsWith("/help")) return "/help";
+  return "/";
 }
 
-const AppHeader: React.FC<HeaderProps> = ({ isLoggedIn }) => {
+function isBackOnlyPath(pathname: string) {
+  return BACK_ONLY_PREFIXES.some((p) => pathname.startsWith(p));
+}
+
+const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false, forceBackOnly = false }) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+
   const isPartner = pathname.startsWith("/partner");
+  const backOnly = forceBackOnly || isBackOnlyPath(pathname);
 
   const goBack = () => {
     if (window.history.length > 1) navigate(-1);
-    else navigate("/")
+    else navigate("/");
+  };
+
+  /** เมนูสำหรับลิงก์ไปพื้นที่ Partner (ตัวอย่าง) */
+  const partnerMenuItems = [
+    { key: "rider", label: <Link to="/partner/rider">Rider</Link> },
+    { key: "rest", label: <Link to="/partner/rest">Restaurant</Link> },
+  ];
+
+  // ---------- Back-only Mode ----------
+  if (backOnly) {
+    return (
+    <Header className="header back-only">
+      <div className="header-container-back">
+        <Button
+          type="text"
+          className="header-back"
+          icon={<ArrowLeftOutlined />}
+          onClick={goBack}
+          aria-label="ย้อนกลับ"
+        />
+      </div>
+    </Header>
+  );
   }
 
-  const partnerMenu = (
-    <Menu>
-      <Menu.Item key="rider">
-        <Link to="/partner/rider">Rider</Link>
-      </Menu.Item>
-      <Menu.Item key="rest">
-        <Link to="/partner/rest">Restaurant</Link>
-      </Menu.Item>
-    </Menu>
-  );
+  // ---------- Normal / Partner Mode ----------
+  const selectedTopKey = resolveTopKey(pathname);
 
   return (
     <Header className={isPartner ? "partner-header header" : "header"}>
       <div className="header-container">
-
         {/* ซ้าย */}
         <div className="header-left">
           {isPartner ? (
             <Button
               type="text"
               className="header-back"
-              icon={<ArrowLeftOutlined/>}
+              icon={<ArrowLeftOutlined />}
               onClick={goBack}
-            >
-              
-            </Button>
+              aria-label="ย้อนกลับ"
+            />
           ) : (
             <div className="header-logo">
-              <Link to="/">
+              <Link to="/" aria-label="ไปหน้าแรก">
                 <img src={logoImage} alt="Logo" />
               </Link>
             </div>
@@ -58,60 +97,50 @@ const AppHeader: React.FC<HeaderProps> = ({ isLoggedIn }) => {
 
         {/* กลาง */}
         {!isPartner ? (
-
-          // กรณีไม่ใช่ Partner
-          <Menu
-            mode="horizontal"
-            theme="dark"
-            className="header-menu"
-            selectedKeys={[pathname]}
-          >
-            <Menu.Item key="/" className="header-item">
+          <Menu mode="horizontal" theme="dark" className="header-menu" selectedKeys={[selectedTopKey]}>
+            <Menu.Item key="/">
               <Link to="/">Home</Link>
             </Menu.Item>
-            <Menu.Item key="/menu" className="header-item">
+            <Menu.Item key="/menu">
               <Link to="/menu">Menu</Link>
             </Menu.Item>
-            <Menu.Item key="/rest" className="header-item">
-              <Link to="/rest">Restaurants</Link>
+            <Menu.Item key="/restaurants">
+              <Link to="/restaurants">Restaurants</Link>
             </Menu.Item>
-            <Menu.Item key="/help" className="header-item">
+            <Menu.Item key="/promotions">
+              <Link to="/promotions">Promotion</Link>
+            </Menu.Item>
+            <Menu.Item key="/help">
               <Link to="/help">Help</Link>
             </Menu.Item>
           </Menu>
-
         ) : (
-          // กรณีที่เป็น partner ซึ่งมี 2 role ก็ต้องเช็คอีกว่าเป็น rest or rider
-          <Menu
-            mode="horizontal"
-            className="header-menu"
-            selectedKeys={[pathname]}
-          >
+          <Menu mode="horizontal" className="header-menu" selectedKeys={[pathname]}>
             {pathname.startsWith("/partner/rider") ? (
               <>
                 <Menu.Item key="/partner/rider/overview">
-                    <Link to="/partner/rider/overview">คิดก่อนจะใส่อะ</Link>
+                  <Link to="/partner/rider/overview">Overview</Link>
                 </Menu.Item>
                 <Menu.Item key="/partner/rider/orders">
-                  <Link to="/partner/rider/orders">อาจจะ</Link>
+                  <Link to="/partner/rider/orders">Orders</Link>
                 </Menu.Item>
                 <Menu.Item key="/partner/rider/settings">
-                  <Link to="/partner/rider/settings">?</Link>
+                  <Link to="/partner/rider/settings">Settings</Link>
                 </Menu.Item>
               </>
             ) : (
               <>
                 <Menu.Item key="/partner/rest/overview">
-                  <Link to="/partner/rest/overview">คิดก่อนจะใส่อะ</Link>
+                  <Link to="/partner/rest/overview">Overview</Link>
                 </Menu.Item>
                 <Menu.Item key="/partner/rest/menu">
-                  <Link to="/partner/rest/menu">อาจจะ</Link>
+                  <Link to="/partner/rest/menu">Menu</Link>
                 </Menu.Item>
                 <Menu.Item key="/partner/rest/orders">
-                  <Link to="/partner/rest/orders">ไม่รู้</Link>
+                  <Link to="/partner/rest/orders">Orders</Link>
                 </Menu.Item>
                 <Menu.Item key="/partner/rest/settings">
-                  <Link to="/partner/rest/settings">?</Link>
+                  <Link to="/partner/rest/settings">Settings</Link>
                 </Menu.Item>
               </>
             )}
@@ -121,21 +150,21 @@ const AppHeader: React.FC<HeaderProps> = ({ isLoggedIn }) => {
         {/* ขวา */}
         <div className="header-right">
           {!isPartner && (
-            <Input
-              placeholder="Search"
-              prefix={<SearchOutlined />}
-              className="header-search"
-            />
+            <>
+              <Input
+                placeholder="Search"
+                prefix={<SearchOutlined />}
+                className="header-search"
+                allowClear
+                aria-label="ค้นหา"
+              />
+              <Dropdown menu={{ items: partnerMenuItems }} trigger={["click"]}>
+                <Button className="header-partner" type="text">
+                  Partner <DownOutlined />
+                </Button>
+              </Dropdown>
+            </>
           )}
-
-          {!isPartner && (
-            <Dropdown overlay={partnerMenu} trigger={["click"]}>
-              <Button className="header-partner" type="text">
-                Partner <DownOutlined />
-              </Button>
-            </Dropdown>            
-          )}
-
 
           {!isLoggedIn ? (
             <Link to="/login">
@@ -144,7 +173,7 @@ const AppHeader: React.FC<HeaderProps> = ({ isLoggedIn }) => {
               </Button>
             </Link>
           ) : (
-            <Link to="/profile">
+            <Link to="/profile" aria-label="โปรไฟล์">
               <Avatar icon={<UserOutlined />} />
             </Link>
           )}

@@ -1,18 +1,31 @@
-/* Header หลักของ AntD ที่ครอบทั้งหมด */
+:root {
+  --header-bg: #ef664b;
+  --header-height: 64px;
+  --container-max: 1280px;
+}
+
+/* ===== Header base ===== */
 .header.ant-layout-header {
-  background: #ef664b;
+  background: var(--header-bg);
   padding-inline: 0;
-  height: 64px;
-  line-height: 64px;
+  height: var(--header-height);
+  line-height: var(--header-height);
   box-shadow: 0 2px 4px rgba(0,0,0,.08);
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
-/* กล่องวางเนื้อหา 3 คอลัมน์: โลโก้ | เมนู | ขวา */
+/* โหมด back-only: ใช้เมื่ออยากมีแค่ปุ่มย้อนกลับ */
+.header.back-only {
+  display: flex;
+  align-items: center;
+  padding-inline: 12px; /* ระยะซ้าย/ขวาเล็กน้อย */
+}
+
+/* ===== Container (3 คอลัมน์: โลโก้ | เมนู | ขวา) ===== */
 .header-container {
-  max-width: 1440px;
+  max-width: var(--container-max);
   margin: 0 auto;
   padding: 0 16px;
   display: grid;
@@ -21,33 +34,59 @@
   gap: 16px;
 }
 
+/* ฟอนต์รวม */
+.header, .header * {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  text-decoration: none;
+}
+
 /* โลโก้ */
 .header-logo img {
   display: block;
   height: 48px;
 }
 
-/* ฟอนต์รวม */
-.header, .header * {
-  font-family: Arial, Helvetica, sans-serif;
-  font-weight: 400;               /* ฟอนต์ธรรมดา */
-  text-decoration: none;
+/* ฝั่งซ้าย/ขวา */
+.header-left { display: flex; align-items: center; }
+.header-right { display: flex; align-items: center; gap: 12px; }
+
+.header-container-back {
+  max-width: var(--container-max);
 }
 
-/* เมนูกลาง: ต้องเขียนทับ class ของ AntD ด้วย */
-.header-menu.ant-menu-dark.ant-menu-horizontal {
+/* ปุ่มย้อนกลับ (ใช้ได้ทั้งโหมดปกติและ partner/back-only) */
+.header-back {
+  color: #fff;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* ✅ แทน justify-items */
+  border-radius: 9999px;
+}
+.header-back:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+.header-back .anticon {
+  font-size: 18px;
+}
+
+/* โหมด back-only: ให้กินเต็มจอ แล้วดันปุ่มไปชิดซ้ายของ viewport */
+.header.back-only {
+  display: flex;
+  align-items: center;
+  padding-left: 16px;   /* ระยะห่างจากขอบจอซ้าย */
+  padding-right: 16px;  /* เผื่ออนาคต */
+}
+
+/* ===== เมนูกลาง (AntD) ===== */
+.header .ant-menu-horizontal {
   background: transparent;
   border-bottom: none;
   display: flex;
   justify-content: center;
   gap: 8px;
-}
-
-/* เอาพื้นหลังสีน้ำเงินของ item ที่ถูกเลือก/hover ออกให้ใส */
-.header .ant-menu-horizontal > .ant-menu-item-selected,
-.header .ant-menu-horizontal > .ant-menu-item:hover,
-.header .ant-menu-horizontal > .ant-menu-item-active {
-  background-color: transparent !important;
 }
 
 /* ลบเส้น ::after ใต้เมนูที่ AntD ใส่มาเอง */
@@ -56,34 +95,35 @@
   border-bottom: none !important;
 }
 
-/* ลิงก์ในเมนู */
-.header-item a {
-  color: #fff !important;
+/* สีลิงก์เมนู */
+.header .ant-menu-horizontal .ant-menu-item a {
+  color: #fff;
   padding: 0 14px;
 }
 
-/* เส้นใต้ "ตัวหนังสือ" เมื่อ active (ไม่ใช่เส้นของ AntD) */
+/* เอาพื้นหลังสีเข้มของ AntD ตอน hover/active ออก */
+.header .ant-menu-horizontal > .ant-menu-item-selected,
+.header .ant-menu-horizontal > .ant-menu-item:hover,
+.header .ant-menu-horizontal > .ant-menu-item-active {
+  background-color: transparent !important;
+}
+
+/* เส้นใต้เมื่อ active (ของลิงก์ ไม่ใช่ ::after ของ AntD) */
 .header .ant-menu-item-selected a {
   text-decoration: underline;
-  text-decoration-thickness: 2px;  /* หนา */
-  text-underline-offset: 6px;      /* ระยะห่างจากตัวอักษร */
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
   color: #fff;
 }
 
-/* hover ให้มีเส้นบาง ๆ ได้ถ้าต้องการ */
-.header-item a:hover {
+/* hover บนลิงก์เมนู */
+.header .ant-menu-horizontal .ant-menu-item a:hover {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 6px;
 }
 
-/* ฝั่งขวา: search + partner + signin/avatar */
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
+/* ===== คอนโทรลฝั่งขวา ===== */
 .header-search {
   width: 220px;
   height: 32px;
@@ -106,76 +146,41 @@
 .header-signin {
   font-weight: 600;
   background: #fff;
-  color: #000 !important;  /* บังคับให้สีดำ */
+  color: #000 !important;
   border: none;
   height: 32px;
   border-radius: 9999px;
   padding: 0 12px;
-  text-decoration: none;   /* เอาเส้นใต้ default ของ a ออก */
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease-in-out;
 }
-
-/* Hover effect */
 .header-signin:hover {
   background: #f2f2f2;
-  color: #ef664b !important;
+  color: var(--header-bg) !important;
 }
 
-/* ทุกลิงก์ใน header */
-.header a {
-  color: white;
-  text-decoration: none;
+/* ลิงก์ทั่วไปใน header */
+.header a { color: #fff; text-decoration: none; }
+.header a:hover { text-decoration: underline; }
+
+/* Partner theme hook: ถ้าต้องการปรับธีมพิเศษ */
+.partner-header.header { /* ใส่สไตล์เฉพาะ partner ที่นี่ถ้าต้องการ */ }
+
+/* ===== เข้าถึงได้ (Accessibility) ===== */
+.header a:focus-visible,
+.header .ant-btn:focus-visible,
+.header .ant-input:focus-visible {
+  outline: 2px solid rgba(255,255,255,.9);
+  outline-offset: 2px;
+  border-radius: 8px;
 }
 
-.header a:hover {
-  text-decoration: underline; /* ถ้าอยากให้มีเส้นตอน hover */
-}
-
-
-/* partner */
-/* ทำให้ back button ดูเป็นส่วนหนึ่งของ header */
-.header-left { display: flex; align-items: center;}
-
-/* ปุ่มย้อนกลับใน partner header */
-.partner-header .header-back {
-  color: #fff;
-  height: 40px;
-  width: 40px;
-  display: flex;
-  align-items: center;
-  justify-items: center;
-  border-radius: 9999px;
-}
-
-.partner-header .header-back:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
-
-/* ถ้าอยากให้ไอคอนชัดขึ้น */
-.partner-header .header-back .anticon {
-  font-size: 18px;
-  margin-right: 6px;
-}
-
-.header-menu.ant-menu-horizontal {
-  background: transparent;  /* โปร่งใส เอาสี header มาแทน */
-  border-bottom: none;
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-}
-
-.header-item a {
-  color: #fff !important; 
-  padding: 0 14px;
-}
-
-
-/* Responsive */
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
-  .header-menu,
-  .header-search { display: none; }
+  .header .ant-menu-horizontal,
+  .header-search {
+    display: none;
+  }
 }

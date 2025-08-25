@@ -13,7 +13,8 @@
   /* ถ้ารายการยาว ให้ Sidebar เลื่อนเอง (เอาออกได้ถ้าอยากให้ sidebar นิ่ง) */
   height: 100%;
   overflow-y: auto;
-  scrollbar-gutter: stable; /* กันเนื้อหากระตุกเวลาโชว์สกรอล */
+  scrollbar-gutter: stable;
+  /* กันเนื้อหากระตุกเวลาโชว์สกรอล */
 }
 
 /* ====== ส่วนหัว ====== */
@@ -26,69 +27,83 @@
 }
 
 /* ====== รายการเมนู ====== */
-.navSidebar_List { 
-    list-style: none; 
-    margin: 0; 
-    padding: 0; 
-    flex-grow: 1; 
+.navSidebar_List {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex-grow: 1;
 }
 
-.navSidebar_Item { 
-    margin-bottom: 0.5rem; 
+.navSidebar_Item {
+  margin-bottom: 0.5rem;
 }
 
 /* ปุ่มเมนู */
 .navSidebar_Btn {
   width: 100%;
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  background: transparent; 
-  color: #555; 
-  font-weight: 500; 
-  text-align: left; 
-  border: 0; 
+  background: transparent;
+  color: #555;
+  font-weight: 500;
+  text-align: left;
+  border: 0;
   border-radius: 0.5rem;
-  cursor: pointer; 
+  cursor: pointer;
   transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
   text-decoration: none;
   line-height: 1.25;
   min-height: 48px;
 }
-.navSidebar_Btn:hover { 
-    background: #eee; 
-    color: #333; 
+
+.navSidebar_Btn:hover {
+  background: #eee;
+  color: #333;
 }
-.navSidebar_Btn.active { 
-    background: #EF664B; 
-    color: #fff; 
-    font-weight: 600; 
+
+.navSidebar_Btn.active {
+  background: #ef664b;
+  color: #fff;
+  font-weight: 600;
 }
 
 /* ไอคอน + ป้ายตัวเลขขวา */
 .navSidebar_Icon {
-  width: 28px; height: 28px; flex: 0 0 28px;
-  display: inline-flex; align-items: center; justify-content: center;
-  font-size: 1.1rem; line-height: 1;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
 }
 
-.navSidebar_Label { 
-    flex: 1; 
+.navSidebar_Label {
+  flex: 1;
 }
 
 .navSidebar_Badge {
-  margin-left: auto; font-size: 0.75rem; padding: 0.15rem 0.45rem;
-  background: #eee; color: #555; border-radius: 999px;
+  margin-left: auto;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.45rem;
+  background: #eee;
+  color: #555;
+  border-radius: 999px;
 }
 
 /* ====== ส่วนท้าย (เช่น Logout) ====== */
-.navSidebar__footer { margin-top: 2rem; }
+.navSidebar__footer {
+  margin-top: 2rem;
+}
 
 /* ====== ปุ่ม Logout ====== */
 .navSidebar_Logout {
   font-weight: 600;
-  margin-top: auto;           /* ดันให้ชิดล่าง */
+  margin-top: auto;
+  /* ดันให้ชิดล่าง */
 }
 
 .navSidebar_Logout:hover {

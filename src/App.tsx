@@ -39,6 +39,10 @@ import AdminProfile from "./pages/admin/admin_profile";
 import RestaurantDetailPage from "./pages/RestaurantDetailPage";
 import CartPage from "./pages/CartPage";
 
+// Payment
+import PaymentLayout from "./layouts/PaymentLayout";
+import Payment from "./pages/payment";
+
 const isLoggedIn = !!getToken();
 
 export default function App() {
@@ -94,6 +98,11 @@ export default function App() {
         <Route path="rider" element={<AdminRider />} />
         <Route path="restaurant" element={<AdminRestaurants />} />
         <Route path="profile" element={<AdminProfile />} />
+      </Route>
+
+      {/* Payment layout */}
+      <Route path="/payment" element={<PaymentLayout />}>
+        <Route index element={<Payment />} />
       </Route>
     </Routes>
   );

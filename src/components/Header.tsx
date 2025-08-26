@@ -54,20 +54,28 @@ const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false, forceBackOnly
     { key: "rest", label: <Link to="/partner/rest">Restaurant</Link> },
   ];
 
+  /** เมนูสำหรับลิงก์ไปพื้นที่ Partner (ตัวอย่าง) */
+  const partnerMenuItems = [
+    { key: "rider", label: <Link to="/partner/rider">Rider</Link> },
+    { key: "rest", label: <Link to="/partner/rest">Restaurant</Link> },
+  ];
+
   // ---------- Back-only Mode ----------
   if (backOnly) {
     return (
-    <Header className="header back-only">
-      <div className="header-container-back">
-        <Button
-          type="text"
-          className="header-back"
-          icon={<ArrowLeftOutlined />}
-          onClick={goBack}
-          aria-label="ย้อนกลับ"
-        />
-      </div>
-    </Header>
+      <Header className="header back-only">
+        <div className="header-container-back">
+          <Button
+            type="text"
+            className="header-back"
+            icon={<ArrowLeftOutlined />}
+            onClick={goBack}
+            aria-label="ย้อนกลับ"
+          />
+        </div>
+      </Header>
+    );
+  }
   );
   }
 

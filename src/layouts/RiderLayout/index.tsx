@@ -27,7 +27,7 @@ import {
 import type { MenuProps } from "antd";
 import logo from "../../assets/LOGO.png";
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 const ROUTE_KEY_MAP: Record<string, string> = {
@@ -290,17 +290,6 @@ const RiderLayout: React.FC = () => {
             <Outlet />
           </div>
         </Content>
-
-        {/*---Footer Section---*/}
-        <Footer
-          style={{
-            textAlign: "center",
-            background: "white",
-            borderTop: "1px solid #f0f0f0",
-          }}
-        >
-          <Text type="secondary">G19-JustEat</Text>
-        </Footer>
       </Layout>
     </Layout>
   );

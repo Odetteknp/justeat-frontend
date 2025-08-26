@@ -26,10 +26,6 @@ const MenuKey = [
   { key: "/help", label: "Help" },
 ];
 
-const ProfileItem = [
-  { key: "/profile", label: "My Profile" },
-  { key: "/order", label: "My Orders"}
-]
 
 // หาว่าเมนูไหนควรถูกเลือก (active) จาก pathname ปัจจุบัน
 function getActiveMenuKey(pathname: string) {
@@ -58,6 +54,19 @@ export default function CustomerHeader({ isLoggedIn = false }: Props) {
       icon: <IoFastFood/>
     },
   ];
+
+  const ProfileItem: MenuProps [ "items" ] = [
+    {
+      key: "profile",
+      label: <Link to="/profile">My Profile</Link>,
+      icon: <DingdingOutlined/>
+    },
+    {
+      key: "order",
+      label: <Link to="/profile/order">My Orders</Link>,
+      icon: <IoFastFood/>
+    },
+  ]
 
   return (
     <Header className="header">

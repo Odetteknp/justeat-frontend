@@ -21,8 +21,8 @@ type Props = {
 const MenuKey = [
   { key: "/", label: "Home" },
   { key: "/menu", label: "Menu" },
-  { key: "/restaurants", label: "Restaurants" },
-  { key: "/promotions", label: "Promotions" },
+  { key: "/restaurant", label: "Restaurants" },
+  { key: "/promotion", label: "Promotions" },
   { key: "/help", label: "Help" },
 ];
 
@@ -53,8 +53,8 @@ export default function CustomerHeader({ isLoggedIn = false }: Props) {
       icon: <DingdingOutlined/>
     },
     {
-      key: "rest",
-      label: <Link to="/partner/rest">Restaurant</Link>,
+      key: "restaurant",
+      label: <Link to="/partner/restaurant">Restaurant</Link>,
       icon: <IoFastFood/>
     },
   ];

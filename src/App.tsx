@@ -10,8 +10,6 @@ import HelpPage from "./pages/HelpPage";
 import LoginPage from "./pages/login/Login";
 import RegisterPage from "./pages/register/Register";
 
-import PartnerRestLayout from "./pages/partner/PartnerRestLayout";
-
 // เพจของไรเดอร์
 import RiderLayout from "./layouts/RiderLayout";
 import RiderDashboard from "./pages/partner/rider/dashboard";
@@ -25,6 +23,14 @@ import RestaurantDashboard from "./pages/partner/restaurant/dashboard";
 import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu";
 import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
 import RestaurantSetting from "./pages/partner/restaurant/restaurant_setting";
+
+// เพจของรแอดมิน
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboard from "./pages/admin/admin_dashboard";
+import AdminReport from "./pages/admin/admin_report";
+import AdminRider from "./pages/admin/admin_rider";
+import AdminRestaurants from "./pages/admin/admin_restaurant";
+import AdminProfile from "./pages/admin/admin_profile";
 
 import { RiderProvider } from "./context/RiderContext";
 
@@ -74,6 +80,21 @@ export default function App() {
         <Route path="order" element={<RestaurantOrder />} />
         <Route path="menu" element={<RestaurantMenu />} />
         <Route path="setting" element={<RestaurantSetting />} />
+      </Route>
+
+      {/* Admin layout */}
+      <Route
+        path="/admin"
+        element={
+            <AdminLayout />
+        }
+      >
+        <Route index element={<AdminDashboard />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="report" element={<AdminReport />} />
+        <Route path="rider" element={<AdminRider />} />
+        <Route path="restaurant" element={<AdminRestaurants />} />
+        <Route path="profile" element={<AdminProfile />} />
       </Route>
 
       {/* หน้ารายละเอียดร้าน */}

@@ -36,7 +36,7 @@ const { Title, Text } = Typography;
 const ROUTE_KEY_MAP: Record<string, string> = {
   "/partner/restaurant": "restaurantdashboard",
   "/restaurantorder": "restaurantorder",
-  "/partner/restaurantmenu": "partner/restaurantmenu",
+  "/partner/restaurantmenu": "restaurantmenu",
   "/restaurantsetting": "restaurantsetting",
 };
 

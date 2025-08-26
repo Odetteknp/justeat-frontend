@@ -31,18 +31,20 @@ const { Header, Content, Footer, Sider } = Layout;
 const { Title, Text } = Typography;
 
 const ROUTE_KEY_MAP: Record<string, string> = {
-  "/partner/rider": "riderdashboard",
-  "/riderwork": "riderwork",
-  "/partner/riderhistories": "partner/riderhistories",
-  "/riderprofile": "riderprofile",
+  "/admin": "admindashboard",
+  "/admin/report": "adminreport",
+  "/admin/rider": "adminrider",
+  "/admin/restaurant": "adminrestaurant",
+  "/adminprofile": "adminprofile",
 };
 
 // --- แก้ KEY_TITLE_MAP ให้ key ตรงชื่อ ---
 const KEY_TITLE_MAP: Record<string, string> = {
-  riderdashboard: "แดชบอร์ด",
-  riderwork: "การจัดส่ง",
-  riderworkhistories: "ประวัติการจัดส่ง",
-  riderprofile: "โปรไฟล์",
+  admindashboard: "แดชบอร์ด",
+  adminreport: "รายงานปัญหา",
+  adminrider: "จัดการไรเดอร์",
+  adminrestaurant: "จัดการร้านอาหาร",
+  adminprofile: "จัดการโปรไฟล์",
 };
 
 const RiderLayout: React.FC = () => {
@@ -59,39 +61,46 @@ const RiderLayout: React.FC = () => {
   // --- แก้ selectedKey: เช็คอันเฉพาะเจาะจงก่อน ---
   const selectedKey = useMemo(() => {
     const clean = location.pathname.replace(/\/+$/, "");
-    if (clean.startsWith("/partner/rider/histories")) return "riderworkhistories";
-    if (clean.startsWith("/partner/rider/work")) return "riderwork";
-    if (clean.startsWith("/partner/rider/profile")) return "riderprofile";
-    if (clean.startsWith("/partner/rider")) return "riderdashboard";
-    return "riderdashboard";
+    if (clean.startsWith("/admin/report")) return "adminreport";
+    if (clean.startsWith("/admin/rider")) return "adminrider";
+    if (clean.startsWith("/admin/restaurant")) return "adminrestaurant";
+    if (clean.startsWith("/admin/profile")) return "adminprofile";
+    if (clean.startsWith("/admin")) return "admindashboard";
+    return "admindashboard";
   }, [location.pathname]);
 
   // เมนูแบบเปิดหมด (UI อย่างเดียว ไม่เช็ค role) //แก้ path ตรงนี้
   const menuItems: MenuProps["items"] = useMemo(
     () => [
       {
-        key: "riderdashboard",
+        key: "admindashboard",
         icon: <DashboardOutlined style={{ fontSize: 18 }} />,
         label: "แดชบอร์ด",
-        onClick: () => navigate("/partner/rider"),
+        onClick: () => navigate("/admin"),
       },
       {
-        key: "riderwork",
+        key: "adminreport",
         icon: <DingdingOutlined style={{ fontSize: 18 }} />,
-        label: "การจัดส่ง",
-        onClick: () => navigate("/partner/rider/work"),
+        label: "รายงานปัญหา",
+        onClick: () => navigate("/admin/report"),
       },
       {
-        key: "riderworkhistories",
+        key: "adminrider",
         icon: <HistoryOutlined style={{ fontSize: 18 }} />,
-        label: "ประวัติการจัดส่ง",
-        onClick: () => navigate("/partner/rider/histories"),
+        label: "จัดการไรเดอร์",
+        onClick: () => navigate("/admin/rider"),
       },
       {
-        key: "riderprofile",
+        key: "adminrestaurant",
+        icon: <UserOutlined style={{ fontSize: 18 }} />,
+        label: "จัดการร้านอาหาร",
+        onClick: () => navigate("/admin/restaurant"),
+      },
+      {
+        key: "adminprofile",
         icon: <UserOutlined style={{ fontSize: 18 }} />,
         label: "โปรไฟล์",
-        onClick: () => navigate("/partner/rider/profile"),
+        onClick: () => navigate("/admin/profile"),
       },
     ],
     [navigate]
@@ -174,7 +183,7 @@ const RiderLayout: React.FC = () => {
                     fontWeight: 600,
                   }}
                 >
-                  <DingdingOutlined /> Rider System
+                  <DingdingOutlined /> Admin System
                 </Title>
               )}
             </div>

@@ -21,8 +21,8 @@ type Props = {
 const MenuKey = [
   { key: "/", label: "Home" },
   { key: "/menu", label: "Menu" },
-  { key: "/restaurant", label: "Restaurants" },
-  { key: "/promotion", label: "Promotions" },
+  { key: "/restaurants", label: "Restaurants" },
+  { key: "/promotions", label: "Promotions" },
   { key: "/help", label: "Help" },
 ];
 

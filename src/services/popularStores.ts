@@ -1,4 +1,4 @@
-import type { PopularStore } from "../types/sections";           // ประเภทข้อมูลที่หน้า Section ใช้
+import type { PopularStore } from "../types";           // ประเภทข้อมูลที่หน้า Section ใช้
 import { getPopularRestaurants } from "./restaurants/index";           // ดึงยอดนิยมจากบริการร้าน (ใช้ฟิกซ์เจอร์เดียวกับ detail)
 
 /** Provider type */

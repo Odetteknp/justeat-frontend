@@ -98,7 +98,7 @@
 /* สีลิงก์เมนู */
 .header .ant-menu-horizontal .ant-menu-item a {
   color: #fff;
-  padding: 0 14px;
+  padding: 0 4px;
 }
 
 /* เอาพื้นหลังสีเข้มของ AntD ตอน hover/active ออก */

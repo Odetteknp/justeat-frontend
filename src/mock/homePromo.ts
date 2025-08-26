@@ -1,5 +1,5 @@
 // src/mocks/homePromo.ts
-import type { HomePromoPayload } from "../types/sections";
+import type { HomePromoPayload } from "../types";
 
 // นำเข้ารูปจาก src/assets (Vite จะให้เป็น URL หลัง build)
 import hero from "../assets/Promo2.png";

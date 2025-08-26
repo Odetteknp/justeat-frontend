@@ -36,7 +36,10 @@ function isBackOnlyPath(pathname: string) {
   return BACK_ONLY_PREFIXES.some((p) => pathname.startsWith(p));
 }
 
-const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false, forceBackOnly = false }) => {
+const AppHeader: React.FC<AppHeaderProps> = ({
+  isLoggedIn = false,
+  forceBackOnly = false,
+}) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
@@ -57,18 +60,18 @@ const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false, forceBackOnly
   // ---------- Back-only Mode ----------
   if (backOnly) {
     return (
-    <Header className="header back-only">
-      <div className="header-container-back">
-        <Button
-          type="text"
-          className="header-back"
-          icon={<ArrowLeftOutlined />}
-          onClick={goBack}
-          aria-label="ย้อนกลับ"
-        />
-      </div>
-    </Header>
-  );
+      <Header className="header back-only">
+        <div className="header-container-back">
+          <Button
+            type="text"
+            className="header-back"
+            icon={<ArrowLeftOutlined />}
+            onClick={goBack}
+            aria-label="ย้อนกลับ"
+          />
+        </div>
+      </Header>
+    );
   }
 
   // ---------- Normal / Partner Mode ----------
@@ -98,7 +101,12 @@ const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false, forceBackOnly
 
         {/* กลาง */}
         {!isPartner ? (
-          <Menu mode="horizontal" theme="dark" className="header-menu" selectedKeys={[selectedTopKey]}>
+          <Menu
+            mode="horizontal"
+            theme="dark"
+            className="header-menu"
+            selectedKeys={[selectedTopKey]}
+          >
             <Menu.Item key="/">
               <Link to="/">Home</Link>
             </Menu.Item>
@@ -116,7 +124,11 @@ const AppHeader: React.FC<AppHeaderProps> = ({ isLoggedIn = false, forceBackOnly
             </Menu.Item>
           </Menu>
         ) : (
-          <Menu mode="horizontal" className="header-menu" selectedKeys={[pathname]}>
+          <Menu
+            mode="horizontal"
+            className="header-menu"
+            selectedKeys={[pathname]}
+          >
             {pathname.startsWith("/partner/rider") ? (
               <>
                 <Menu.Item key="/partner/rider/overview">

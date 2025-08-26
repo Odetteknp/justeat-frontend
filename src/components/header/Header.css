@@ -1,0 +1,229 @@
+:root {
+  --header-bg: #ef664b;
+  /* สีพื้นหลัง header */
+  --header-height: 64px;
+  /* ความสูง header */
+  --container-max: 1440px;
+  /* ความกว้างสูงสุดของคอนเทนต์ */
+}
+
+/* ===== Header base (ต้องแน่ใจว่ามี className="header" บน <Header>) ===== */
+.header.ant-layout-header {
+  background: var(--header-bg);
+  padding-inline: 0;
+  height: var(--header-height);
+  line-height: var(--header-height);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* ===== โหมด back-only (ยังเผื่อใช้ ถ้าอนาคตมี Header ที่เป็นปุ่มย้อนอย่างเดียว) ===== */
+.header.back-only {
+  display: flex;
+  align-items: center;
+  padding-left: 16px;
+  /* ชิดซ้ายของ viewport แบบมีระยะ */
+  padding-right: 16px;
+}
+
+/* ===== Container 3 คอลัมน์: ซ้าย | กลาง | ขวา ===== */
+.header-container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 8px;
+
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+
+/* ฟอนต์รวมใน header */
+.header,
+.header * {
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+/* โลโก้: ใช้รูป */
+.header-logo img {
+  display: block;
+  height: 48px;
+  /* ปรับสูง-ต่ำโลโก้จากตรงนี้ */
+}
+
+/* คอลัมน์ซ้าย/ขวา */
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 12px;
+}
+
+/* ===== ปุ่มย้อนกลับ (ใช้ได้กับ Partner/Back-only) ===== */
+.header-back {
+  color: #fff;
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  /* วงกลม */
+}
+
+.header-back:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.header-back .anticon {
+  font-size: 18px;
+}
+
+/* ===== เมนูกลาง (AntD) ===== */
+.header .ant-menu-horizontal {
+  background: transparent;
+  /* กลืนกับพื้นหลัง header */
+  border-bottom: none;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ลบเส้น ::after ของ AntD */
+.header .ant-menu-horizontal > .ant-menu-item::after,
+.header .ant-menu-horizontal > .ant-menu-submenu::after {
+  border-bottom: none !important;
+}
+
+/* สี/ระยะ ลิงก์ในเมนู
+   NOTE: ถ้าอยากได้ระยะตามไฟล์เดิมจริง ๆ ให้ใช้ 0 14px
+   ตอนนี้คุณมี 0 4px อยู่ → ถ้าแคบไป ให้กลับไป 14 */
+.header .ant-menu-horizontal .ant-menu-item a {
+  color: #fff;
+  padding: 0 14px;
+  /* <-- ปรับตรงนี้ให้ตรงใจ (4 หรือ 14 ก็ได้) */
+}
+
+/* ตัดพื้นหลังเข้มของ AntD ตอน hover/active (ใช้เส้นใต้แทน) */
+.header .ant-menu-horizontal > .ant-menu-item-selected,
+.header .ant-menu-horizontal > .ant-menu-item:hover,
+.header .ant-menu-horizontal > .ant-menu-item-active {
+  background-color: transparent !important;
+}
+
+/* เส้นใต้เมื่อ active (ใส่กับลิงก์เอง คุมสไตล์ง่ายกว่า) */
+.header .ant-menu-item-selected a {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  color: #fff;
+}
+
+/* hover บนลิงก์เมนู */
+.header .ant-menu-horizontal .ant-menu-item a:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
+
+/* ===== คอนโทรลฝั่งขวา ===== */
+.header-search {
+  width: 220px;
+  height: 32px;
+  border-radius: 9999px;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 2px 10px;
+}
+
+.header-partner {
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 9999px;
+  height: 32px;
+  line-height: 32px;
+  padding: 0 10px;
+}
+
+.header-partner:hover {
+  border-color: #fff;
+}
+
+.header-signin {
+  font-weight: 600;
+  background: #fff;
+  color: #000 !important;
+  border: none;
+  height: 32px;
+  border-radius: 9999px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+}
+
+.header-signin:hover {
+  background: #f2f2f2;
+  color: var(--header-bg) !important;
+  /* สะท้อนสีแบรนด์ตอน hover */
+}
+
+/* ลิงก์ทั่วไปใน header */
+.header a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.header a:hover {
+  text-decoration: underline;
+}
+
+/* Hook ธีม partner: ถ้าอยากปรับเฉพาะ partner ใส่ที่นี่ */
+.partner-header.header {
+  /* ตัวอย่าง: background: #d24f3a; */
+}
+
+/* ===== การเข้าถึง (Accessibility) ===== */
+.header a:focus-visible,
+.header .ant-btn:focus-visible,
+.header .ant-input:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.header-avatar-btn {
+  border: none !important;
+  background: #fff !important;
+  color: #000 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* สไตล์ตอน hover */
+.header-avatar-btn:hover {
+  background: #f2f2f2 !important;
+  border: none !important;
+  color: var(--header-bg) !important; /* ใช้สีแบรนด์ของคุณ */
+}
+
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .header .ant-menu-horizontal,
+  .header-search {
+    display: none;
+    /* จอเล็กซ่อนเมนูบนและกล่องค้นหา */
+  }
+}

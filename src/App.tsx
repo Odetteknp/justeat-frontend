@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
-import ProtectedRoute from "./routes/ProtectedRoute";
 import { getToken } from "./services/tokenStore";
 
 import HomePage from "./pages/HomePage";

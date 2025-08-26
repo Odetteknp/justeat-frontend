@@ -304,4 +304,4 @@ const AdminLayout: React.FC = () => {
   );
 };
 
-export default RiderLayout;
+export default AdminLayout;

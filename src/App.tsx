@@ -41,7 +41,8 @@ import CartPage from "./pages/CartPage";
 
 // Payment
 import PaymentLayout from "./layouts/PaymentLayout";
-import Payment from "./pages/payment";
+import Payment from "./pages/payment/payment";
+import PaymentSuccess from "./pages/payment/payment_success";
 
 const isLoggedIn = !!getToken();
 
@@ -103,6 +104,7 @@ export default function App() {
       {/* Payment layout */}
       <Route path="/payment" element={<PaymentLayout />}>
         <Route index element={<Payment />} />
+        <Route path="success" element={<PaymentSuccess />} />
       </Route>
     </Routes>
   );

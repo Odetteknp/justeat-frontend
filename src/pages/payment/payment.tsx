@@ -73,6 +73,14 @@ const Payment: React.FC = () => {
     }, 200);
   };
 
+  const handleSuccess = () => {
+    // โหมด UI อย่างเดียว: แค่โชว์ข้อความเฉย ๆ ไม่ลบข้อมูล/redirect
+    messageApi.success("เดโม UI: กำลังกลับไปหน้าหลัก... (ไม่มีการลบข้อมูล)");
+    setTimeout(() => {
+      navigate("/payment/success");      // ไปหน้าหลัก
+    }, 200);
+  };
+
     useEffect(() => {
         let timer: number | undefined;
         if (qrDataUrl && expireAt) {
@@ -327,7 +335,7 @@ const Payment: React.FC = () => {
                         </Card>
                             <Button
                                 size="large"
-                                onClick={GoMainPage} // กลับหน้าหลัก อันนี้ชั่วคราวไปก่อน
+                                onClick={handleSuccess} // ไปที่หน้าชำระสำเร็จ
                                 style={{ 
                                     height: "48px",
                                     width: "256px",

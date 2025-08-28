@@ -12,6 +12,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   DingdingOutlined,
+  ArrowLeftOutlined
 } from "@ant-design/icons";
 
 import {
@@ -23,6 +24,7 @@ import {
   Typography,
   Avatar,
   Space,
+  Col,
 } from "antd";
 import type { MenuProps } from "antd";
 import logo from "../../assets/LOGO.png";
@@ -56,11 +58,7 @@ const PaymentLayout: React.FC = () => {
   }, [location.pathname]);
 
   const GoMainPage = () => {
-    // โหมด UI อย่างเดียว: แค่โชว์ข้อความเฉย ๆ ไม่ลบข้อมูล/redirect
-    messageApi.success("เดโม UI: กำลังกลับไปหน้าหลัก... (ไม่มีการลบข้อมูล)");
-    setTimeout(() => {
-      navigate("/");      // ไปหน้าหลัก
-    }, 500);
+    setTimeout(() => navigate("/"), 200);
   };
 
   return (
@@ -68,21 +66,31 @@ const PaymentLayout: React.FC = () => {
       {contextHolder}
 
       {/*---Header Section---*/}
-      <Layout>
-        <Header
+      <Layout><Header
+        style={{
+          padding: "0 24px",
+          backgroundColor: "rgb(239, 102, 75)",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",   //  ดันให้อยู่ชิดซ้าย
+          gap: "12px",                    //  เพิ่มระยะห่างระหว่างลูกศรกับข้อความ
+        }}
+      >
+        <Avatar
+          onClick={GoMainPage}
+          size={42}
+          icon={<ArrowLeftOutlined />}
           style={{
-            padding: "0 24px",
-            background: "white",
-            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            cursor: "pointer",
+            backgroundColor: "rgba(255,255,255,0.2)",
           }}
-        >
-          <Title level={4} style={{ margin: 0, color: "rgb(239, 102, 75)" }}>
-            {KEY_TITLE_MAP[selectedKey] || "ชำระเงิน"}
-          </Title>
-        </Header>
+        />
+        <Title level={4} style={{ margin: 0, color: "white" }}>
+          {KEY_TITLE_MAP[selectedKey] || "ข้อมูลการชำระเงิน"}
+        </Title>
+      </Header>
+
 
         <Content style={{ margin: 16, background: "#f5f5f5", overflow: "auto" }}>
           <div

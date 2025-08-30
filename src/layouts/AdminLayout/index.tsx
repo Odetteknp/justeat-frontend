@@ -47,7 +47,7 @@ const KEY_TITLE_MAP: Record<string, string> = {
   adminprofile: "จัดการโปรไฟล์",
 };
 
-const RiderLayout: React.FC = () => {
+const AdminLayout: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [collapsed, setCollapsed] = useState(false);
   const siderRef = React.useRef<any>(null);
@@ -304,4 +304,4 @@ const RiderLayout: React.FC = () => {
   );
 };
 
-export default RiderLayout;
+export default AdminLayout;

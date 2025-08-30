@@ -45,6 +45,11 @@ import RestaurantDetailPage from "./pages/RestaurantDetailPage";
 import CartPage from "./pages/CartPage";
 import ProfileChatPage from "./pages/ProfileChatPage.tsx";
 
+// Payment
+import PaymentLayout from "./layouts/PaymentLayout";
+import Payment from "./pages/payment/payment";
+import PaymentSuccess from "./pages/payment/payment_success";
+
 const isLoggedIn = !!getToken();
 
 export default function App() {
@@ -110,6 +115,12 @@ export default function App() {
         <Route path="rider" element={<AdminRider />} />
         <Route path="restaurant" element={<AdminRestaurants />} />
         <Route path="profile" element={<AdminProfile />} />
+      </Route>
+
+      {/* Payment layout */}
+      <Route path="/payment" element={<PaymentLayout />}>
+        <Route index element={<Payment />} />
+        <Route path="success" element={<PaymentSuccess />} />
       </Route>
     </Routes>
   );

@@ -52,9 +52,24 @@ body {
   font-size: 18px;
 }
 
-/* ปุ่มออกจากระบบ */
+/* ปุ่มไปที่หน้าหลัก */
 .GoMainPage-button:hover {
   background: rgb(240, 140, 120) !important;
+  transform: translateY(-1px);
+  /* ลอยขึ้นเมื่อเอาเม้าไปวาง */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ปุ่ม ตกลง Payment */
+.Payment-ok-button:hover {
+  background: rgb(240, 120, 100) !important;
+  transform: translateY(-1px);
+  /* ลอยขึ้นเมื่อเอาเม้าไปวาง */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ปุ่ม ขาวขอบดำ */
+.white-outline-button:hover {
   transform: translateY(-1px);
   /* ลอยขึ้นเมื่อเอาเม้าไปวาง */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

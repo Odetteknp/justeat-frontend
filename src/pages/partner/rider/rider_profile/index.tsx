@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   Row,
@@ -55,6 +56,12 @@ const RiderProfile: React.FC = () => {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<RiderProfileData>();
+
+  const navigate = useNavigate();
+
+  const GotoPayment = () => {
+  navigate("/payment");
+};
 
   const riderId = useMemo(() => localStorage.getItem("riderId") || "demo-rider", []);
 
@@ -163,6 +170,11 @@ const RiderProfile: React.FC = () => {
             <Text style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: 16 }}>
               แก้ไขข้อมูลส่วนตัวได้ที่นี่
             </Text>
+          </Col>
+          <Col>
+            <Button size="large" onClick={GotoPayment}>
+              Payment
+            </Button>
           </Col>
         </Row>
       </Card>

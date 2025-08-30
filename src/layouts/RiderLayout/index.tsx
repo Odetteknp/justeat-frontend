@@ -102,7 +102,7 @@ const RiderLayout: React.FC = () => {
     messageApi.success("เดโม UI: กำลังกลับไปหน้าหลัก... (ไม่มีการลบข้อมูล)");
     setTimeout(() => {
       navigate("/");      // ไปหน้าหลัก
-    }, 1500);
+    }, 200);
   };
 
   return (

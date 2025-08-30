@@ -1,0 +1,81 @@
+/* wrapper ใหญ่ จัดกึ่งกลาง กว้างเต็มพื้นที่ไม่เกิน 900px */
+.form-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+
+/* Form ให้เต็มความกว้าง container */
+.ant-form {
+  width: 100%;
+}
+
+/* กำหนดให้ Form.Item กว้างเต็ม และเว้นช่องว่าง */
+.form-item {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Input, Select, TextArea ให้เต็มความกว้าง */
+.input-field,
+.ant-input,
+.ant-select-selector,
+.ant-input-textarea {
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-size: 16px;
+  height: 40px;
+}
+
+/* textarea สูงขึ้น */
+.ant-input-textarea {
+  height: auto !important;
+  min-height: 120px;
+  padding: 10px;
+}
+
+/* Upload wrapper จัดกึ่งกลาง */
+.upload-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+/* ปุ่ม Upload */
+.upload-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: center;
+  color: #99301b;
+  font-size: 14px;
+}
+
+/* ข้อความใต้ปุ่ม Upload */
+.upload-text {
+  margin-top: 15px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* ปุ่ม Submit */
+.submit-button {
+  background-color: #ef664b;
+  border: none;
+  font-weight: bold;
+  padding: 20px 25px;
+  font-size: 16px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* container ปุ่ม submit กึ่งกลาง */
+.form-submit-item {
+  text-align: center;
+  margin-top: 50px;
+}

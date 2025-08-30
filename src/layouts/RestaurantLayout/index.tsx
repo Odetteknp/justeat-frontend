@@ -10,6 +10,10 @@ import {
   LeftSquareOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ShoppingCartOutlined,
+  HomeOutlined,
+  AppstoreOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
 
 import {
@@ -34,15 +38,15 @@ const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 const ROUTE_KEY_MAP: Record<string, string> = {
-  "/partner/restaurant": "restaurantdashboard",
+  "/partner/restaurant": "restaurant",
   "/restaurantorder": "restaurantorder",
-  "/partner/restaurantmenu": "restaurantmenu",
+  "/partnerrestaurantmenu": "restaurantmenu",
   "/restaurantsetting": "restaurantsetting",
 };
 
 // --- แก้ KEY_TITLE_MAP ให้ key ตรงชื่อ ---
 const KEY_TITLE_MAP: Record<string, string> = {
-  restaurantdashboard: "แดชบอร์ด",
+  restaurant: "ร้านค้า",
   restaurantorder: "คำสั่งซื้อ",
   restaurantmenu: "เมนูอาหาร",
   restaurantsetting: "ตั้งค่าร้านอาหาร",
@@ -64,38 +68,37 @@ const RestaurantLayout: React.FC = () => {
     const clean = location.pathname.replace(/\/+$/, "");
     if (clean.startsWith("/partner/restaurant/order")) return "restaurantorder";
     if (clean.startsWith("/partner/restaurant/menu")) return "restaurantmenu";
-    if (clean.startsWith("/partner/restaurant/setting")) return "restaurantsetting";
-    if (clean.startsWith("/partner/restaurant")) return "restaurantdashboard";
-    return "restaurantdashboard";
+    if (clean.startsWith("/partner/restaurant/account")) return "restaurantaccount";
+    return "restaurantorder";
   }, [location.pathname]);
 
   // Hover เมื่อเลือกแต่ละหัวข้อ 
   const menuItems: MenuProps["items"] = useMemo(
     () => [
       {
-        key: "restaurantdashboard",
-        icon: <DashboardOutlined style={{ fontSize: 18 }} />,
-        label: "แดชบอร์ด",
-        onClick: () => navigate("/partner/restaurant"), //แก้ path ของ page ตรงนี้
-      },
-      {
-        key: "restaurantworkorder",
-        icon: <HistoryOutlined style={{ fontSize: 18 }} />,
+        key: "restaurantorder",
+        icon: <ShoppingCartOutlined style={{ fontSize: 18 }} />,
         label: "คำสั่งซื้อ",
         onClick: () => navigate("/partner/restaurant/order"),
       },
       {
+        key: "restaurantaccount",
+        icon: <HomeOutlined style={{ fontSize: 18 }} />,
+        label: "ร้านอาหาร",
+        onClick: () => navigate("/partner/restaurant/account"),
+      },
+      {
         key: "restaurantmenu",
-        icon: <IoFastFoodOutline   style={{ fontSize: 18 , color: "rgba(255, 255, 255, 1)"}} />,
+        icon: <AppstoreOutlined   style={{ fontSize: 18 , color: "rgba(255, 255, 255, 1)"}} />,
         label: "เมนูอาหาร",
         onClick: () => navigate("/partner/restaurant/menu"),
       },
-      {
-        key: "restaurantsetting",
-        icon: <UserOutlined style={{ fontSize: 18 }} />,
-        label: "ตั้งค่าร้านอาหาร",
-        onClick: () => navigate("/partner/restaurant/setting"),
-      },
+      // {
+      //   key: "restaurantsetting",
+      //   icon: <SettingOutlined style={{ fontSize: 18 }} />,
+      //   label: "ตั้งค่าร้านอาหาร",
+      //   onClick: () => navigate("/partner/restaurant/account"),
+      // },
     ],
     [navigate]
   );
@@ -105,7 +108,7 @@ const RestaurantLayout: React.FC = () => {
     messageApi.success("เดโม UI: กำลังกลับไปหน้าหลัก... (ไม่มีการลบข้อมูล)");
     setTimeout(() => {
       navigate("/");      // ไปหน้าหลัก
-    }, 1500);
+    }, 200);
   };
 
   return (

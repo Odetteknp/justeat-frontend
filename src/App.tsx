@@ -22,10 +22,9 @@ import RiderProfile from "./pages/partner/rider/rider_profile";
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";
-import RestaurantDashboard from "./pages/partner/restaurant/restaurant";
 import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu";
 import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
-import RestaurantSetting from "./pages/partner/restaurant/restaurant_setting";
+import RestaurantAcc from "./pages/partner/restaurant/restaurant";
 
 // Admin
 import AdminLayout from "./layouts/AdminLayout";
@@ -83,11 +82,16 @@ export default function App() {
       </Route>
 
       {/* Restaurant layout */}
-      <Route path="/partner/restaurant" element={<RestaurantLayout />}>
+      <Route 
+        path="/partner/restaurant" 
+        element={
+          <RestaurantLayout />
+        }
+      >
         <Route index element={<RestaurantOrder />} />
         <Route path="order" element={<RestaurantOrder />} />
         <Route path="menu" element={<RestaurantMenu />} />
-        <Route path="setting" element={<RestaurantSetting />} />
+        <Route path="account" element={<RestaurantAcc />} />
       </Route>
 
       {/* Admin layout */}

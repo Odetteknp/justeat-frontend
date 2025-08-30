@@ -68,7 +68,7 @@ const RestaurantLayout: React.FC = () => {
     const clean = location.pathname.replace(/\/+$/, "");
     if (clean.startsWith("/partner/restaurant/order")) return "restaurantorder";
     if (clean.startsWith("/partner/restaurant/menu")) return "restaurantmenu";
-    if (clean.startsWith("/partner/restaurant/setting")) return "restaurantsetting";
+    if (clean.startsWith("/partner/restaurant/account")) return "restaurantaccount";
     return "restaurantorder";
   }, [location.pathname]);
 
@@ -82,10 +82,10 @@ const RestaurantLayout: React.FC = () => {
         onClick: () => navigate("/partner/restaurant/order"),
       },
       {
-        key: "restaurant",
+        key: "restaurantaccount",
         icon: <HomeOutlined style={{ fontSize: 18 }} />,
         label: "ร้านอาหาร",
-        onClick: () => navigate("/partner/restaurant"),
+        onClick: () => navigate("/partner/restaurant/account"),
       },
       {
         key: "restaurantmenu",
@@ -93,12 +93,12 @@ const RestaurantLayout: React.FC = () => {
         label: "เมนูอาหาร",
         onClick: () => navigate("/partner/restaurant/menu"),
       },
-      {
-        key: "restaurantsetting",
-        icon: <SettingOutlined style={{ fontSize: 18 }} />,
-        label: "ตั้งค่าร้านอาหาร",
-        onClick: () => navigate("/partner/restaurant/setting"),
-      },
+      // {
+      //   key: "restaurantsetting",
+      //   icon: <SettingOutlined style={{ fontSize: 18 }} />,
+      //   label: "ตั้งค่าร้านอาหาร",
+      //   onClick: () => navigate("/partner/restaurant/account"),
+      // },
     ],
     [navigate]
   );

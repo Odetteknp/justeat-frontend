@@ -1,0 +1,131 @@
+/* --------------------------------------------------
+  CSS Variables (ตัวแปร CSS)
+  --------------------------------------------------
+*/
+:root {
+  --primary-color: #FE7018; /* สีหลักสำหรับปุ่มและไอคอน */
+  /* --background-color: #f0f2f5; /* ถูกลบออกเพื่อให้พื้นหลังหน้าจอเป็นค่าเริ่มต้น */
+  --card-background: #fff; /* สีพื้นหลังของ Card - อาจจะเปลี่ยนเป็น transparent ถ้าต้องการ */
+  --text-color-primary: #333; /* สีข้อความหลัก */
+  --text-color-secondary: #888; /* สีข้อความรอง */
+  --border-radius-base: 8px; /* ค่าเริ่มต้นของขอบมน */
+  --box-shadow-base: 0 4px 12px rgba(0, 0, 0, 0.1); /* ค่าเริ่มต้นของเงา */
+}
+
+/* --------------------------------------------------
+  General Layout (โครงสร้างหน้าจอทั่วไป)
+  --------------------------------------------------
+*/
+.promo-management-container {
+  padding: 40px;
+  /* background-color: var(--background-color);  ถูกลบออก */
+  min-height: 100vh;
+}
+
+.promo-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.promo-management-header h2 {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: var(--text-color-primary);
+}
+
+/* --------------------------------------------------
+  Button Overrides (ปรับปรุงปุ่มของ Ant Design)
+  --------------------------------------------------
+*/
+.ant-btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background-color: #e56616; /* สีเมื่อ hover/focus */
+  border-color: #e56616;
+}
+
+.ant-btn-text {
+  padding: 0 10px;
+}
+
+.ant-btn-text.ant-btn-danger {
+  color: #f5222d;
+}
+
+.ant-btn-text .anticon {
+  margin-right: 5px;
+}
+
+/* --------------------------------------------------
+  Promotion Cards (การ์ดโปรโมชั่น)
+  --------------------------------------------------
+*/
+.promo-list {
+  width: 100%;
+}
+
+.promo-card {
+  width: 100%;
+  border-radius: var(--border-radius-base);
+  box-shadow: var(--box-shadow-base);
+  /* background-color: var(--card-background);  ถูกลบออก หรือเปลี่ยนเป็น transparent */
+  background-color: transparent; /* ทำให้พื้นหลังการ์ดโปร่งใส */
+  transition: transform 0.3s ease; /* เพิ่ม transition เพื่อให้มี animation เล็กน้อย */
+}
+
+.promo-card:hover {
+  transform: translateY(-5px); /* ยกการ์ดขึ้นเล็กน้อยเมื่อชี้เมาส์ */
+}
+
+.promo-card-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: var(--border-radius-base);
+  border: 1px solid #eee; /* เพิ่มขอบเล็กน้อยเพื่อความคมชัด */
+}
+
+.promo-name {
+  font-size: 1.2em;
+  color: var(--text-color-primary);
+}
+
+.ant-card-body .ant-typography-secondary {
+  color: var(--text-color-secondary);
+}
+
+/* --------------------------------------------------
+  Modal and Upload (Modal และการอัปโหลดรูป)
+  --------------------------------------------------
+*/
+.ant-upload-list-picture-card-container,
+.ant-upload.ant-upload-select-picture-card {
+  width: 150px;
+  height: 150px;
+  border-radius: var(--border-radius-base);
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+  height: 100%;
+  color: var(--primary-color);
+}
+
+.upload-placeholder .anticon {
+  font-size: 2em;
+}
+
+.upload-placeholder div {
+  margin-top: 8px;
+}

@@ -33,6 +33,8 @@ import AdminReport from "./pages/admin/admin_report";
 import AdminRider from "./pages/admin/admin_rider";
 import AdminRestaurants from "./pages/admin/admin_restaurant";
 import AdminProfile from "./pages/admin/admin_profile";
+import AdminPromotion from "./pages/admin/admin_promotion";
+
 
 // User pages
 import RestaurantDetailPage from "./pages/RestaurantDetailPage";
@@ -102,6 +104,7 @@ export default function App() {
         <Route path="rider" element={<AdminRider />} />
         <Route path="restaurant" element={<AdminRestaurants />} />
         <Route path="profile" element={<AdminProfile />} />
+        <Route path="promotion" element={<AdminPromotion />} />
       </Route>
 
       {/* Payment layout */}

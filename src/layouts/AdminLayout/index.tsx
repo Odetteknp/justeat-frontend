@@ -36,6 +36,8 @@ const ROUTE_KEY_MAP: Record<string, string> = {
   "/admin/rider": "adminrider",
   "/admin/restaurant": "adminrestaurant",
   "/adminprofile": "adminprofile",
+  "/admin/promotions":"adminpromotion",
+
 };
 
 // --- แก้ KEY_TITLE_MAP ให้ key ตรงชื่อ ---
@@ -45,6 +47,8 @@ const KEY_TITLE_MAP: Record<string, string> = {
   adminrider: "จัดการไรเดอร์",
   adminrestaurant: "จัดการร้านอาหาร",
   adminprofile: "จัดการโปรไฟล์",
+  adminpromotion:"จัดการโปรโมชั่น",
+
 };
 
 const AdminLayout: React.FC = () => {
@@ -65,7 +69,9 @@ const AdminLayout: React.FC = () => {
     if (clean.startsWith("/admin/rider")) return "adminrider";
     if (clean.startsWith("/admin/restaurant")) return "adminrestaurant";
     if (clean.startsWith("/admin/profile")) return "adminprofile";
+    if (clean.startsWith("/admin/promotion")) return "adminpromotion";
     if (clean.startsWith("/admin")) return "admindashboard";
+
     return "admindashboard";
   }, [location.pathname]);
 
@@ -95,6 +101,12 @@ const AdminLayout: React.FC = () => {
         icon: <UserOutlined style={{ fontSize: 18 }} />,
         label: "จัดการร้านอาหาร",
         onClick: () => navigate("/admin/restaurant"),
+      },
+      {
+        key: "adminpromotion",
+        icon: <UserOutlined style={{ fontSize: 18 }} />,
+        label: "จัดการโปรโมชั่น",
+        onClick: () => navigate("/admin/promotion"),
       },
       {
         key: "adminprofile",

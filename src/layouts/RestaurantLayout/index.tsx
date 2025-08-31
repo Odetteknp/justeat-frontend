@@ -25,6 +25,8 @@ import {
   Typography,
   Avatar,
   Space,
+  Spin,
+  Result,
 } from "antd";
 import type { MenuProps } from "antd";
 import { 
@@ -32,6 +34,7 @@ import {
   IoFastFoodOutline 
 } from "react-icons/io5"; //npm install react-icons --save    //ไอค่อน อาหาร ของ RestaurantLayout
 
+import { useAuthGuard } from "../../hooks/useAuthGuard";
 import logo from "../../assets/LOGO.png";
 
 const { Header, Content, Sider } = Layout;
@@ -53,6 +56,7 @@ const KEY_TITLE_MAP: Record<string, string> = {
 };
 
 const RestaurantLayout: React.FC = () => {
+  const guard = useAuthGuard(["owner", "admin"]);
   const [messageApi, contextHolder] = message.useMessage();
   const [collapsed, setCollapsed] = useState(false);
   const siderRef = React.useRef<any>(null);
@@ -62,6 +66,43 @@ const RestaurantLayout: React.FC = () => {
   const {
     token: { colorBgContainer },
   } = theme.useToken();
+
+  if (guard.loading) {
+    return (
+      <div style={{ height:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <Spin tip="กำลังตรวจสิทธิ์..." size="large" />
+      </div>
+    )
+  }
+
+  if (!guard.allowed) {
+    // guard.status === 401 => ไม่ได้ล็อกอิน / token หมดอายุ
+    // guard.status === 403 => ล็อกอินแล้วแต่ role ไม่ตรง
+    return (
+      <Result
+        status={guard.status === 401 ? "403" : "403"}
+        title={guard.status === 401 ? "กรุณาเข้าสู่ระบบ" : "ไม่มีสิทธิ์เข้าหน้านี้"}
+        subTitle={
+          guard.status === 401
+            ? "บัญชีของคุณยังไม่เข้าสู่ระบบ หรือเซสชันหมดอายุ"
+            : "หน้านี้อนุญาตเฉพาะเจ้าของร้าน (owner) เท่านั้น"
+        }
+        extra={
+          <Space>
+            {guard.status === 401 ? (
+              <Button type="primary" onClick={() => navigate("/login")}>
+                ไปหน้าเข้าสู่ระบบ
+              </Button>
+            ) : (
+              <Button type="primary" onClick={() => navigate("/")}>
+                กลับหน้าหลัก
+              </Button>
+            )}
+          </Space>
+        }
+      />
+    );
+  }
 
   // --- แก้ selectedKey: เช็คอันเฉพาะเจาะจงก่อน --- // Hover เมื่อเลือกแต่ละหัวข้อ 
   const selectedKey = useMemo(() => {

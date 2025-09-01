@@ -3,17 +3,12 @@ import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import "../../App.css";
 import {
   UserOutlined,
-  DashboardOutlined,
-  HeartOutlined,
-  HistoryOutlined,
-  EditOutlined,
   LeftSquareOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   ShoppingCartOutlined,
   HomeOutlined,
   AppstoreOutlined,
-  SettingOutlined
 } from "@ant-design/icons";
 
 import {
@@ -31,7 +26,6 @@ import {
 import type { MenuProps } from "antd";
 import { 
   IoFastFood, 
-  IoFastFoodOutline 
 } from "react-icons/io5"; //npm install react-icons --save    //ไอค่อน อาหาร ของ RestaurantLayout
 
 import { useAuthGuard } from "../../hooks/useAuthGuard";
@@ -56,7 +50,12 @@ const KEY_TITLE_MAP: Record<string, string> = {
 };
 
 const RestaurantLayout: React.FC = () => {
-  const guard = useAuthGuard(["owner", "admin"]);
+  const guard = useAuthGuard(["owner", "admin"], {
+    autoRedirect: false,
+    redirectDelayMs: 0,
+    redirectTo: { unauthorized: "/login?", forbidden: "/" },
+  });
+
   const [messageApi, contextHolder] = message.useMessage();
   const [collapsed, setCollapsed] = useState(false);
   const siderRef = React.useRef<any>(null);
@@ -66,43 +65,6 @@ const RestaurantLayout: React.FC = () => {
   const {
     token: { colorBgContainer },
   } = theme.useToken();
-
-  if (guard.loading) {
-    return (
-      <div style={{ height:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
-        <Spin tip="กำลังตรวจสิทธิ์..." size="large" />
-      </div>
-    )
-  }
-
-  if (!guard.allowed) {
-    // guard.status === 401 => ไม่ได้ล็อกอิน / token หมดอายุ
-    // guard.status === 403 => ล็อกอินแล้วแต่ role ไม่ตรง
-    return (
-      <Result
-        status={guard.status === 401 ? "403" : "403"}
-        title={guard.status === 401 ? "กรุณาเข้าสู่ระบบ" : "ไม่มีสิทธิ์เข้าหน้านี้"}
-        subTitle={
-          guard.status === 401
-            ? "บัญชีของคุณยังไม่เข้าสู่ระบบ หรือเซสชันหมดอายุ"
-            : "หน้านี้อนุญาตเฉพาะเจ้าของร้าน (owner) เท่านั้น"
-        }
-        extra={
-          <Space>
-            {guard.status === 401 ? (
-              <Button type="primary" onClick={() => navigate("/login")}>
-                ไปหน้าเข้าสู่ระบบ
-              </Button>
-            ) : (
-              <Button type="primary" onClick={() => navigate("/")}>
-                กลับหน้าหลัก
-              </Button>
-            )}
-          </Space>
-        }
-      />
-    );
-  }
 
   // --- แก้ selectedKey: เช็คอันเฉพาะเจาะจงก่อน --- // Hover เมื่อเลือกแต่ละหัวข้อ 
   const selectedKey = useMemo(() => {
@@ -134,12 +96,6 @@ const RestaurantLayout: React.FC = () => {
         label: "เมนูอาหาร",
         onClick: () => navigate("/partner/restaurant/menu"),
       },
-      // {
-      //   key: "restaurantsetting",
-      //   icon: <SettingOutlined style={{ fontSize: 18 }} />,
-      //   label: "ตั้งค่าร้านอาหาร",
-      //   onClick: () => navigate("/partner/restaurant/account"),
-      // },
     ],
     [navigate]
   );
@@ -151,6 +107,47 @@ const RestaurantLayout: React.FC = () => {
       navigate("/");      // ไปหน้าหลัก
     }, 200);
   };
+
+  // เงื่อนไขการแสดงผล หลังจากเรียก hooks 
+  if (guard.loading) {
+    return (
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center0"}}>
+        {contextHolder}
+        <Spin tip="กำลังตรวจสอบสิทธิ์..." size="large"/>
+      </div>
+    )
+  }
+
+  if (!guard.allowed) {
+    const is401 = guard.status === 401;
+    return (
+      <>
+        {contextHolder}
+        <Result
+          status={is401 ? "warning" : "403"}
+          title={is401 ? "กรุณาเข้าสู่ระบบ" : "ไม่มีสิทธิ์เข้าหน้านี้"}
+          subTitle={
+            is401
+              ? "บัญชีของคุณยังไม่เข้าสู่ระบบ หรือเซสชันหมดอายุ"
+              : "หน้านี้อนุญาตเฉพาะ Rider เท่านั้น"
+          }
+          extra={
+            <Space>
+              {is401 ? (
+                <Button type="primary" onClick={() => navigate("/login", { state: { from: location.pathname }})}>
+                  ไปหน้าเข้าสู่ระบบ
+                </Button>
+              ) : (
+                <Button type="primary" onClick={GoMainPage}>
+                  กลับหน้าหลัก
+                </Button>
+              )}
+            </Space>
+          }
+        />
+      </>
+    )
+  }
 
   return (
     <Layout style={{ height: "100vh", overflow: "hidden" }}>

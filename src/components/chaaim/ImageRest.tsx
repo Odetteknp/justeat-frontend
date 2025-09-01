@@ -1,6 +1,7 @@
-import hiwImage from '../assets/image/hiw.png';
+import hiwImage from '../../assets/image/hiw.png';
+import "./ImageRest.css"
 
-const Header = () => {
+const ImageRest = () => {
   return (
       <div className="header">
         <div className="header-image-container">
@@ -14,5 +15,5 @@ const Header = () => {
   );
 };
 
-export default Header;
+export default ImageRest;
 

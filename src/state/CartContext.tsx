@@ -1,14 +1,15 @@
-// src/state/CartContext.tsx
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 import type { MenuItem } from '../data/menuData';
+
+type Selected = Record<string, string[]>;
 
 export type CartLine = {
   id: string;
   item: MenuItem;
   quantity: number;
-  selected: Record<string, string[]>; // optionId -> choiceIds
+  selected: Selected;
   note?: string;
-  total: number; // รวมราคาต่อแถว
+  total: number;
 };
 
 type CartContextType = {
@@ -16,38 +17,86 @@ type CartContextType = {
   addItem: (line: Omit<CartLine, 'id'>) => void;
   removeItem: (id: string) => void;
   clear: () => void;
-  totalAmount: number;
   count: number;
+  totalAmount: number;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
+
+// ✅ ฟังก์ชัน gen id ปลอดภัย
+const genId = () =>
+  (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartLine[]>([]);
 
   const addItem = (line: Omit<CartLine, 'id'>) => {
-    setItems(prev => [{ id: crypto.randomUUID(), ...line }, ...prev]);
+    setItems((prev) => {
+      const sizeChoice = line.selected['size']?.[0] ?? '';
+      const noteText = line.note?.trim() ?? '';
+
+      const idx = prev.findIndex(
+        (x) =>
+          x.item.name === line.item.name &&
+          (x.selected['size']?.[0] ?? '') === sizeChoice &&
+          (x.note?.trim() ?? '') === noteText
+      );
+
+      if (idx >= 0) {
+        const copy = [...prev];
+
+        // ✅ ใช้ unitPrice ล่าสุด
+        const latestUnitPrice = line.total / line.quantity;
+        const newQty = copy[idx].quantity + line.quantity;
+
+        copy[idx] = {
+          ...copy[idx],
+          quantity: newQty,
+          total: latestUnitPrice * newQty,
+          selected: {
+            ...copy[idx].selected,
+            ...line.selected,
+            size: copy[idx].selected['size'], // size ใช้ค่าของเดิม
+          },
+          note: line.note,
+        };
+
+        return copy;
+      }
+
+      return [...prev, { ...line, id: genId() }];
+    });
   };
 
   const removeItem = (id: string) => {
-    setItems(prev => prev.filter(x => x.id !== id));
+    setItems((prev) => prev.filter((x) => x.id !== id));
   };
 
   const clear = () => setItems([]);
 
-  const totalAmount = useMemo(
-    () => items.reduce((s, x) => s + x.total, 0),
+  const count = useMemo(
+    () => items.reduce((sum, x) => sum + x.quantity, 0),
     [items]
   );
 
-  const count = useMemo(() => items.reduce((s, x) => s + x.quantity, 0), [items]);
+  const totalAmount = useMemo(
+    () => items.reduce((sum, x) => sum + x.total, 0),
+    [items]
+  );
 
-  const value = { items, addItem, removeItem, clear, totalAmount, count };
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider
+      value={{ items, addItem, removeItem, clear, count, totalAmount }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 }
 
 export function useCart() {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error('useCart must be used within CartProvider');
+  if (!ctx) throw new Error('useCart must be inside CartProvider');
   return ctx;
 }

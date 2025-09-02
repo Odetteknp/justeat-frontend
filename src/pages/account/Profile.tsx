@@ -3,6 +3,7 @@ import { Form, message } from "antd";
 import type { UploadChangeParam } from "antd/es/upload";
 import { useAuthGuard } from "../../hooks/useAuthGuard";
 import { api } from "../../services/api";
+import { getToken } from "../../services/tokenStore";
 import "./Profile.css";
 
 import PageHeader from "../../components/account/PageHeader";
@@ -28,35 +29,39 @@ type ProfileUpdateDTO = {
   lastName?: string;
   phoneNumber?: string;
   address?: string;
-  avatar?: string;
-}
+  avatarUrl?: string;
+};
 
 export default function ProfilePage() {
-  const { loading, allowed, user, logout } = useAuthGuard([], {
+  const { loading, allowed, user } = useAuthGuard([], {
     autoRedirect: true,
     redirectDelayMs: 0,
     redirectTo: { unauthorized: "/login", forbidden: "/" },
-  })
+  });
   const [form] = Form.useForm<UserProfile>();
   const [submitting, setSubmitting] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
 
-  // useEffect(() => {
-  //   const t = setTimeout(() => {
-  //     form.setFieldsValue(MOCK_USER);
-  //     setAvatarUrl(MOCK_USER.avatar);
-  //     setIsFetching(false);
-  //   }, 600);
-  //   return () => clearTimeout(t);
-  // }, [form]);
+  // ✅ ฟังก์ชันโหลด avatar แบบ blob
+  const fetchAvatar = useCallback(async () => {
+    try {
+      const token = getToken();
+      const res = await api.get("/auth/me/avatar", {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
+      const blobUrl = URL.createObjectURL(res.data);
+      setAvatarUrl(blobUrl);
+    } catch (e) {
+      console.error("โหลด avatar ไม่ได้", e);
+    }
+  }, []);
 
   useEffect(() => {
     if (loading) return;
+    if (!allowed) return;
 
-    if (!allowed) {
-      return;
-    }
     const initial: UserProfile = {
       username: (user as any)?.username ?? MOCK_USER.username,
       email: user?.email ?? "",
@@ -65,32 +70,45 @@ export default function ProfilePage() {
       phoneNumber: user?.phoneNumber ?? "",
       address: user?.address ?? "",
       role: user?.role ?? "customer",
-      avatar: (user as any)?.avatar ?? MOCK_USER.avatar,
-    }
-    
+    };
     form.setFieldsValue(initial as any);
-    setAvatarUrl(initial.avatar)
-    setIsFetching(false)
-  }, [loading, allowed, user, form])
+
+    if (user?.avatarUrl) {
+      fetchAvatar(); // ✅ โหลด blob แทนการสร้าง URL string
+    } else {
+      setAvatarUrl(MOCK_USER.avatar);
+    }
+
+    setIsFetching(false);
+  }, [loading, allowed, user, form, fetchAvatar]);
 
   useEffect(() => {
     return () => {
-      if (avatarUrl?.startsWith("blob: ")) URL.revokeObjectURL(avatarUrl)
-    }
-  }, [avatarUrl])
+      if (avatarUrl?.startsWith("blob:")) URL.revokeObjectURL(avatarUrl);
+    };
+  }, [avatarUrl]);
 
-  const handleAvatarChange = useCallback((info: UploadChangeParam) => {
+  // อัปโหลด Avatar
+  const handleAvatarChange = useCallback(async (info: UploadChangeParam) => {
     const file = info.file.originFileObj as File | undefined;
     if (!file) return;
 
-    const nextUrl = URL.createObjectURL(file);
-    setAvatarUrl((prev) => {
-      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev)
-        return nextUrl
-    });
-    message.success("เปลี่ยนรูปโปรไฟล์เรียบร้อย ✅");
-  }, []);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
 
+      await api.post("/auth/me/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      await fetchAvatar(); // ✅ โหลดใหม่หลังอัปโหลด
+      message.success("อัปโหลดรูปโปรไฟล์เรียบร้อย");
+    } catch (e: any) {
+      message.error(e?.response?.data?.error || "อัปโหลดไม่สำเร็จ");
+    }
+  }, [fetchAvatar]);
+
+  // บันทึกข้อมูลอื่น
   const handleSave = useCallback(
     async (values: UserProfile) => {
       setSubmitting(true);
@@ -100,22 +118,33 @@ export default function ProfilePage() {
           lastName: values.lastName,
           phoneNumber: values.phoneNumber,
           address: values.address,
-          avatar: avatarUrl, // ถ้า BE ต้องการเป็นไฟล์ ให้เปลี่ยนเป็น multipart/form-data
         };
 
-        // ตัวอย่าง: ลองยิงจริงก็ได้ (ถ้าพร้อม)
-        // await api.patch("/auth/me", payload);
+        await api.patch("/auth/me", payload);
+        const refreshed = await api.get("/auth/me");
+        form.setFieldsValue({
+          email: refreshed.data.user.email,
+          firstName: refreshed.data.user.firstName,
+          lastName: refreshed.data.user.lastName,
+          phoneNumber: refreshed.data.user.phoneNumber,
+          address: refreshed.data.user.address,
+          role: refreshed.data.user.role,
+        });
 
-        console.log("payload:", payload);
-        message.success("บันทึกโปรไฟล์เรียบร้อย ✅");
+        if (refreshed.data.user.avatarUrl) {
+          await fetchAvatar(); // ✅ โหลด blob ใหม่หลังบันทึก
+        }
+        message.success("บันทึกโปรไฟล์เรียบร้อย");
       } catch (e: any) {
-        message.error(e?.response?.data?.error || "บันทึกไม่สำเร็จ ❌ กรุณาลองใหม่อีกครั้ง");
+        message.error(e?.response?.data?.error || "บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
       } finally {
         setSubmitting(false);
       }
-    },[avatarUrl]);
+    },
+    [form, fetchAvatar]
+  );
 
-  if(!allowed) return null;
+  if (!allowed) return null;
 
   return (
     <div className="profile-page">
@@ -123,7 +152,7 @@ export default function ProfilePage() {
       <div className="content-grid">
         <AvatarCard
           isLoading={isFetching}
-          avatarUrl={avatarUrl}
+          avatarUrl={avatarUrl || MOCK_USER.avatar}
           role={form.getFieldValue("role")}
           email={form.getFieldValue("email")}
           onChangeAvatar={handleAvatarChange}

@@ -1,13 +1,10 @@
 import React, { useMemo, useState } from "react";
-import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "../../App.css";
 import {
   UserOutlined,
   DashboardOutlined,
-  PlayCircleOutlined,
-  HeartOutlined,
   HistoryOutlined,
-  EditOutlined,
   LeftSquareOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -23,8 +20,11 @@ import {
   Typography,
   Avatar,
   Space,
+  Spin,
+  Result,
 } from "antd";
 import type { MenuProps } from "antd";
+import { useAuthGuard } from "../../hooks/useAuthGuard";
 import logo from "../../assets/LOGO.png";
 
 const { Header, Content, Sider } = Layout;
@@ -36,6 +36,8 @@ const ROUTE_KEY_MAP: Record<string, string> = {
   "/admin/rider": "adminrider",
   "/admin/restaurant": "adminrestaurant",
   "/adminprofile": "adminprofile",
+  "/admin/promotions":"adminpromotion",
+
 };
 
 // --- แก้ KEY_TITLE_MAP ให้ key ตรงชื่อ ---
@@ -45,9 +47,12 @@ const KEY_TITLE_MAP: Record<string, string> = {
   adminrider: "จัดการไรเดอร์",
   adminrestaurant: "จัดการร้านอาหาร",
   adminprofile: "จัดการโปรไฟล์",
+  adminpromotion:"จัดการโปรโมชั่น",
+
 };
 
-const RiderLayout: React.FC = () => {
+const AdminLayout: React.FC = () => {
+  const guard = useAuthGuard(["admin"]);
   const [messageApi, contextHolder] = message.useMessage();
   const [collapsed, setCollapsed] = useState(false);
   const siderRef = React.useRef<any>(null);
@@ -58,6 +63,45 @@ const RiderLayout: React.FC = () => {
     token: { colorBgContainer },
   } = theme.useToken();
 
+  // ---------- EARLY RETURNS ----------
+  if (guard.loading) {
+    return (
+      <div style={{height:"100vh",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <Spin tip="กำลังตรวจสิทธิ์..." size="large" />
+      </div>
+    );
+  }
+
+  if (!guard.allowed) {
+    // guard.status === 401 => ไม่ได้ล็อกอิน / token หมดอายุ
+    // guard.status === 403 => ล็อกอินแล้วแต่ role ไม่ตรง
+    return (
+      <Result
+        status={guard.status === 401 ? "403" : "403"}
+        title={guard.status === 401 ? "กรุณาเข้าสู่ระบบ" : "ไม่มีสิทธิ์เข้าหน้านี้"}
+        subTitle={
+          guard.status === 401
+            ? "บัญชีของคุณยังไม่เข้าสู่ระบบ หรือเซสชันหมดอายุ"
+            : "หน้านี้อนุญาตเฉพาะผู้ดูแลระบบ (admin) เท่านั้น"
+        }
+        extra={
+          <Space>
+            {guard.status === 401 ? (
+              <Button type="primary" onClick={() => navigate("/login")}>
+                ไปหน้าเข้าสู่ระบบ
+              </Button>
+            ) : (
+              <Button type="primary" onClick={() => navigate("/")}>
+                กลับหน้าหลัก
+              </Button>
+            )}
+          </Space>
+        }
+      />
+    );
+  }
+  // ---------- /EARLY RETURNS ----------
+
   // --- แก้ selectedKey: เช็คอันเฉพาะเจาะจงก่อน ---
   const selectedKey = useMemo(() => {
     const clean = location.pathname.replace(/\/+$/, "");
@@ -65,7 +109,9 @@ const RiderLayout: React.FC = () => {
     if (clean.startsWith("/admin/rider")) return "adminrider";
     if (clean.startsWith("/admin/restaurant")) return "adminrestaurant";
     if (clean.startsWith("/admin/profile")) return "adminprofile";
+    if (clean.startsWith("/admin/promotion")) return "adminpromotion";
     if (clean.startsWith("/admin")) return "admindashboard";
+
     return "admindashboard";
   }, [location.pathname]);
 
@@ -95,6 +141,12 @@ const RiderLayout: React.FC = () => {
         icon: <UserOutlined style={{ fontSize: 18 }} />,
         label: "จัดการร้านอาหาร",
         onClick: () => navigate("/admin/restaurant"),
+      },
+      {
+        key: "adminpromotion",
+        icon: <UserOutlined style={{ fontSize: 18 }} />,
+        label: "จัดการโปรโมชั่น",
+        onClick: () => navigate("/admin/promotion"),
       },
       {
         key: "adminprofile",
@@ -304,4 +356,4 @@ const RiderLayout: React.FC = () => {
   );
 };
 
-export default RiderLayout;
+export default AdminLayout;

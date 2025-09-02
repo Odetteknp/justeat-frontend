@@ -11,6 +11,11 @@ import PromoPage from "./pages/PromotionPage";
 
 import LoginPage from "./pages/login/Login";
 import RegisterPage from "./pages/register/Register";
+import ProfileLayout from "./layouts/ProfileLayout/index.tsx";
+import ProfilePage from "./pages/account/Profile.tsx";
+import ProfileOrderPage from "./pages/ProfileOrder.tsx";
+import ProfilePromoPage from "./pages/ProfilePromo.tsx";
+import RestaurantMenuPage from "./components/chaaim/RestaurantMenu.tsx";
 
 // Rider
 import { RiderProvider } from "./context/RiderContext";
@@ -22,10 +27,9 @@ import RiderProfile from "./pages/partner/rider/rider_profile";
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";
-import RestaurantDashboard from "./pages/partner/restaurant/dashboard";
 import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu";
 import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
-import RestaurantSetting from "./pages/partner/restaurant/restaurant_setting";
+import RestaurantAcc from "./pages/partner/restaurant/restaurant";
 
 // Admin
 import AdminLayout from "./layouts/AdminLayout";
@@ -34,10 +38,18 @@ import AdminReport from "./pages/admin/admin_report";
 import AdminRider from "./pages/admin/admin_rider";
 import AdminRestaurants from "./pages/admin/admin_restaurant";
 import AdminProfile from "./pages/admin/admin_profile";
+import AdminPromotion from "./pages/admin/admin_promotion";
+
 
 // User pages
 import RestaurantDetailPage from "./pages/RestaurantDetailPage";
 import CartPage from "./pages/CartPage";
+import ProfileChatPage from "./pages/ProfileChatPage.tsx";
+
+// Payment
+import PaymentLayout from "./layouts/PaymentLayout";
+import Payment from "./pages/payment/payment";
+import PaymentSuccess from "./pages/payment/payment_success";
 
 const isLoggedIn = !!getToken();
 
@@ -55,10 +67,20 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/restaurants" element={<RestPage />} />
-        <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
+        <Route path="/restaurants/:id" element={<RestaurantMenuPage />} />
         <Route path="/promotions" element={<PromoPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/help" element={<HelpPage />} />
+      </Route>
+
+      <Route
+        path="/profile"
+        element={<ProfileLayout />}
+      >
+        <Route index element={<ProfilePage/>}/>
+        <Route path="order" element={<ProfileOrderPage/>}/>
+        <Route path="promotion" element={<ProfilePromoPage/>}/>
+        <Route path="chat" element={<ProfileChatPage/>}/>
       </Route>
 
       {/* Rider layout */}
@@ -78,12 +100,16 @@ export default function App() {
       </Route>
 
       {/* Restaurant layout */}
-      <Route path="/partner/restaurant" element={<RestaurantLayout />}>
-        <Route index element={<RestaurantDashboard />} />
-        <Route path="dashboard" element={<RestaurantDashboard />} />
+      <Route 
+        path="/partner/restaurant" 
+        element={
+          <RestaurantLayout />
+        }
+      >
+        <Route index element={<RestaurantOrder />} />
         <Route path="order" element={<RestaurantOrder />} />
         <Route path="menu" element={<RestaurantMenu />} />
-        <Route path="setting" element={<RestaurantSetting />} />
+        <Route path="account" element={<RestaurantAcc />} />
       </Route>
 
       {/* Admin layout */}
@@ -94,6 +120,13 @@ export default function App() {
         <Route path="rider" element={<AdminRider />} />
         <Route path="restaurant" element={<AdminRestaurants />} />
         <Route path="profile" element={<AdminProfile />} />
+        <Route path="promotion" element={<AdminPromotion />} />
+      </Route>
+
+      {/* Payment layout */}
+      <Route path="/payment" element={<PaymentLayout />}>
+        <Route index element={<Payment />} />
+        <Route path="success" element={<PaymentSuccess />} />
       </Route>
     </Routes>
   );

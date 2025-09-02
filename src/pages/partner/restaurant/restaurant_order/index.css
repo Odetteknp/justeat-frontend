@@ -1,0 +1,66 @@
+/* ตาราง */
+.ant-table-thead > tr > th {
+  background-color: #f0f2f5 !important; /* สีพื้นหลังหัวตาราง */
+  color: #333; /* สีตัวอักษรหัวตาราง */
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr > td {
+  background-color: #fff;
+  color: #444; /* สีตัวหนังสือในตาราง */
+}
+
+/* ปุ่มแก้ไข */
+button.ant-btn-link {
+  color: #99301b !important; /* สีน้ำเงิน */
+  font-weight: 600;
+}
+
+button.ant-btn-link:hover {
+  color: #40a9ff;
+  text-decoration: underline;
+}
+
+/* ปุ่มลบ */
+button.ant-btn-link.ant-btn-dangerous {
+  color: red !important; /* สีแดง */
+  font-weight: 700;
+}
+
+button.ant-btn-link.ant-btn-dangerous:hover {
+  color: #ff7875;
+  text-decoration: underline;
+}
+
+/* ปุ่มยืนยันคำสั่งซื้อ */
+button.ant-btn-primary {
+  background-color: #f88771; /* สีเขียว */
+  border-color: #f88771;
+  font-weight: 700;
+}
+
+button.ant-btn-primary:hover,
+button.ant-btn-primary:focus {
+  background-color: #73d13d;
+  border-color: #73d13d;
+}
+
+/* กรอบการ์ด */
+.order-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* คำสั่งซื้อเสร็จสิ้น (ปุ่ม disabled) */
+button[disabled] {
+  color: rgba(0, 0, 0, 0.25);
+  background-color: #f5f5f5;
+  border-color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+/* เพิ่มช่องว่างปุ่มใน Card */
+.ant-card-extra > .ant-space > * {
+  margin-left: 8px;
+}
+

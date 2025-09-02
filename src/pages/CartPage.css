@@ -1,0 +1,202 @@
+/* src/pages/CartPage.module.css */
+
+/* Layout พื้นฐาน */
+.container {
+  max-width: 1100px;
+  margin: 16px auto;
+  padding: 0 16px;
+}
+
+.pageTitle {
+  margin-bottom: 12px;
+}
+
+.emptyText {
+  color: #777;
+}
+
+/* Grid ซ้าย-ขวา */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 16px;
+}
+
+/* คอลัมน์ขวาติดขอบบน */
+.rightCol {
+  position: sticky;
+  top: 16px;
+  align-self: start;
+}
+
+/* Card */
+.card {
+  border: 1px solid #eee;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+  margin-bottom: 16px;
+}
+
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+/* ปุ่ม */
+.btnPrimary {
+  border: 0;
+  background: #111;
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btnDanger {
+  border: 0;
+  background: #e53935;
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btnPlain {
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* ปุ่ม Checkout เต็มความกว้าง + สถานะ disabled ผ่าน opacity */
+.checkoutBtn {
+  width: 100%;
+}
+.checkoutBtn[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Input */
+.input {
+  flex: 1;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+.textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* List / รายการตะกร้า */
+.listReset {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cartLine {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.itemImage {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.lineBody {
+  flex: 1;
+}
+
+.itemName {
+  font-weight: 600;
+}
+
+.itemMeta {
+  font-size: 12px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.itemMetaChip {
+  margin-right: 6px;
+}
+
+.qty {
+  white-space: nowrap;
+}
+
+.lineTotal {
+  width: 100px;
+  text-align: right;
+  font-weight: 600;
+}
+
+/* ส่วนสรุปราคา */
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+
+.hr {
+  height: 1px;
+  background: #eee;
+  margin: 10px 0;
+}
+
+.totalLabel {
+  font-weight: 700;
+}
+
+.totalValue {
+  font-weight: 700;
+}
+
+/* ตัวช่วย layout ย่อยๆ */
+.blockTitle {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.inlineFields {
+  display: flex;
+  gap: 8px;
+}
+
+.vStack {
+  display: grid;
+  gap: 8px;
+}
+
+.radioRow {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.actionsRow {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+/* ข้อความช่วยเหลือใต้ input */
+.helpText {
+  font-size: 12px;
+  color: #888;
+  margin-top: 6px;
+}

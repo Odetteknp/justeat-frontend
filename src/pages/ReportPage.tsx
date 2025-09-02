@@ -7,9 +7,13 @@ const { Content } = Layout;
 const { Option } = Select;
 const { TextArea } = Input;
 
-const normFile = (e: any) => Array.isArray(e) ? e : e?.fileList;
+const normFile = (e: any) => {
+  if (Array.isArray(e)) {
+    return e;
+  }
+  return e?.fileList;
+};
 
-// Mapping id -> type_name
 const issueTypeMap: Record<number, string> = {
   1: "ได้รับอาหารไม่ครบ",
   2: "จัดส่งล่าช้า",
@@ -19,34 +23,43 @@ const issueTypeMap: Record<number, string> = {
 
 const ReportPage = () => {
   const [form] = Form.useForm();
-  const [issues, setIssues] = useState<any[]>([]); // สำหรับแสดง report
+  const [issues, setIssues] = useState<any[]>([]);
 
   const handleFinish = async (values: any) => {
-    // แปลง upload เป็นชื่อไฟล์
-    if (values.upload) {
-      values.Photo = values.upload.map((f: any) => f.name).join(",");
-    }
-    delete values.upload;
+    const token = localStorage.getItem("token");
 
-    // เพิ่ม title จาก IssueTypeID
-    values.Title = issueTypeMap[values.IssueTypeID];
+    const formData = new FormData();
+    formData.append("name", values.name || "");
+    formData.append("email", values.email || "");
+    formData.append("phoneNumber", values.phoneNumber || "");
+    formData.append("description", values.description || "");
+    formData.append("issueTypeId", values.issueTypeId?.toString() || "");
+
+    // แน่ใจว่า upload มีและเป็น array
+    if (values.upload && Array.isArray(values.upload)) {
+      values.upload.forEach((file: any) => {
+        if (file.originFileObj) {
+          formData.append("pictures", file.originFileObj);  // ชื่อ field ต้องตรงกับ backend
+        }
+      });
+    }
 
     try {
-      const response = await fetch("http://localhost:8081/api/report", {
+      const response = await fetch("http://localhost:8000/reports", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        headers: {
+          Authorization: `Bearer ${token}`, // หลีกเลี่ยงการตั้ง Content-Type เพราะ browser ตั้งให้เอง
+        },
+        body: formData,
       });
 
       if (response.ok) {
         alert("รายงานปัญหาเรียบร้อยค่ะ");
         form.resetFields();
-
-        // สำหรับตัวอย่าง เพิ่ม issue ลง state เพื่อแสดง report
         setIssues(prev => [...prev, values]);
       } else {
         const data = await response.json();
-        alert("เกิดข้อผิดพลาด: " + data.error);
+        alert("เกิดข้อผิดพลาด: " + (data.error || "ไม่ทราบสาเหตุ"));
       }
     } catch (error) {
       console.error(error);
@@ -63,43 +76,36 @@ const ReportPage = () => {
 
         <Card className="card-report">
           <Form layout="vertical" form={form} onFinish={handleFinish}>
-            {/* Select ส่ง id แทนชื่อ */}
-            <Form.Item label="Title" name="IssueTypeID" rules={[{ required: true, message: "กรุณาเลือกหัวข้อ" }]}>
+            <Form.Item label="Title" name="issueTypeId" rules={[{ required: true, message: "กรุณาเลือกหัวข้อ" }]}>
               <Select placeholder="Select title" className="input-field">
                 {Object.entries(issueTypeMap).map(([id, name]) => (
-                  <Option key={id} value={Number(id)}>
-                    {name}
-                  </Option>
+                  <Option key={id} value={Number(id)}>{name}</Option>
                 ))}
               </Select>
             </Form.Item>
 
-            <Form.Item label="Description" name="Description" rules={[{ required: true, message: "กรุณากรอกคำอธิบายปัญหา" }]}>
+            <Form.Item label="Description" name="description" rules={[{ required: true, message: "กรุณากรอกคำอธิบายปัญหา" }]}>
               <TextArea rows={5} />
             </Form.Item>
 
             <Form.Item label="Add Photo" name="upload" valuePropName="fileList" getValueFromEvent={normFile}>
-              <Upload listType="picture-card" maxCount={5}>
-                <button type="button" className="upload-btn">
+              <Upload listType="picture-card" maxCount={5} beforeUpload={() => false /* prevent auto upload */}>
+                <div>
                   <PlusOutlined />
-                  <div className="upload-text">Upload Now!</div>
-                </button>
+                  <div style={{ marginTop: 8 }}>Upload Now!</div>
+                </div>
               </Upload>
             </Form.Item>
 
-            <Form.Item label="Order ID" name="OrderID">
+            <Form.Item label="Name" name="name">
               <Input className="input-field" />
             </Form.Item>
 
-            <Form.Item label="Name" name="Name">
+            <Form.Item label="Email" name="email">
               <Input className="input-field" />
             </Form.Item>
 
-            <Form.Item label="Email" name="Email">
-              <Input className="input-field" />
-            </Form.Item>
-
-            <Form.Item label="Phone Number" name="PhoneNumber">
+            <Form.Item label="Phone Number" name="phoneNumber">
               <Input className="input-field" />
             </Form.Item>
 
@@ -111,15 +117,13 @@ const ReportPage = () => {
           </Form>
         </Card>
 
-        {/* ตัวอย่างแสดง report */}
         {issues.length > 0 && (
           <Card className="card-report" style={{ marginTop: 20 }}>
             <h3>Issue Report</h3>
             {issues.map((issue, index) => (
               <div key={index}>
-                <strong>OrderID:</strong> {issue.OrderID} | 
-                <strong> Title:</strong> {issue.Title} | 
-                <strong> Description:</strong> {issue.Description}
+                <strong>Title:</strong> {issueTypeMap[issue.issueTypeId]} |
+                <strong> Description:</strong> {issue.description}
               </div>
             ))}
           </Card>

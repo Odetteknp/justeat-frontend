@@ -1,32 +1,42 @@
-import { saveToken, clearToken } from "../tokenStore";
-import type { AuthProvider, LoginInput, SignupInput, LoginResult, SignupResult } from "./types";
-import { ApiAuthProvider } from "./providers/api";
-import { MockAuthProvider } from "./providers/mock";
+// src/services/auth/index.ts
+import { api } from "../apiClient"; // ⚠️ ชี้มาที่ไฟล์ instance ที่คุณมีจริง
+import { clearToken } from "../tokenStore";
 
-const useApi = import.meta.env.VITE_USE_API === "true";
-const provider: AuthProvider = useApi ? new ApiAuthProvider() : new MockAuthProvider();
+// กำหนด type ตาม backend จริงของคุณ
+export type User = { id: number|string; email: string; role: string };
+export type LoginResponse = { token?: string; user: User };
+export type RefreshResponse = { token: string };
 
-/** ล็อกอิน: รองรับ remember + ยืดหยุ่นต่อ cookie/bearer */
-export async function login(input: LoginInput, signal?: AbortSignal): Promise<LoginResult> {
-  const res = await provider.login(input, signal);
-  // ถ้า backend ใช้ cookie: token อาจไม่มี -> ไม่ต้อง saveToken
-  if (res.token) saveToken(res.token, input.remember);
-  return res;
-}
+// ---- ฟังก์ชันเดี่ยว (ให้ไฟล์เดิมที่ import { login } ยังทำงานได้) ----
+export const register = (body: {
+  email: string; password: string; firstName: string; lastName: string; phoneNumber?: string;
+}) => api.post("/auth/register", body).then(r => r.data);
 
-export async function signup(input: SignupInput, signal?: AbortSignal): Promise<SignupResult> {
-  return provider.signup ? provider.signup(input, signal) : Promise.reject(new Error("Not implemented"));
-}
+export const login = (body: { email: string; password: string }) =>
+  api.post<LoginResponse>("/auth/login", body).then(r => r.data);
 
-export async function logout(signal?: AbortSignal): Promise<void> {
+export const me = () =>
+  api.get<User>("/auth/me").then(r => r.data);
+
+export const refresh = () =>
+  api.post<{ token: string }>("/auth/refresh").then(r => r.data);
+
+export const logout = async () => {
   try {
-    if (provider.logout) await provider.logout(signal);
+    // ถ้า backend มี endpoint นี้ให้เปิดใช้
+    await api.post("/auth/logout");
+  } catch {
+    // ไม่ต้อง throw — เคลียร์ฝั่ง client ต่อไป
   } finally {
     clearToken();
+    // ถ้าตั้ง Authorization ไว้ที่ instance ให้ล้างด้วย
+    if ((api as any)?.defaults?.headers?.common?.Authorization) {
+      delete (api as any).defaults.headers.common.Authorization;
+    }
   }
-}
+  return true;
+};
 
-export async function me(signal?: AbortSignal) {
-  if (!provider.me) throw new Error("Not implemented");
-  return provider.me(signal);
-}
+// ---- รวมเป็น object สำหรับผู้ที่อยากใช้แบบ auth.login ----
+export const auth = { register, login, me, refresh, logout };
+export default auth; // จะ import auth จาก default ก็ได้

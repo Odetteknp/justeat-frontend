@@ -10,6 +10,10 @@ import {
   LeftSquareOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  ShoppingCartOutlined,
+  HomeOutlined,
+  AppstoreOutlined,
+  SettingOutlined
 } from "@ant-design/icons";
 
 import {
@@ -21,6 +25,8 @@ import {
   Typography,
   Avatar,
   Space,
+  Spin,
+  Result,
 } from "antd";
 import type { MenuProps } from "antd";
 import { 
@@ -28,27 +34,29 @@ import {
   IoFastFoodOutline 
 } from "react-icons/io5"; //npm install react-icons --save    //ไอค่อน อาหาร ของ RestaurantLayout
 
+import { useAuthGuard } from "../../hooks/useAuthGuard";
 import logo from "../../assets/LOGO.png";
 
 const { Header, Content, Sider } = Layout;
 const { Title, Text } = Typography;
 
 const ROUTE_KEY_MAP: Record<string, string> = {
-  "/partner/restaurant": "restaurantdashboard",
+  "/partner/restaurant": "restaurant",
   "/restaurantorder": "restaurantorder",
-  "/partner/restaurantmenu": "restaurantmenu",
+  "/partnerrestaurantmenu": "restaurantmenu",
   "/restaurantsetting": "restaurantsetting",
 };
 
 // --- แก้ KEY_TITLE_MAP ให้ key ตรงชื่อ ---
 const KEY_TITLE_MAP: Record<string, string> = {
-  restaurantdashboard: "แดชบอร์ด",
+  restaurant: "ร้านค้า",
   restaurantorder: "คำสั่งซื้อ",
   restaurantmenu: "เมนูอาหาร",
   restaurantsetting: "ตั้งค่าร้านอาหาร",
 };
 
 const RestaurantLayout: React.FC = () => {
+  const guard = useAuthGuard(["owner", "admin"]);
   const [messageApi, contextHolder] = message.useMessage();
   const [collapsed, setCollapsed] = useState(false);
   const siderRef = React.useRef<any>(null);
@@ -59,43 +67,79 @@ const RestaurantLayout: React.FC = () => {
     token: { colorBgContainer },
   } = theme.useToken();
 
+  if (guard.loading) {
+    return (
+      <div style={{ height:"100vh", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <Spin tip="กำลังตรวจสิทธิ์..." size="large" />
+      </div>
+    )
+  }
+
+  if (!guard.allowed) {
+    // guard.status === 401 => ไม่ได้ล็อกอิน / token หมดอายุ
+    // guard.status === 403 => ล็อกอินแล้วแต่ role ไม่ตรง
+    return (
+      <Result
+        status={guard.status === 401 ? "403" : "403"}
+        title={guard.status === 401 ? "กรุณาเข้าสู่ระบบ" : "ไม่มีสิทธิ์เข้าหน้านี้"}
+        subTitle={
+          guard.status === 401
+            ? "บัญชีของคุณยังไม่เข้าสู่ระบบ หรือเซสชันหมดอายุ"
+            : "หน้านี้อนุญาตเฉพาะเจ้าของร้าน (owner) เท่านั้น"
+        }
+        extra={
+          <Space>
+            {guard.status === 401 ? (
+              <Button type="primary" onClick={() => navigate("/login")}>
+                ไปหน้าเข้าสู่ระบบ
+              </Button>
+            ) : (
+              <Button type="primary" onClick={() => navigate("/")}>
+                กลับหน้าหลัก
+              </Button>
+            )}
+          </Space>
+        }
+      />
+    );
+  }
+
   // --- แก้ selectedKey: เช็คอันเฉพาะเจาะจงก่อน --- // Hover เมื่อเลือกแต่ละหัวข้อ 
   const selectedKey = useMemo(() => {
     const clean = location.pathname.replace(/\/+$/, "");
     if (clean.startsWith("/partner/restaurant/order")) return "restaurantorder";
     if (clean.startsWith("/partner/restaurant/menu")) return "restaurantmenu";
-    if (clean.startsWith("/partner/restaurant/setting")) return "restaurantsetting";
-    if (clean.startsWith("/partner/restaurant")) return "restaurantdashboard";
-    return "restaurantdashboard";
+    if (clean.startsWith("/partner/restaurant/account")) return "restaurantaccount";
+    return "restaurantorder";
   }, [location.pathname]);
 
   // Hover เมื่อเลือกแต่ละหัวข้อ 
   const menuItems: MenuProps["items"] = useMemo(
     () => [
       {
-        key: "restaurantdashboard",
-        icon: <DashboardOutlined style={{ fontSize: 18 }} />,
-        label: "แดชบอร์ด",
-        onClick: () => navigate("/partner/restaurant"), //แก้ path ของ page ตรงนี้
-      },
-      {
-        key: "restaurantworkorder",
-        icon: <HistoryOutlined style={{ fontSize: 18 }} />,
+        key: "restaurantorder",
+        icon: <ShoppingCartOutlined style={{ fontSize: 18 }} />,
         label: "คำสั่งซื้อ",
         onClick: () => navigate("/partner/restaurant/order"),
       },
       {
+        key: "restaurantaccount",
+        icon: <HomeOutlined style={{ fontSize: 18 }} />,
+        label: "ร้านอาหาร",
+        onClick: () => navigate("/partner/restaurant/account"),
+      },
+      {
         key: "restaurantmenu",
-        icon: <IoFastFoodOutline   style={{ fontSize: 18 , color: "rgba(255, 255, 255, 1)"}} />,
+        icon: <AppstoreOutlined   style={{ fontSize: 18 , color: "rgba(255, 255, 255, 1)"}} />,
         label: "เมนูอาหาร",
         onClick: () => navigate("/partner/restaurant/menu"),
       },
-      {
-        key: "restaurantsetting",
-        icon: <UserOutlined style={{ fontSize: 18 }} />,
-        label: "ตั้งค่าร้านอาหาร",
-        onClick: () => navigate("/partner/restaurant/setting"),
-      },
+      // {
+      //   key: "restaurantsetting",
+      //   icon: <SettingOutlined style={{ fontSize: 18 }} />,
+      //   label: "ตั้งค่าร้านอาหาร",
+      //   onClick: () => navigate("/partner/restaurant/account"),
+      // },
     ],
     [navigate]
   );
@@ -105,7 +149,7 @@ const RestaurantLayout: React.FC = () => {
     messageApi.success("เดโม UI: กำลังกลับไปหน้าหลัก... (ไม่มีการลบข้อมูล)");
     setTimeout(() => {
       navigate("/");      // ไปหน้าหลัก
-    }, 1500);
+    }, 200);
   };
 
   return (

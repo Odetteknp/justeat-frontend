@@ -22,3 +22,4 @@ export default function MenuItemCard({ name, price, image, onAdd }: Props) {
     </div>
   );
 }
+

@@ -1,3 +1,6 @@
+
+// src/components/RestaurantMenu.tsx
+
 import React, { useEffect, useMemo, useRef, useState, createRef } from 'react';
 import './RestaurantMenu.css';
 import MenuItemCard from './MenuItemCard';
@@ -5,6 +8,7 @@ import MenuOptionModal from './MenuOptionModal';
 import { SECTIONS, menuItems, type MenuItem } from '../../data/menuData';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../../state/CartContext';
+
 import Header from './ImageRest';
 
 type SectionRefs = Record<string, React.RefObject<HTMLDivElement | null>>;
@@ -45,7 +49,6 @@ export default function RestaurantMenu() {
 
   const goCart = () => navigate('/cart');
 
-  // ==== Scroll & Active tab ====
   useEffect(() => {
     const ob = new IntersectionObserver((entries) => {
       const vis = entries
@@ -120,8 +123,6 @@ export default function RestaurantMenu() {
           </section>
         ))}
       </div>
-
-      {/* Modal */}
       <MenuOptionModal
         open={open}
         item={choosing}

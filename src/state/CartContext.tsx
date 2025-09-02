@@ -1,8 +1,8 @@
+
 import React, { createContext, useContext, useState, useMemo } from 'react';
 import type { MenuItem } from '../data/menuData';
 
 type Selected = Record<string, string[]>;
-
 export type CartLine = {
   id: string;
   item: MenuItem;

@@ -207,4 +207,3 @@ export const menuItems: MenuItem[] = [
   // ส้มตำ
   { name: 'ตำลาว',  price: '$50', image: somtam1, sectionId: 'somtum' },
   { name: 'ตำไทย',  price: '$50', image: somtam2, sectionId: 'somtum' },
-];

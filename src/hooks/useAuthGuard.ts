@@ -25,6 +25,7 @@ export function useAuthGuard(allowedRoles: string[] = [], opts: GuardOptions = {
     autoRedirect = true,
     redirectDelayMs = 10000,
     redirectTo = { unauthorized: "/", forbidden: "/" },
+
     onLogout,
   } = opts;
 
@@ -95,9 +96,9 @@ export function useAuthGuard(allowedRoles: string[] = [], opts: GuardOptions = {
       // 2) มี token → ไปดึง /me
       try {
         const res = await auth.me();
+
         const payload = (res as any)?.data ?? res ?? null;
         const me = payload?.user ?? payload?.data ?? payload ?? null;
-
         if (cancelled) return;
 
         setUser(me);

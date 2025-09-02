@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useRider } from "../../../../context/RiderContext";
-import { riderWorkApi } from "../../../../services/riderWorkApi";
+import { useRider } from "../../../context/RiderContext";
+import { riderWorkApi } from "../../../services/riderWorkApi";
 import {
   Card,
   Row,

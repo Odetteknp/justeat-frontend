@@ -20,10 +20,10 @@ import RestaurantMenuPage from "./components/chaaim/RestaurantMenu.tsx";
 // Rider
 import { RiderProvider } from "./context/RiderContext";
 import RiderLayout from "./layouts/RiderLayout";
-import RiderDashboard from "./pages/partner/rider/dashboard";
-import RiderWork from "./pages/partner/rider/rider_work";
-import RiderHistories from "./pages/partner/rider/rider_work_histories";
-import RiderProfile from "./pages/partner/rider/rider_profile";
+import RiderDashboard from "./pages/partner/rider/dashboard.tsx";
+import RiderWork from "./pages/partner/rider/rider_work.tsx";
+import RiderHistories from "./pages/partner/rider/rider_work_histories.tsx";
+import RiderProfile from "./pages/partner/rider/rider_profile.tsx";
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";

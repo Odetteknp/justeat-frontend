@@ -42,7 +42,6 @@ import AdminPromotion from "./pages/admin/admin_promotion";
 
 
 // User pages
-import RestaurantDetailPage from "./pages/RestaurantDetailPage";
 import CartPage from "./pages/CartPage";
 import ProfileChatPage from "./pages/ProfileChatPage.tsx";
 

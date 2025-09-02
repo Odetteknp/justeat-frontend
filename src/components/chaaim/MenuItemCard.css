@@ -1,3 +1,39 @@
+
+.menu-item {
+
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+  padding: 10px;
+  position: relative;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.menu-item:hover {
+  transform: scale(1.03);
+}
+
+.menu-item img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.menu-item p {
+  margin: 0;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.menu-item span {
+  display: block;
+  color: #888;
+  margin: 4px 0;
+}
+
 .menu-item-card {
   display: flex;
   flex-direction: column;

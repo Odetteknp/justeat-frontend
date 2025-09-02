@@ -59,11 +59,6 @@ export const menuItems: MenuItem[] = [
         { id: 'sz-m', name: 'กลาง', price: 10 },
         { id: 'sz-l', name: 'ใหญ่', price: 20 },
       ]},
-      { id: 'dip', label: 'ซอสจิ้ม', type: 'multiple', choices: [
-        { id: 'dip-k', name: 'ซอสมะเขือเทศ' },
-        { id: 'dip-m', name: 'มายองเนส' },
-        { id: 'dip-c', name: 'ซอสพริก' },
-      ]},
     ]
   },
   { name: 'ข้าวหน้าแซลมอน', price: '$50', image: salmon, sectionId: 'featured' },
@@ -101,8 +96,36 @@ export const menuItems: MenuItem[] = [
       ]},
     ]
   },
-  { name: 'กะเพราหมูสับ',   price: '$50', image: kaprao2, sectionId: 'kaprao' },
-  { name: 'กะเพราทะเล',     price: '$50', image: kaprao3, sectionId: 'kaprao' },
+  { name: 'กะเพราหมูสับ',   price: '$50', image: kaprao2, sectionId: 'kaprao',
+    options: [
+      { id: 'spicy', label: 'ระดับความเผ็ด', type: 'single', required: true, choices: [
+        { id: 'sp0', name: 'ไม่เผ็ด' },
+        { id: 'sp1', name: 'เผ็ดน้อย' },
+        { id: 'sp2', name: 'เผ็ดกลาง' },
+        { id: 'sp3', name: 'เผ็ดมาก' },
+      ]},
+      { id: 'egg', label: 'ไข่', type: 'single', choices: [
+        { id: 'e0',  name: 'ไม่ใส่ไข่' },
+        { id: 'e1',  name: 'ไข่ดาว', price: 10 },
+        { id: 'e2',  name: 'ไข่เจียว', price: 15 },
+      ]},
+    ]
+  },
+  { name: 'กะเพราทะเล',     price: '$50', image: kaprao3, sectionId: 'kaprao',
+    options: [
+      { id: 'spicy', label: 'ระดับความเผ็ด', type: 'single', required: true, choices: [
+        { id: 'sp0', name: 'ไม่เผ็ด' },
+        { id: 'sp1', name: 'เผ็ดน้อย' },
+        { id: 'sp2', name: 'เผ็ดกลาง' },
+        { id: 'sp3', name: 'เผ็ดมาก' },
+      ]},
+      { id: 'egg', label: 'ไข่', type: 'single', choices: [
+        { id: 'e0',  name: 'ไม่ใส่ไข่' },
+        { id: 'e1',  name: 'ไข่ดาว', price: 10 },
+        { id: 'e2',  name: 'ไข่เจียว', price: 15 },
+      ]},
+    ]
+  },
 
   // ✅ ยำทุกเมนู เพิ่ม option ความเผ็ด
   { name: 'ยำหอยนางรม', price: '$50', image: yum, sectionId: 'yum',
@@ -164,11 +187,6 @@ export const menuItems: MenuItem[] = [
         { id: 'sz-m', name: 'กลาง', price: 10 },
         { id: 'sz-l', name: 'ใหญ่', price: 20 },
       ]},
-      { id: 'dip', label: 'ซอสจิ้ม', type: 'multiple', choices: [
-        { id: 'dip-k', name: 'ซอสมะเขือเทศ' },
-        { id: 'dip-m', name: 'มายองเนส' },
-        { id: 'dip-c', name: 'ซอสพริก' },
-      ]},
     ]
   },
   { name: 'เฟรนซ์ฟรายส์',     price: '$50', image: frenchfries, sectionId: 'fried' ,
@@ -189,4 +207,3 @@ export const menuItems: MenuItem[] = [
   // ส้มตำ
   { name: 'ตำลาว',  price: '$50', image: somtam1, sectionId: 'somtum' },
   { name: 'ตำไทย',  price: '$50', image: somtam2, sectionId: 'somtum' },
-];

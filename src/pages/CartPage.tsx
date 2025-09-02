@@ -32,7 +32,7 @@ export default function CartPage() {
 
   // ---------- Pricing ----------
   const subtotal = cart.totalAmount; // ยอดรวมจากตะกร้า
-  const baseDelivery = 25; // ค่าส่งตั้งต้น
+  const baseDelivery = 15; // ค่าส่งตั้งต้น
 
   // คำนวนส่วนลด/ค่าส่ง/ยอดสุทธิด้วย useMemo เพื่อกัน re-render ที่ไม่จำเป็น
   const { discount, deliveryFee, total } = useMemo(() => {
@@ -106,41 +106,42 @@ export default function CartPage() {
               </div>
 
               <ul className="listReset">
-                {cart.items.map((line) => (
-                  <li key={line.id} className="cartLine">
-                    <img
-                      src={line.item.image}
-                      alt={line.item.name}
-                      className="itemImage"
-                    />
-                    <div className="lineBody">
-                      <div className="itemName">{line.item.name}</div>
-                      <div className="itemMeta">
-                        {/* แสดงตัวเลือกแบบอ่านง่าย */}
-                        {Object.entries(line.selected).map(([optId, choiceIds], idx) => (
-                          <span key={optId} className="itemMetaChip">
-                            {idx ? ' | ' : ''}
-                            {choiceIds.join(', ')}
-                          </span>
-                        ))}
-                        {line.note ? ` • ${line.note}` : null}
-                      </div>
-                    </div>
-                    <div className="qty">× {line.quantity}</div>
-                    <div className="lineTotal">{fmtTHB(line.total)}</div>
-                    <button
-                      onClick={() => cart.removeItem(line.id)}
-                      className="btnPlain"
-                      aria-label={`ลบ ${line.item.name}`}
-                    >
-                      ลบ
-                    </button>
-                  </li>
-                ))}
-              </ul>
+  {cart.items.map((line) => (
+    <li key={line.id} className="cartLine">
+      <img src={line.item.image} alt={line.item.name} className="itemImage" />
+      <div className="lineBody">
+        <div className="itemName">{line.item.name}</div>
+        <div className="itemMeta">
+          {Object.entries(line.selected).map(([optId, choiceIds], idx) => {
+            if (!Array.isArray(choiceIds)) return null;
+            const opt = line.item.options?.find(o => o.id === optId);
+            const names = choiceIds
+              .map(cid => opt?.choices.find(c => c.id === cid)?.name ?? cid);
+            return (
+              <span key={optId} className="itemMetaChip">
+                {idx ? ' | ' : ''}
+                {names.join(', ')}
+              </span>
+            );
+          })}
+          {line.note ? ` • ${line.note}` : null}
+        </div>
+      </div>
+      <div className="qty">× {line.quantity}</div>
+      <div className="lineTotal">{fmtTHB(line.total)}</div>
+      <button
+        onClick={() => cart.removeItem(line.id)}
+        className="btnPlain"
+      >
+        ลบ
+      </button>
+    </li>
+  ))}
+</ul>
+
 
               <div className="actionsRow">
-                <button onClick={() => navigate('/')} className="btnPlain">
+                <button onClick={() => navigate(-1)} className="btnPlain">
                   เพิ่มเมนูต่อ
                 </button>
               </div>
@@ -229,7 +230,7 @@ export default function CartPage() {
                     value={newAddress}
                     onChange={(e) => setNewAddress(e.target.value)}
                     placeholder="พิมพ์ที่อยู่จัดส่งใหม่..."
-                    className="input textarea"
+                    className={`$"input" $"textarea"`}
                     aria-label="ที่อยู่ใหม่"
                   />
                 )}
@@ -273,7 +274,7 @@ export default function CartPage() {
             <button
               onClick={onCheckout}
               disabled={!canCheckout}
-              className="btnPrimary checkoutBtn"
+              className={`$"btnPrimary" $"checkoutBtn"`}
               aria-disabled={!canCheckout}
               aria-label={`ยืนยันคำสั่งซื้อ มูลค่า ${fmtTHB(total)}`}
             >

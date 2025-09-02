@@ -10,6 +10,7 @@
 /* ===== Header base (ต้องแน่ใจว่ามี className="header" บน <Header>) ===== */
 .header.ant-layout-header {
   background: var(--header-bg);
+  width: 100%;
   padding-inline: 0;
   height: var(--header-height);
   line-height: var(--header-height);
@@ -30,7 +31,7 @@
 
 /* ===== Container 3 คอลัมน์: ซ้าย | กลาง | ขวา ===== */
 .header-container {
-  max-width: var(--container-max);
+  width: var(--container-max);
   margin: 0 auto;
   padding: 0 8px;
 

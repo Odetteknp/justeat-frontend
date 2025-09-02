@@ -1,4 +1,5 @@
 // src/components/MenuOptionModal.tsx
+
 import React, { useMemo, useState } from 'react';
 import type { MenuItem, MenuOption, Choice } from '../../data/menuData';
 
@@ -33,6 +34,7 @@ export default function MenuOptionModal({ open, item, onClose, onConfirm }: Prop
     if (!item?.options) return 0;
     let sum = 0;
     for (const opt of item.options) {
+      
       // ข้าม option ประเภท "note" ถ้ามีอยู่ใน data
       if (opt.id === 'note') continue;
       const picks = selected[opt.id] ?? [];
@@ -68,6 +70,7 @@ export default function MenuOptionModal({ open, item, onClose, onConfirm }: Prop
       note: note.trim() || undefined,
       total,
     });
+    
     // reset state ของ modal
     setQty(1);
     setSelected({});
@@ -91,7 +94,9 @@ export default function MenuOptionModal({ open, item, onClose, onConfirm }: Prop
 
         {/* Body */}
         <div style={styles.body}>
+
           {/* แสดง options ถ้ามี (ยกเว้น opt.id === 'note') */}
+
           {(item.options ?? [])
             .filter(opt => opt.id !== 'note')
             .map((opt) => (
@@ -137,7 +142,8 @@ export default function MenuOptionModal({ open, item, onClose, onConfirm }: Prop
             ))
           }
 
-          {/* ✅ ช่องหมายเหตุ แสดงเสมอทุกเมนู */}
+
+          {/* ช่องหมายเหตุ */}
           <div style={{ marginTop: 12 }}>
             <div style={{ fontWeight: 600, marginBottom: 6 }}>หมายเหตุ</div>
             <textarea
@@ -164,8 +170,9 @@ export default function MenuOptionModal({ open, item, onClose, onConfirm }: Prop
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  backdrop: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 2000 },
-  modal: { background: '#fff', width: 'min(720px,100%)', maxHeight: '90vh', borderRadius: '16px 16px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' },
+
+  backdrop: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000 },
+  modal: { background: '#fff', width: 'min(720px,100%)', maxHeight: '90vh', borderRadius: 16, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #eee' },
   thumb: { width: 56, height: 56, objectFit: 'cover', borderRadius: 8 },
   close: { border: 0, background: 'transparent', fontSize: 24, cursor: 'pointer', lineHeight: 1 },

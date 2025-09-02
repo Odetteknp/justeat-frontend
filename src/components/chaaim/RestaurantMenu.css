@@ -30,6 +30,64 @@
 .menu-section{
   max-width: 1100px;
   margin: 24px auto 16px;
-  padding: 0 16px;
+  padding:0;
 }
+
+.section-title {
+  font-size: 20px;
+  margin: 20px 0 10px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  justify-items: center;
+  margin: 0 70px;
+}
+
+.menu-grid > * { width: 100%; }
+
 .empty{ color:#8a8a8a; }
+
+/* ✅ ปุ่มตะกร้าลอยกลางล่าง */
+.floating-cart {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 16px;
+  width: min(720px, calc(100% - 32px)); /* กว้างไม่เกิน 720px และมีระยะขอบซ้ายขวา */
+  background: #ea6246;                  /* โทนส้มแดง */
+  color: #fff;
+  border: 0;
+  border-radius: 28px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 800;
+  font-size: 18px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.15), 0 2px 6px rgba(0,0,0,.08);
+  z-index: 2000;
+  cursor: pointer;
+}
+
+.floating-cart__left {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: .2px;
+}
+
+.floating-cart__right {
+  font-weight: 900;
+}
+
+/* ให้เว้นพื้นที่ขอบล่างเวลามีปุ่มลอย */
+@media (max-width: 768px) {
+  .menu-left {
+    padding-bottom: 80px;
+  }
+}

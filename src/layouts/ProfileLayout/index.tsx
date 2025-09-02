@@ -12,6 +12,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   DingdingOutlined,
+  LockOutlined,
+  TagsOutlined,
 } from "@ant-design/icons";
 
 import {
@@ -38,11 +40,9 @@ const ROUTE_KEY_MAP: Record<string, string> = {
 
 // --- แก้ KEY_TITLE_MAP ให้ key ตรงชื่อ ---
 const KEY_TITLE_MAP: Record<string, string> = {
-  MyProfile: "แดชบอร์ด",
-  MyOrders: "รายงานปัญหา",
-  MyPromotions: "จัดการไรเดอร์",
-  adminrestaurant: "จัดการร้านอาหาร",
-  adminprofile: "จัดการโปรไฟล์",
+  MyOrders: "รายการสั่งซื้อ",
+  MyPromotions: "ส่วนลด",
+  MyProfile: "จัดการโปรไฟล์",
 };
 
 const ProfileLayout: React.FC = () => {
@@ -59,47 +59,40 @@ const ProfileLayout: React.FC = () => {
   // --- แก้ selectedKey: เช็คอันเฉพาะเจาะจงก่อน ---
   const selectedKey = useMemo(() => {
     const clean = location.pathname.replace(/\/+$/, "");
-    if (clean.startsWith("/admin/report")) return "adminreport";
-    if (clean.startsWith("/admin/rider")) return "adminrider";
-    if (clean.startsWith("/admin/restaurant")) return "adminrestaurant";
-    if (clean.startsWith("/admin/profile")) return "adminprofile";
-    if (clean.startsWith("/admin")) return "admindashboard";
-    return "admindashboard";
+    if (clean.startsWith("/profile/order")) return "MyOrders";
+    if (clean.startsWith("/profile/promotion")) return "MyPromotions";
+    if (clean.startsWith("/proflie/security")) return "Security";
+    if (clean.startsWith("/profile")) return "MyProfile";
+    return "MyProfile";
   }, [location.pathname]);
 
   // เมนูแบบเปิดหมด (UI อย่างเดียว ไม่เช็ค role) //แก้ path ตรงนี้
   const menuItems: MenuProps["items"] = useMemo(
     () => [
       {
-        key: "admindashboard",
+        key: "MyOrders",
         icon: <DashboardOutlined style={{ fontSize: 18 }} />,
-        label: "แดชบอร์ด",
-        onClick: () => navigate("/admin"),
+        label: "รายการสั่งซื้อ",
+        onClick: () => navigate("/profile/order"),
       },
       {
-        key: "adminreport",
-        icon: <DingdingOutlined style={{ fontSize: 18 }} />,
-        label: "รายงานปัญหา",
-        onClick: () => navigate("/admin/report"),
+        key: "MyPromotions",
+        icon: <TagsOutlined style={{ fontSize: 18 }} />,
+        label: "ส่วนลด",
+        onClick: () => navigate("/profile/promotion"),
       },
       {
-        key: "adminrider",
-        icon: <HistoryOutlined style={{ fontSize: 18 }} />,
-        label: "จัดการไรเดอร์",
-        onClick: () => navigate("/admin/rider"),
-      },
-      {
-        key: "adminrestaurant",
-        icon: <UserOutlined style={{ fontSize: 18 }} />,
-        label: "จัดการร้านอาหาร",
-        onClick: () => navigate("/admin/restaurant"),
-      },
-      {
-        key: "adminprofile",
+        key: "MyProfile",
         icon: <UserOutlined style={{ fontSize: 18 }} />,
         label: "โปรไฟล์",
-        onClick: () => navigate("/admin/profile"),
+        onClick: () => navigate("/profile"),
       },
+      {
+        key: "Security",
+        icon: <LockOutlined style={{ fontSize: 18 }}/>, 
+        label: "ความปลอดภัย",
+        onClick: () => navigate("/proflie/security"),
+      }
     ],
     [navigate]
   );
@@ -181,7 +174,7 @@ const ProfileLayout: React.FC = () => {
                     fontWeight: 600,
                   }}
                 >
-                  <DingdingOutlined /> Admin System
+                  User Profile
                 </Title>
               )}
             </div>

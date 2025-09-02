@@ -1,0 +1,241 @@
+ไฟล์เนี่ยหรอ
+/* โครงหน้า */
+.profile-page {
+  padding: 20px 24px 32px;
+}
+.page-header {
+  max-width: 1040px;
+  margin: 0 auto 16px;
+}
+.page-header .ant-typography { margin-bottom: 0; }
+
+/* กริดคอนเทนต์ */
+.content-grid {
+  max-width: 1040px;            /* กว้างพอดีตา */
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 280px 1fr; /* ซ้ายแคบ-ขวากว้าง */
+  gap: 16px;
+}
+@media (max-width: 992px) {
+  .content-grid { grid-template-columns: 1fr; }
+}
+
+/* การ์ดซ้าย */
+.side-card { padding: 16px; }
+.avatar-block { text-align: center; }
+.avatar-block .meta { margin-top: 12px; }
+.role-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fff5f2;
+  color: #ef664b;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.muted { font-size: 12px; color: #8c8c8c; }
+
+/* การ์ดขวา (ฟอร์ม) */
+.form-card { padding: 16px; }
+.row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 576px) {
+  .row-2 { grid-template-columns: 1fr; }
+}
+
+.ant-form-item-label > label { font-weight: 600; }
+
+/* ปุ่มแบรนด์ (local only) */
+.ant-btn.brand-btn,
+.ant-btn.brand-btn:focus,
+.ant-btn.brand-btn:active {
+  background-color: #ef664b;
+  border-color: #ef664b;
+  color: #fff;
+}
+.ant-btn.brand-btn:hover {
+  background-color: #d24f3a;
+  border-color: #d24f3a;
+  color: #fff;
+}
+
+/* ปุ่มจาง */
+.ant-btn.ghost-btn {
+  background: #fff;
+  border-color: #e5e5e5;
+  color: #444;
+}
+.ant-btn.ghost-btn:hover {
+  border-color: #cfcfcf;
+  color: #111;
+}
+
+/* เส้นขอบ input โทนแบรนด์ (เฉพาะหน้านี้) */
+.profile-page :where(.ant-input:hover, .ant-input:focus, textarea.ant-input:hover, textarea.ant-input:focus) {
+  border-color: #ef664b !important;
+  box-shadow: 0 0 0 2px rgba(239, 102, 75, 0.12);
+}
+
+/* แอ็กชัน sticky ด้านล่างของการ์ดฟอร์ม */
+.sticky-actions {
+  position: sticky;
+  bottom: -16px;  /* ชิดขอบการ์ด */
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #fff;
+  padding-top: 12px;
+  margin-top: 8px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.profile-page { padding: 20px 24px 32px; }
+.page-header { max-width: 1040px; margin: 0 auto 16px; }
+.title-row { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 6px; }
+.title-icon { font-size: 22px; color: #ef664b; }
+.header-link { color: #ef664b; }
+.header-link:hover { color: #d24f3a; }
+
+.content-grid {
+  max-width: 1040px; margin: 0 auto;
+  display: grid; grid-template-columns: 280px 1fr; gap: 16px;
+}
+@media (max-width: 992px) { .content-grid { grid-template-columns: 1fr; } }
+
+.side-card, .form-card { padding: 16px; }
+.avatar-block { text-align: center; }
+.avatar-skeleton { text-align: center; }
+
+.role-tag {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  background: #fff5f2; color: #ef664b; font-size: 12px; margin: 8px 0 2px;
+}
+.muted { font-size: 12px; color: #8c8c8c; }
+
+/* แถว 2 คอลัมน์ในฟอร์ม */
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 576px) { .row-2 { grid-template-columns: 1fr; } }
+
+.ant-form-item-label > label { font-weight: 600; }
+
+/* ปุ่มแบรนด์ (local) */
+.ant-btn.brand-btn,
+.ant-btn.brand-btn:focus,
+.ant-btn.brand-btn:active { background-color: #ef664b; border-color: #ef664b; color: #fff; }
+.ant-btn.brand-btn:hover { background-color: #d24f3a; border-color: #d24f3a; color: #fff; }
+
+/* ปุ่มจาง */
+.ant-btn.ghost-btn { background: #fff; border-color: #e5e5e5; color: #444; }
+.ant-btn.ghost-btn:hover { border-color: #cfcfcf; color: #111; }
+
+/* ขอบ input โทนแบรนด์ (เฉพาะหน้านี้) */
+.profile-page :where(.ant-input:hover, .ant-input:focus, textarea.ant-input:hover, textarea.ant-input:focus) {
+  border-color: #ef664b !important; box-shadow: 0 0 0 2px rgba(239,102,75,.12);
+}
+
+/* ปุ่ม sticky ล่างการ์ดฟอร์ม */
+.sticky-actions {
+  position: sticky; bottom: -16px;
+  display: flex; gap: 12px; justify-content: flex-end;
+  background: #fff; padding-top: 12px; margin-top: 8px; border-top: 1px solid #f0f0f0;
+}
+
+
+/* โฟกัสปกติ: ใช้สีแบรนด์ */
+.profile-page :where(.ant-input:focus,
+                     .ant-input-focused,
+                     .ant-input-affix-wrapper-focused,
+                     textarea.ant-input:focus) {
+  border-color: #ef664b !important;
+  box-shadow: 0 0 0 2px rgba(239,102,75,.16) !important;
+  outline: none !important; /* กันเส้นฟ้า */
+}
+
+/* Hover ให้กลมกลืน */
+.profile-page :where(.ant-input:hover,
+                     textarea.ant-input:hover,
+                     .ant-input-affix-wrapper:hover) {
+  border-color: #ef664b !important;
+}
+
+/* ตัดสีน้ำเงินของ browser (Chrome/Edge) */
+.profile-page :where(input, textarea):focus-visible {
+  outline: none !important;
+}
+
+/* กรณีสถานะ error: คงสีแดงไว้ แต่เอาแสงฟ้าออก */
+.profile-page :where(.ant-form-item-has-error .ant-input:focus,
+                     .ant-input-status-error:not(.ant-input-disabled):focus,
+                     .ant-input-status-error.ant-input-affix-wrapper-focused,
+                     .ant-form-item-has-error textarea.ant-input:focus) {
+  border-color: #ff4d4f !important;
+  box-shadow: 0 0 0 2px rgba(255,77,79,.18) !important;
+  outline: none !important;
+}
+
+/* ---- ฆ่าสีน้ำเงินค่าเริ่มต้นเมื่อโฟกัสปุ่ม (เฉพาะหน้าโปรไฟล์) ---- */
+.profile-page :where(.ant-btn:focus, .ant-btn:focus-visible, .ant-btn:active) {
+  outline: none !important;
+  box-shadow: none !important; /* ตัด ring ฟ้าเริ่มต้น */
+}
+
+/* ถ้าใช้ type="primary" ของ AntD ให้ ring เป็นโทนแบรนด์แทน */
+.profile-page :where(.ant-btn-primary:focus,
+                     .ant-btn-primary:focus-visible,
+                     .ant-btn-primary:active) {
+  border-color: #ef664b !important;
+  box-shadow: 0 0 0 3px rgba(239,102,75,.22) !important;
+}
+
+/* ปุ่มแบรนด์แบบที่เราใส่คลาสเอง (.brand-btn) */
+.profile-page .ant-btn.brand-btn,
+.profile-page .ant-btn.brand-btn:focus,
+.profile-page .ant-btn.brand-btn:active {
+  background-color: #ef664b !important;
+  border-color: #ef664b !important;
+  color: #fff !important;
+}
+.profile-page .ant-btn.brand-btn:hover {
+  background-color: #d24f3a !important;
+  border-color: #d24f3a !important;
+}
+/* โฟกัสของ .brand-btn ให้เป็นวงโทนแบรนด์ */
+.profile-page .ant-btn.brand-btn:focus,
+.profile-page .ant-btn.brand-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239,102,75,.22) !important;
+}
+
+/* ปุ่มเส้นขอบโทนแบรนด์ (.brand-outline-btn) */
+.profile-page .ant-btn.brand-outline-btn,
+.profile-page .ant-btn.brand-outline-btn:focus,
+.profile-page .ant-btn.brand-outline-btn:active {
+  background: #fff !important;
+  color: #ef664b !important;
+  border-color: #ef664b !important;
+}
+.profile-page .ant-btn.brand-outline-btn:hover {
+  color: #d24f3a !important;
+  border-color: #d24f3a !important;
+}
+.profile-page .ant-btn.brand-outline-btn:focus,
+.profile-page .ant-btn.brand-outline-btn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239,102,75,.18) !important;
+}
+
+/* ปุ่มจาง/เทา (.ghost-btn) – เอา ring ฟ้าออกและใช้เงาอ่อน ๆ แทน */
+.profile-page .ant-btn.ghost-btn:focus,
+.profile-page .ant-btn.ghost-btn:focus-visible,
+.profile-page .ant-btn.ghost-btn:active {
+  box-shadow: 0 0 0 3px rgba(0,0,0,.06) !important;
+  border-color: #cfcfcf !important;
+  outline: none !important;
+}
+
+/* กันเบราว์เซอร์ใส่ outline สีน้ำเงิน */
+.profile-page :where(button):focus-visible {
+  outline: none !important;
+}

@@ -11,6 +11,11 @@ import PromoPage from "./pages/PromotionPage";
 
 import LoginPage from "./pages/login/Login";
 import RegisterPage from "./pages/register/Register";
+import ProfileLayout from "./layouts/ProfileLayout/index.tsx";
+import ProfilePage from "./pages/account/Profile.tsx";
+import ProfileOrderPage from "./pages/ProfileOrder.tsx";
+import ProfilePromoPage from "./pages/ProfilePromo.tsx";
+import RestaurantMenuPage from "./components/chaaim/RestaurantMenu.tsx";
 
 // Rider
 import { RiderProvider } from "./context/RiderContext";
@@ -39,6 +44,7 @@ import AdminPromotion from "./pages/admin/admin_promotion";
 // User pages
 import RestaurantDetailPage from "./pages/RestaurantDetailPage";
 import CartPage from "./pages/CartPage";
+import ProfileChatPage from "./pages/ProfileChatPage.tsx";
 
 // Payment
 import PaymentLayout from "./layouts/PaymentLayout";
@@ -61,10 +67,20 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/menu" element={<MenuPage />} />
         <Route path="/restaurants" element={<RestPage />} />
-        <Route path="/restaurants/:id" element={<RestaurantDetailPage />} />
+        <Route path="/restaurants/:id" element={<RestaurantMenuPage />} />
         <Route path="/promotions" element={<PromoPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/help" element={<HelpPage />} />
+      </Route>
+
+      <Route
+        path="/profile"
+        element={<ProfileLayout />}
+      >
+        <Route index element={<ProfilePage/>}/>
+        <Route path="order" element={<ProfileOrderPage/>}/>
+        <Route path="promotion" element={<ProfilePromoPage/>}/>
+        <Route path="chat" element={<ProfileChatPage/>}/>
       </Route>
 
       {/* Rider layout */}

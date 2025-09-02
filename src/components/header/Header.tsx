@@ -1,33 +1,32 @@
-import React, { useMemo } from "react"; // useMemo ไว้จำค่า react จะได้ไม่ต้องคำนวณซ้ำ
+import React, { useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { IoFastFood  } from "react-icons/io5"; //npm install react-icons --save
+import { IoFastFood } from "react-icons/io5";
 
 // antd
 import { Layout, Menu, Dropdown, Input, Button, Space } from "antd";
 import type { MenuProps } from "antd";
-import { DownOutlined, UserOutlined, SearchOutlined, DingdingOutlined  } from "@ant-design/icons";
+import { DownOutlined, UserOutlined, SearchOutlined, DingdingOutlined, LogoutOutlined } from "@ant-design/icons";
 
 // CSS
 import "./Header.css";
 import logoImage from "../../assets/LOGO.png";
 
+// ✅ เพิ่มบรรทัดนี้ (ปรับ path ให้ตรงโปรเจกต์คุณ)
+import { useAuthGuard } from "../../hooks/useAuthGuard";
+
 const { Header } = Layout;
 
 type Props = {
-  isLoggedIn?: boolean;
+  isLoggedIn?: boolean; // จะเลิกใช้ prop นี้ก็ได้ เพราะเราอ่านจาก hook แทน
 };
 
-// array ของ Object แต่ละ Obkect มี key = path และ label เป็นชื่อแสดงเมนู
 const MenuKey = [
   { key: "/", label: "Home" },
-  { key: "/menu", label: "Menu" },
   { key: "/restaurants", label: "Restaurants" },
   { key: "/promotions", label: "Promotions" },
   { key: "/help", label: "Help" },
 ];
 
-
-// หาว่าเมนูไหนควรถูกเลือก (active) จาก pathname ปัจจุบัน
 function getActiveMenuKey(pathname: string) {
   return (
     MenuKey.find((item) =>
@@ -41,39 +40,63 @@ export default function CustomerHeader({ isLoggedIn = false }: Props) {
   const navigate = useNavigate();
   const selectedKey = useMemo(() => getActiveMenuKey(pathname), [pathname]);
 
-  // เมนูลัดไปหน้า Partner
+  // ✅ ใช้ hook: ดึง user + logout (ปิด autoRedirect ใน Header เพื่อกันการเด้งหน้าโดย Header เอง)
+  const { user, logout, loading } = useAuthGuard([], {
+    autoRedirect: false,
+    redirectDelayMs: 0,
+  });
+  const isAuthed = !!user; // ใช้สถานะล็อกอินจาก hook
+
+  // เมนู Partner
   const partnerItems: MenuProps["items"] = [
     {
       key: "rider",
       label: <Link to="/partner/rider">Rider</Link>,
-      icon: <DingdingOutlined/>
+      icon: <DingdingOutlined />,
     },
     {
       key: "restaurant",
       label: <Link to="/partner/restaurant">Restaurant</Link>,
-      icon: <IoFastFood/>
+      icon: <IoFastFood />,
     },
   ];
 
-  const ProfileItem: MenuProps [ "items" ] = [
+  // เมนูโปรไฟล์ + logout
+  const profileItems: MenuProps["items"] = [
     {
       key: "profile",
       label: <Link to="/profile">My Profile</Link>,
-      icon: <DingdingOutlined/>
+      icon: <DingdingOutlined />,
     },
     {
       key: "order",
       label: <Link to="/profile/order">My Orders</Link>,
-      icon: <IoFastFood/>
+      icon: <IoFastFood />,
     },
-  ]
+    {
+      type: "divider",
+    },
+    {
+      key: "logout",
+      label: "Log out",
+      icon: <LogoutOutlined />,
+      danger: true,
+    },
+  ];
+
+  // ✅ จัดการคลิกเมนูโปรไฟล์ (โดยเฉพาะ logout)
+  const onProfileMenuClick: MenuProps["onClick"] = async ({ key }) => {
+    if (key === "logout") {
+      // แบบ A: frontend-only — ลบ token + เด้งไปหน้า login
+      logout("/login"); // ไม่ใส่ก็ได้ จะเด้งไป redirectTo.unauthorized ใน hook
+      return;
+    }
+    // อื่น ๆ ไม่ต้องทำอะไร เพราะเราใช้ <Link> แล้ว
+  };
 
   return (
     <Header className="header">
-    
-      {/* จะแบ่งเป็น 3 ส่วน : ซ้าย | กลาง | ขวา */}
       <div className="header-container">
-
         {/* ซ้าย */}
         <div className="header-left">
           <div className="header-logo">
@@ -110,11 +133,7 @@ export default function CustomerHeader({ isLoggedIn = false }: Props) {
 
           <Space wrap>
             <Dropdown menu={{ items: partnerItems }}>
-              <Button
-                className="header-partner"
-                type="text"
-                aria-label="เปิดเมนู partner"
-              >
+              <Button className="header-partner" type="text" aria-label="เปิดเมนู partner">
                 <Space>
                   Partner
                   <DownOutlined />
@@ -123,21 +142,21 @@ export default function CustomerHeader({ isLoggedIn = false }: Props) {
             </Dropdown>
           </Space>
 
-          {!isLoggedIn ? (
+          {/* ถ้าอยากแสดงระหว่างโหลด auth.me: จะ render ปุ่ม Sign In ไปก่อนก็ได้ */}
+          {!isAuthed ? (
             <Link to="/login" aria-label="เข้าสู่ระบบ">
-              <Button className="header-signin" shape="round">
+              <Button className="header-signin" shape="round" disabled={loading}>
                 Sign In
               </Button>
             </Link>
           ) : (
-            <Dropdown menu={{ items: ProfileItem }} placement="bottomRight" arrow={{ pointAtCenter: true }}>
-              <Button
-                className="header-avatar-btn"
-                shape="circle"
-                icon={<UserOutlined />}
-              />
+            <Dropdown
+              menu={{ items: profileItems, onClick: onProfileMenuClick }}
+              placement="bottomRight"
+              arrow={{ pointAtCenter: true }}
+            >
+              <Button className="header-avatar-btn" shape="circle" icon={<UserOutlined />} />
             </Dropdown>
-
           )}
         </div>
       </div>

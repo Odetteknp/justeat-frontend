@@ -1,13 +1,10 @@
 import React, { useMemo, useState } from "react";
-import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "../../App.css";
 import {
   UserOutlined,
   DashboardOutlined,
-  PlayCircleOutlined,
-  HeartOutlined,
   HistoryOutlined,
-  EditOutlined,
   LeftSquareOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -23,8 +20,11 @@ import {
   Typography,
   Avatar,
   Space,
+  Spin,
+  Result,
 } from "antd";
 import type { MenuProps } from "antd";
+import { useAuthGuard } from "../../hooks/useAuthGuard";
 import logo from "../../assets/LOGO.png";
 
 const { Header, Content, Sider } = Layout;
@@ -52,6 +52,12 @@ const KEY_TITLE_MAP: Record<string, string> = {
 };
 
 const AdminLayout: React.FC = () => {
+  const guard = useAuthGuard(["admin"], {
+    autoRedirect: false,
+    redirectDelayMs: 0,
+    redirectTo: { unauthorized: "/login?", forbidden: "/" },
+  });
+  
   const [messageApi, contextHolder] = message.useMessage();
   const [collapsed, setCollapsed] = useState(false);
   const siderRef = React.useRef<any>(null);
@@ -123,8 +129,49 @@ const AdminLayout: React.FC = () => {
     messageApi.success("เดโม UI: กำลังกลับไปหน้าหลัก... (ไม่มีการลบข้อมูล)");
     setTimeout(() => {
       navigate("/");      // ไปหน้าหลัก
-    }, 1500);
+    }, 200);
   };
+
+  // เงื่อนไขการแสดงผล หลังจากเรียก hooks 
+  if (guard.loading) {
+    return (
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center0"}}>
+        {contextHolder}
+        <Spin tip="กำลังตรวจสอบสิทธิ์..." size="large"/>
+      </div>
+    )
+  }
+
+  if (!guard.allowed) {
+    const is401 = guard.status === 401;
+    return (
+      <>
+        {contextHolder}
+        <Result
+          status={is401 ? "warning" : "403"}
+          title={is401 ? "กรุณาเข้าสู่ระบบ" : "ไม่มีสิทธิ์เข้าหน้านี้"}
+          subTitle={
+            is401
+              ? "บัญชีของคุณยังไม่เข้าสู่ระบบ หรือเซสชันหมดอายุ"
+              : "หน้านี้อนุญาตเฉพาะ Rider เท่านั้น"
+          }
+          extra={
+            <Space>
+              {is401 ? (
+                <Button type="primary" onClick={() => navigate("/login", { state: { from: location.pathname }})}>
+                  ไปหน้าเข้าสู่ระบบ
+                </Button>
+              ) : (
+                <Button type="primary" onClick={GoMainPage}>
+                  กลับหน้าหลัก
+                </Button>
+              )}
+            </Space>
+          }
+        />
+      </>
+    )
+  }
 
   return (
     <Layout style={{ height: "100vh", overflow: "hidden" }}>

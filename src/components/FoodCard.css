@@ -1,0 +1,78 @@
+.card {
+  position: relative;   /* ให้ absolute child (กากบาท) อ้างอิงได้ */
+  max-width: 200px;
+  margin: 30px auto;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 48px 150px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  overflow: visible;   /* ✅ กันไม่ให้ปุ่มโดนตัดออก */
+}
+
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;   /* ✅ ให้ปุ่มอยู่บนสุด กดได้แน่นอน */
+}
+
+
+.closeBtn:hover {
+  background: #d94e36;
+}
+
+/* Checkbox + label */
+.checkboxRow {
+  margin-top: 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.submitBtn {
+  margin-top: 16px;
+  padding: 10px 24px;
+  border: none;
+  border-radius: 20px;
+  background-color: #f25c42;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.submitBtn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.submitBtn:hover {
+  background-color: #d94e36;
+}
+
+.riderImg {
+  width: 150px;       /* ✅ ลดขนาดลง */
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 16px;
+}

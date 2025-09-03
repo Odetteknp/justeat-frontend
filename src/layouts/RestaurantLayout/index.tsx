@@ -66,6 +66,7 @@ const RestaurantLayout: React.FC = () => {
     token: { colorBgContainer },
   } = theme.useToken();
 
+
   // --- แก้ selectedKey: เช็คอันเฉพาะเจาะจงก่อน --- // Hover เมื่อเลือกแต่ละหัวข้อ 
   const selectedKey = useMemo(() => {
     const clean = location.pathname.replace(/\/+$/, "");

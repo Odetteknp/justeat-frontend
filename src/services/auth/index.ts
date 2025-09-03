@@ -70,3 +70,4 @@ export const logout = async () => {
 // ---- รวม object
 export const auth = { register, login, me, refresh, logout };
 export default auth;
+

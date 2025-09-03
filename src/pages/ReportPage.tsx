@@ -8,9 +8,9 @@ const { Content } = Layout;
 const { Option } = Select;
 const { TextArea } = Input;
 
+
 const normFile = (e: any) => (Array.isArray(e) ? e : e?.fileList);
 
-// Mapping id -> type_name
 const issueTypeMap: Record<number, string> = {
   1: "ได้รับอาหารไม่ครบ",
   2: "จัดส่งล่าช้า",
@@ -56,10 +56,6 @@ const ReportPage = () => {
         }
       });
     }
-    delete values.upload;
-
-    // เพิ่ม title จาก IssueTypeID
-    values.Title = issueTypeMap[values.IssueTypeID];
 
     try {
       setSubmitting(true);
@@ -93,9 +89,7 @@ const ReportPage = () => {
             >
               <Select placeholder="Select title" className="input-field">
                 {Object.entries(issueTypeMap).map(([id, name]) => (
-                  <Option key={id} value={Number(id)}>
-                    {name}
-                  </Option>
+                  <Option key={id} value={Number(id)}>{name}</Option>
                 ))}
               </Select>
             </Form.Item>
@@ -117,24 +111,20 @@ const ReportPage = () => {
               <Upload listType="picture-card" maxCount={5} beforeUpload={() => false}>
                 <button>
                   <PlusOutlined />
-                  <div className="upload-text">Upload Now!</div>
-                </button>
+                  <div style={{ marginTop: 8 }}>Upload Now!</div>
+                </div>
               </Upload>
             </Form.Item>
 
-            <Form.Item label="Order ID" name="OrderID">
+            <Form.Item label="Name" name="name">
               <Input className="input-field" />
             </Form.Item>
 
-            <Form.Item label="Name" name="Name">
+            <Form.Item label="Email" name="email">
               <Input className="input-field" />
             </Form.Item>
 
-            <Form.Item label="Email" name="Email">
-              <Input className="input-field" />
-            </Form.Item>
-
-            <Form.Item label="Phone Number" name="PhoneNumber">
+            <Form.Item label="Phone Number" name="phoneNumber">
               <Input className="input-field" />
             </Form.Item>
 

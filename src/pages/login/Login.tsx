@@ -1,13 +1,18 @@
-// src/pages/login/Login.tsx
 import React, { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Form, Input, Button, Checkbox, Typography, Alert } from "antd";
 import "./Login.css";
-import { auth, type LoginResponse } from "../../services/auth/index";
-import { setToken } from "../../services/tokenStore";
+import { auth } from "../../services/auth";
+import type { LoginResponse } from "../../types";
+import { saveToken } from "../../services/tokenStore";
 
 const { Title, Text } = Typography;
-type LoginForm = { email: string; password: string; remember?: boolean };
+
+type LoginForm = {
+  email: string;
+  password: string;
+  remember?: boolean;
+};
 
 export default function Login() {
   const navigate = useNavigate();
@@ -15,7 +20,7 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // ถ้าถูกกันมาจากหน้า protected จะมี state.from
+  // redirect กลับไปหน้าที่ถูกกันไว้
   const from = (location.state as any)?.from || "/";
 
   async function onFinish(values: LoginForm) {
@@ -27,13 +32,13 @@ export default function Login() {
         password: values.password,
       });
 
-      // ถ้า backend ใช้ Bearer: เก็บ token (ถ้าใช้ cookie/HttpOnly จะไม่มี token ก็ข้าม)
-      if (res.token) setToken(res.token);
+      // ✅ เก็บ token โดยดูจาก remember me
+      if (res.token) saveToken(res.token, values.remember);
 
       navigate(from, { replace: true });
     } catch (e: any) {
       const msg =
-        e?.response?.data?.message ||
+        e?.response?.data?.error || // backend ของคุณส่ง key "error"
         e?.message ||
         "Invalid email or password";
       setError(msg);
@@ -92,7 +97,9 @@ export default function Login() {
             <Form.Item name="remember" valuePropName="checked" noStyle>
               <Checkbox disabled={loading}>Remember me</Checkbox>
             </Form.Item>
-            <Link to="/forgot" className="auth__link">Forget password?</Link>
+            <Link to="/forgot" className="auth__link">
+              Forget password?
+            </Link>
           </div>
 
           <Form.Item style={{ marginTop: 6 }}>
@@ -118,7 +125,9 @@ export default function Login() {
 
         <div className="auth__meta">
           <Text type="secondary">Don't have an account? </Text>
-          <Link to="/register" className="auth__link">Register</Link>
+          <Link to="/register" className="auth__link">
+            Register
+          </Link>
         </div>
       </div>
     </div>

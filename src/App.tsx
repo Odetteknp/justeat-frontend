@@ -27,7 +27,7 @@ import RiderProfile from "./pages/partner/rider/rider_profile.tsx";
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";
-import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu";
+import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu/index.tsx";
 import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
 import RestaurantAcc from "./pages/partner/restaurant/restaurant";
 
@@ -49,6 +49,8 @@ import ProfileChatPage from "./pages/ProfileChatPage.tsx";
 import PaymentLayout from "./layouts/PaymentLayout";
 import Payment from "./pages/payment/payment";
 import PaymentSuccess from "./pages/payment/payment_success";
+import RestaurantReview from "./pages/RestaurantReview.tsx";
+import ThankYouPage from "./pages/ThankYouPage.tsx";
 
 const isLoggedIn = !!getToken();
 
@@ -70,6 +72,8 @@ export default function App() {
         <Route path="/promotions" element={<PromoPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/help" element={<HelpPage />} />
+        <Route path="/review" element={<RestaurantReview/>}/>
+        <Route path="/thankyou" element={<ThankYouPage/>}/>
       </Route>
 
       <Route

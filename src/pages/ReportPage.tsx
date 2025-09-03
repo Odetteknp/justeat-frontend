@@ -5,9 +5,7 @@ import { reports, type Report } from "../services/reports";
 import "./ReportPage.css";
 
 const { Content } = Layout;
-const { Option } = Select;
 const { TextArea } = Input;
-
 
 const normFile = (e: any) => (Array.isArray(e) ? e : e?.fileList);
 
@@ -26,18 +24,17 @@ const ReportPage = () => {
 
   // โหลดรายงานทั้งหมดตอนเปิดหน้า
   useEffect(() => {
-    async function fetchReports() {
+    (async () => {
       try {
         setLoading(true);
         const res = await reports.list();
-        setReportsData(res.data.reports);
+        setReportsData(res.data.reports || []);
       } catch (e: any) {
         message.error(e?.response?.data?.error || "โหลดรายงานไม่สำเร็จ");
       } finally {
         setLoading(false);
       }
-    }
-    fetchReports();
+    })();
   }, []);
 
   // submit form → POST /reports
@@ -61,17 +58,22 @@ const ReportPage = () => {
       setSubmitting(true);
       await reports.create(formData);
       message.success("รายงานปัญหาเรียบร้อยค่ะ");
-
       form.resetFields();
+
       // reload list หลัง submit
       const res = await reports.list();
-      setReportsData(res.data.reports);
+      setReportsData(res.data.reports || []);
     } catch (e: any) {
       message.error(e?.response?.data?.error || "บันทึกไม่สำเร็จ");
     } finally {
       setSubmitting(false);
     }
   };
+
+  const issueOptions = Object.entries(issueTypeMap).map(([id, name]) => ({
+    value: Number(id),
+    label: name,
+  }));
 
   return (
     <Layout>
@@ -87,11 +89,11 @@ const ReportPage = () => {
               name="issueTypeId"
               rules={[{ required: true, message: "กรุณาเลือกหัวข้อ" }]}
             >
-              <Select placeholder="Select title" className="input-field">
-                {Object.entries(issueTypeMap).map(([id, name]) => (
-                  <Option key={id} value={Number(id)}>{name}</Option>
-                ))}
-              </Select>
+              <Select
+                placeholder="Select title"
+                className="input-field"
+                options={issueOptions}
+              />
             </Form.Item>
 
             <Form.Item
@@ -108,8 +110,12 @@ const ReportPage = () => {
               valuePropName="fileList"
               getValueFromEvent={normFile}
             >
-              <Upload listType="picture-card" maxCount={5} beforeUpload={() => false}>
-                <button>
+              <Upload
+                listType="picture-card"
+                maxCount={5}
+                beforeUpload={() => false} // ไม่อัปโหลดอัตโนมัติ ให้ส่งตอน submit
+              >
+                <div>
                   <PlusOutlined />
                   <div style={{ marginTop: 8 }}>Upload Now!</div>
                 </div>
@@ -121,7 +127,7 @@ const ReportPage = () => {
             </Form.Item>
 
             <Form.Item label="Email" name="email">
-              <Input className="input-field" />
+              <Input className="input-field" type="email" />
             </Form.Item>
 
             <Form.Item label="Phone Number" name="phoneNumber">
@@ -134,6 +140,7 @@ const ReportPage = () => {
                 htmlType="submit"
                 className="submit-button"
                 loading={submitting}
+                disabled={submitting}
               >
                 SUBMIT
               </Button>
@@ -147,9 +154,10 @@ const ReportPage = () => {
             <p>กำลังโหลด...</p>
           ) : reportsData.length > 0 ? (
             reportsData.map((issue) => (
-              <div key={issue.id}>
-                <strong>Title:</strong> {issueTypeMap[issue.issueTypeId]} |{" "}
-                <strong>Description:</strong> {issue.description}
+              <div key={issue.id} style={{ marginBottom: 8 }}>
+                <strong>Title:</strong>{" "}
+                {issueTypeMap[issue.issueTypeId] ?? `#${issue.issueTypeId}`}{" "}
+                | <strong>Description:</strong> {issue.description}
               </div>
             ))
           ) : (

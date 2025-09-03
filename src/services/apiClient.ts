@@ -1,6 +1,6 @@
 // src/services/apiClient.ts
 import axios, { AxiosError, AxiosHeaders } from "axios";
-import { getToken, setToken, clearToken } from "./tokenStore";
+import { getToken, saveToken, clearToken } from "./tokenStore";
 
 /** Base config */
 export const api = axios.create({
@@ -68,7 +68,7 @@ async function refreshAccessToken(): Promise<string | null> {
 
       const newToken = data?.token ?? null;
       if (newToken) {
-        setToken?.(newToken);
+        saveToken?.(newToken);
         return newToken;
       }
       return null;

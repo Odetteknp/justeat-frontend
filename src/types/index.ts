@@ -104,3 +104,41 @@ export type UserProfile = {
   role: string;
   avatar?: string;
 };
+
+/** Response ของการ Login */
+export interface LoginResponse {
+  ok: boolean;
+  token: string;
+  user: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    address?: string;
+    role: string;
+    avatarUrl?: string;
+  };
+}
+
+/** Response ของการ Register */
+export interface RegisterResponse {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  role: string;
+}
+
+/** Response ของ /auth/me */
+export interface MeResponse {
+  ok: boolean;
+  user: LoginResponse["user"];
+}
+
+/** Response ของ refresh token */
+export interface RefreshResponse {
+  ok: boolean;
+  token: string;
+}

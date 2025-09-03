@@ -1,6 +1,6 @@
 // src/services/auth/index.ts
 import { api } from "../apiClient";
-import { setToken, clearToken } from "../tokenStore";
+import { saveToken, clearToken } from "../tokenStore";
 
 // ---- Types ให้ตรงกับ backend ตอนนี้ ----
 export type User = {
@@ -34,7 +34,7 @@ export const register = async (body: {
 export const login = async (body: { email: string; password: string }) => {
   const { data } = await api.post<LoginResponse>("/auth/login", body);
   if (data?.token) {
-    setToken(data.token);
+    saveToken(data.token);
     // (ออปชัน) เผื่อบางหน้าที่ยังไม่ได้แนบจาก interceptor
     api.defaults.headers.common.Authorization = `Bearer ${data.token}`;
   }

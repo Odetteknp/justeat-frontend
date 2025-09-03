@@ -3,7 +3,7 @@ import { Form, message } from "antd";
 import type { UploadChangeParam } from "antd/es/upload";
 import { useAuthGuard } from "../../hooks/useAuthGuard";
 import { api } from "../../services/api";
-import { getToken } from "../../services/tokenStore";
+import { getAvatar } from "../../services/user";
 import "./Profile.css";
 
 import PageHeader from "../../components/account/PageHeader";
@@ -22,7 +22,6 @@ const MOCK_USER: UserProfile = {
   avatar: "https://i.pravatar.cc/150?img=3",
 };
 
-// type req backend
 type ProfileUpdateDTO = {
   email?: string;
   firstName?: string;
@@ -38,20 +37,16 @@ export default function ProfilePage() {
     redirectDelayMs: 0,
     redirectTo: { unauthorized: "/login", forbidden: "/" },
   });
+
   const [form] = Form.useForm<UserProfile>();
   const [submitting, setSubmitting] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
 
-  // ✅ ฟังก์ชันโหลด avatar แบบ blob
+  // ✅ โหลด avatar ผ่าน service
   const fetchAvatar = useCallback(async () => {
     try {
-      const token = getToken();
-      const res = await api.get("/auth/me/avatar", {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "blob",
-      });
-      const blobUrl = URL.createObjectURL(res.data);
+      const blobUrl = await getAvatar();
       setAvatarUrl(blobUrl);
     } catch (e) {
       console.error("โหลด avatar ไม่ได้", e);
@@ -59,8 +54,8 @@ export default function ProfilePage() {
   }, []);
 
   useEffect(() => {
-    if (loading) return;
-    if (!allowed) return;
+    if (loading || !allowed) return;
+    console.log("user from useAuthGuard:", user);
 
     const initial: UserProfile = {
       username: (user as any)?.username ?? MOCK_USER.username,
@@ -74,7 +69,7 @@ export default function ProfilePage() {
     form.setFieldsValue(initial as any);
 
     if (user?.avatarUrl) {
-      fetchAvatar(); // ✅ โหลด blob แทนการสร้าง URL string
+      fetchAvatar();
     } else {
       setAvatarUrl(MOCK_USER.avatar);
     }
@@ -82,6 +77,7 @@ export default function ProfilePage() {
     setIsFetching(false);
   }, [loading, allowed, user, form, fetchAvatar]);
 
+  // cleanup blob url
   useEffect(() => {
     return () => {
       if (avatarUrl?.startsWith("blob:")) URL.revokeObjectURL(avatarUrl);
@@ -89,24 +85,27 @@ export default function ProfilePage() {
   }, [avatarUrl]);
 
   // อัปโหลด Avatar
-  const handleAvatarChange = useCallback(async (info: UploadChangeParam) => {
-    const file = info.file.originFileObj as File | undefined;
-    if (!file) return;
+  const handleAvatarChange = useCallback(
+    async (info: UploadChangeParam) => {
+      const file = info.file.originFileObj as File | undefined;
+      if (!file) return;
 
-    try {
-      const formData = new FormData();
-      formData.append("avatar", file);
+      try {
+        const formData = new FormData();
+        formData.append("avatar", file);
 
-      await api.post("/auth/me/avatar", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+        await api.post("/auth/me/avatar", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
 
-      await fetchAvatar(); // ✅ โหลดใหม่หลังอัปโหลด
-      message.success("อัปโหลดรูปโปรไฟล์เรียบร้อย");
-    } catch (e: any) {
-      message.error(e?.response?.data?.error || "อัปโหลดไม่สำเร็จ");
-    }
-  }, [fetchAvatar]);
+        await fetchAvatar();
+        message.success("อัปโหลดรูปโปรไฟล์เรียบร้อย");
+      } catch (e: any) {
+        message.error(e?.response?.data?.error || "อัปโหลดไม่สำเร็จ");
+      }
+    },
+    [fetchAvatar]
+  );
 
   // บันทึกข้อมูลอื่น
   const handleSave = useCallback(
@@ -121,22 +120,18 @@ export default function ProfilePage() {
         };
 
         await api.patch("/auth/me", payload);
+
         const refreshed = await api.get("/auth/me");
-        form.setFieldsValue({
-          email: refreshed.data.user.email,
-          firstName: refreshed.data.user.firstName,
-          lastName: refreshed.data.user.lastName,
-          phoneNumber: refreshed.data.user.phoneNumber,
-          address: refreshed.data.user.address,
-          role: refreshed.data.user.role,
-        });
+        form.setFieldsValue(refreshed.data.user);
 
         if (refreshed.data.user.avatarUrl) {
-          await fetchAvatar(); // ✅ โหลด blob ใหม่หลังบันทึก
+          await fetchAvatar();
         }
         message.success("บันทึกโปรไฟล์เรียบร้อย");
       } catch (e: any) {
-        message.error(e?.response?.data?.error || "บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+        message.error(
+          e?.response?.data?.error || "บันทึกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+        );
       } finally {
         setSubmitting(false);
       }

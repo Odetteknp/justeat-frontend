@@ -1,32 +1,73 @@
-import { saveToken, clearToken } from "../tokenStore";
-import type { AuthProvider, LoginInput, SignupInput, LoginResult, SignupResult } from "./types";
-import { ApiAuthProvider } from "./providers/api";
-import { MockAuthProvider } from "./providers/mock";
+// src/services/auth/index.ts
+import { api } from "../apiClient";
+import { setToken, clearToken } from "../tokenStore";
 
-const useApi = import.meta.env.VITE_USE_API === "true";
-const provider: AuthProvider = useApi ? new ApiAuthProvider() : new MockAuthProvider();
+// ---- Types ให้ตรงกับ backend ตอนนี้ ----
+export type User = {
+  id: number | string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  address?: string;
+  role: string;
+};
 
-/** ล็อกอิน: รองรับ remember + ยืดหยุ่นต่อ cookie/bearer */
-export async function login(input: LoginInput, signal?: AbortSignal): Promise<LoginResult> {
-  const res = await provider.login(input, signal);
-  // ถ้า backend ใช้ cookie: token อาจไม่มี -> ไม่ต้อง saveToken
-  if (res.token) saveToken(res.token, input.remember);
-  return res;
+export type LoginResponse = { ok?: boolean; token?: string; user: User };
+export type RefreshResponse = { token: string };
+
+// ---- helper: ดึง user จาก payload ได้ทั้งห่อ/ไม่ห่อ ----
+function extractUser(payload: any): User {
+  // รองรับ { user: {...} } หรือ { data: {...} } หรือ user ตรงๆ
+  return (payload?.user ?? payload?.data ?? payload) as User;
 }
 
-export async function signup(input: SignupInput, signal?: AbortSignal): Promise<SignupResult> {
-  return provider.signup ? provider.signup(input, signal) : Promise.reject(new Error("Not implemented"));
-}
+// ---- ฟังก์ชันเดี่ยว (ให้ import { login } ยังทำงานได้) ----
+export const register = async (body: {
+  email: string; password: string; firstName: string; lastName: string; phoneNumber?: string;
+}) => {
+  const { data } = await api.post("/auth/register", body);
+  // คืน user ตรงๆ เพื่อ FE ใช้ง่าย
+  return extractUser(data);
+};
 
-export async function logout(signal?: AbortSignal): Promise<void> {
+export const login = async (body: { email: string; password: string }) => {
+  const { data } = await api.post<LoginResponse>("/auth/login", body);
+  if (data?.token) {
+    setToken(data.token);
+    // (ออปชัน) เผื่อบางหน้าที่ยังไม่ได้แนบจาก interceptor
+    api.defaults.headers.common.Authorization = `Bearer ${data.token}`;
+  }
+  // ถ้าต้องการตั้ง header อัตโนมัติที่นี่ก็ทำได้:
+  // if (data.token) api.defaults.headers.common.Authorization = `Bearer ${data.token}`;
+  return data; // คงรูปแบบเดิม: { ok, token, user }
+};
+
+export const me = async () => {
+  const { data } = await api.get("/auth/me");
+  // คืน user ตรงๆ เสมอ (useAuthGuard จะได้ไม่แตก)
+  return extractUser(data);
+};
+
+export const refresh = () =>
+  api.post<RefreshResponse>("/auth/refresh").then(r => r.data);
+
+export const logout = async () => {
   try {
-    if (provider.logout) await provider.logout(signal);
+    // ถ้ามี endpoint นี้ค่อยเรียก; ถ้าไม่มีก็ข้าม
+    await api.post("/auth/logout");
+  } catch {
+    // ignore
   } finally {
     clearToken();
+    if ((api as any)?.defaults?.headers?.common?.Authorization) {
+      delete (api as any).defaults.headers.common.Authorization;
+    }
   }
-}
+  return true;
+};
 
-export async function me(signal?: AbortSignal) {
-  if (!provider.me) throw new Error("Not implemented");
-  return provider.me(signal);
-}
+// ---- รวม object
+export const auth = { register, login, me, refresh, logout };
+export default auth;
+

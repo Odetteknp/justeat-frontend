@@ -328,4 +328,83 @@
   color: #fff;
   border: none;
   cursor: pointer;
+=======
+.menu-management-container {
+  padding: 40px;
+  background-color: transparent; /* ลบพื้นหลังสีขาว */
+  min-height: 100vh;
+}
+
+.menu-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.menu-management-header h2 {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #333;
+}
+
+.ant-btn-primary {
+  background-color: #FE7018;
+  border-color: #FE7018;
+}
+
+.menu-list {
+  width: 100%;
+}
+
+.menu-card {
+  width: 100%;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: transparent; /* ทำให้พื้นหลังของการ์ดโปร่งใส */
+}
+
+.menu-card-image {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 16px;
+}
+
+.menu-icon {
+  font-size: 2.5em;
+  color: #FE7018;
+}
+
+.menu-name {
+  font-size: 1.2em;
+}
+
+.ant-btn-text {
+  padding: 0 10px;
+}
+
+.ant-btn-text.ant-btn-danger {
+  color: #f5222d;
+}
+
+.ant-btn-text .anticon {
+  margin-right: 5px;
+}
+
+/* Antd Upload Custom Style */
+.ant-upload.ant-upload-select-picture-card {
+  width: 100px;
+  height: 100px;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  text-align: center;
+  color: #FE7018;
 }

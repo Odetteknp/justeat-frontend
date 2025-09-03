@@ -50,6 +50,8 @@ import ProfileChatPage from "./pages/ProfileChatPage.tsx";
 import PaymentLayout from "./layouts/PaymentLayout";
 import Payment from "./pages/payment/payment";
 import PaymentSuccess from "./pages/payment/payment_success";
+import RestaurantReview from "./pages/RestaurantReview.tsx";
+import ThankYouPage from "./pages/ThankYouPage.tsx";
 
 const isLoggedIn = !!getToken();
 
@@ -71,6 +73,8 @@ export default function App() {
         <Route path="/promotions" element={<PromoPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/help" element={<HelpPage />} />
+        <Route path="/review" element={<RestaurantReview/>}/>
+        <Route path="/thankyou" element={<ThankYouPage/>}/>
       </Route>
 
       <Route

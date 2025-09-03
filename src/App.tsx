@@ -22,7 +22,7 @@ import RiderProfile from "./pages/partner/rider/rider_profile";
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";
-import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu";
+import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu/index.tsx";
 import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
 import RestaurantAcc from "./pages/partner/restaurant/restaurant";
 

@@ -54,10 +54,10 @@ const RiderProfile: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<RiderProfileData>();
 
+  const orders = [{ id : 123, total : 500 }];
+
   const navigate = useNavigate();
   const riderId = useMemo(() => localStorage.getItem("riderId") || "demo-rider", []);
-
-  const GotoPayment = () => navigate("/payment");
 
   const fileToBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -150,9 +150,16 @@ const RiderProfile: React.FC = () => {
             </Text>
           </Col>
           <Col>
-            <Button size="large" onClick={GotoPayment}>
-              Payment
-            </Button>
+            {orders.map((o) => (
+        <button
+          key={o.id}
+          onClick={() =>
+            navigate(`/payment?orderId=${o.id}&amount=${(o.total / 100).toFixed(2)}`)
+          }
+        >
+          ไปชำระเงิน (#{o.id})
+        </button>
+      ))}
           </Col>
         </Row>
       </Card>

@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
-import { getToken } from "./services/tokenStore";
 
 import HomePage from "./pages/HomePage";
 import RestPage from "./pages/RestaurantsPage";          
@@ -24,6 +23,7 @@ import RiderDashboard from "./pages/partner/rider/dashboard.tsx";
 import RiderWork from "./pages/partner/rider/rider_work.tsx";
 import RiderHistories from "./pages/partner/rider/rider_work_histories.tsx";
 import RiderProfile from "./pages/partner/rider/rider_profile.tsx";
+import RiderRegister from "./pages/register/RiderRegisterForm.tsx"
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";
@@ -40,7 +40,6 @@ import AdminRestaurants from "./pages/admin/admin_restaurant";
 import AdminProfile from "./pages/admin/admin_profile";
 import AdminPromotion from "./pages/admin/admin_promotion";
 
-
 // User pages
 import CartPage from "./pages/CartPage";
 import ProfileChatPage from "./pages/ProfileChatPage.tsx";
@@ -51,8 +50,6 @@ import Payment from "./pages/payment/payment";
 import PaymentSuccess from "./pages/payment/payment_success";
 import RestaurantReview from "./pages/RestaurantReview.tsx";
 import ThankYouPage from "./pages/ThankYouPage.tsx";
-
-const isLoggedIn = !!getToken();
 
 export default function App() {
   return (
@@ -74,6 +71,7 @@ export default function App() {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/review" element={<RestaurantReview/>}/>
         <Route path="/thankyou" element={<ThankYouPage/>}/>
+        <Route path="/partner/rider/register" element={<RiderRegister/>}/>
       </Route>
 
       <Route

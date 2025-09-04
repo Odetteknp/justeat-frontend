@@ -1,85 +1,94 @@
-// src/pages/CartPage.tsx
-import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCart } from '../state/CartContext';
-import './CartPage.css';
+import React, { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useCart } from "../state/CartContext";
+import "./CartPage.css";
 
-// ฟอร์แมตราคาเป็น THB (ไม่ปัดทศนิยม)
+// --- Promotion type ---
+interface Promotion {
+  id: number;
+  title: string;
+  description: string;
+  code?: string;
+  expiresAt?: string;
+  image?: string;
+}
+
+// ฟอร์แมตราคาเป็น THB
 const fmtTHB = (n: number) =>
-  new Intl.NumberFormat('th-TH', {
-    style: 'currency',
-    currency: 'THB',
+  new Intl.NumberFormat("th-TH", {
+    style: "currency",
+    currency: "THB",
     maximumFractionDigits: 0,
   }).format(n);
 
-// ประเภทช่องทางชำระเงิน
-type PaymentMethod = 'promptpay' | 'credit' | 'cod';
+type PaymentMethod = "promptpay" | "credit" | "cod";
 
 export default function CartPage() {
   const cart = useCart();
   const navigate = useNavigate();
 
-  // ---------- Promo code ----------
-  const [promoCode, setPromoCode] = useState('');
-  const [appliedCode, setAppliedCode] = useState<string | null>(null);
+  // ---------- Promotions ----------
+  const [appliedPromo, setAppliedPromo] = useState<Promotion | null>(null);
+  const [savedPromos, setSavedPromos] = useState<Promotion[]>([]);
+
+  // โหลดโปรโมชั่นที่บันทึกไว้จาก localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("savedPromotions");
+      if (raw) {
+        setSavedPromos(JSON.parse(raw));
+      }
+    } catch {
+      setSavedPromos([]);
+    }
+  }, []);
 
   // ---------- Address ----------
-  const [addressId, setAddressId] = useState<string>('addr1');
-  const [newAddress, setNewAddress] = useState('');
+  const [addressId, setAddressId] = useState<string>("addr1");
+  const [newAddress, setNewAddress] = useState("");
 
   // ---------- Payment ----------
   const [payment, setPayment] = useState<PaymentMethod | null>(null);
 
   // ---------- Pricing ----------
-  const subtotal = cart.totalAmount; // ยอดรวมจากตะกร้า
-  const baseDelivery = 15; // ค่าส่งตั้งต้น
+  const subtotal = cart.totalAmount;
+  const baseDelivery = 15;
 
-  // คำนวนส่วนลด/ค่าส่ง/ยอดสุทธิด้วย useMemo เพื่อกัน re-render ที่ไม่จำเป็น
   const { discount, deliveryFee, total } = useMemo(() => {
     let discountVal = 0;
     let delivery = baseDelivery;
 
-    if (appliedCode) {
-      const code = appliedCode.trim().toUpperCase();
-      if (code === 'SAVE10') {
-        discountVal = Math.round(subtotal * 0.1);
-      } else if (code === 'SAVE50') {
-        discountVal = 50;
-      } else if (code === 'SHIPFREE') {
+    if (appliedPromo?.code) {
+      const code = appliedPromo.code.toUpperCase();
+
+      if (code === "SHIPFREE") {
         delivery = 0;
+      } else if (code === "FOOD30") {
+        discountVal = Math.round(subtotal * 0.3);
+      } else if (code === "DRINKB1G1") {
+        discountVal = 40; // ตัวอย่าง fix ค่า
+      } else if (code === "NEW50") {
+        discountVal = 50;
       }
     }
-    if (discountVal > subtotal) discountVal = subtotal; // ป้องกันติดลบ
+
+    if (discountVal > subtotal) discountVal = subtotal;
     const t = subtotal - discountVal + delivery;
     return { discount: discountVal, deliveryFee: delivery, total: t };
-  }, [appliedCode, subtotal]);
+  }, [appliedPromo, subtotal]);
 
-  // ---------- Promo code handlers ----------
-  const applyCode = () => {
-    const c = promoCode.trim();
-    if (!c) return;
-    setAppliedCode(c);
-  };
-  const clearCode = () => {
-    setAppliedCode(null);
-    setPromoCode('');
-  };
-
-  // ---------- Helpers ----------
-  // มีที่อยู่พร้อมใช้งานหรือไม่ (ถ้าเลือก "เพิ่มที่อยู่ใหม่" ต้องยาวพอประมาณ)
+  // ---------- Checkout ----------
   const hasAddress =
-    (addressId && addressId !== 'new') ||
-    (addressId === 'new' && newAddress.trim().length > 8);
+    (addressId && addressId !== "new") ||
+    (addressId === "new" && newAddress.trim().length > 8);
 
-  // ปุ่ม Checkout จะกดได้เมื่อ: มีสินค้า + มีที่อยู่ + เลือกชำระเงินแล้ว
   const canCheckout = cart.items.length > 0 && hasAddress && !!payment;
 
   const onCheckout = () => {
     if (!canCheckout) return;
-    // ที่นี่สามารถต่อกับ payment gateway / API จริงได้
-    alert('สั่งซื้อสำเร็จ ขอบคุณค่ะ 🧡');
+    alert("สั่งซื้อสำเร็จ ขอบคุณค่ะ 🧡");
     cart.clear();
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -89,13 +98,13 @@ export default function CartPage() {
       {cart.items.length === 0 ? (
         <>
           <p className="emptyText">ยังไม่มีสินค้าในตะกร้า</p>
-          <button onClick={() => navigate('/')} className="btnPlain">
+          <button onClick={() => navigate("/")} className="btnPlain">
             กลับไปเลือกเมนู
           </button>
         </>
       ) : (
         <div className="grid">
-          {/* LEFT: รายการอาหารในตะกร้า */}
+          {/* LEFT: รายการอาหาร */}
           <div>
             <div className="card">
               <div className="cardHead">
@@ -106,39 +115,49 @@ export default function CartPage() {
               </div>
 
               <ul className="listReset">
-  {cart.items.map((line) => (
-    <li key={line.id} className="cartLine">
-      <img src={line.item.image} alt={line.item.name} className="itemImage" />
-      <div className="lineBody">
-        <div className="itemName">{line.item.name}</div>
-        <div className="itemMeta">
-          {Object.entries(line.selected).map(([optId, choiceIds], idx) => {
-            if (!Array.isArray(choiceIds)) return null;
-            const opt = line.item.options?.find(o => o.id === optId);
-            const names = choiceIds
-              .map(cid => opt?.choices.find(c => c.id === cid)?.name ?? cid);
-            return (
-              <span key={optId} className="itemMetaChip">
-                {idx ? ' | ' : ''}
-                {names.join(', ')}
-              </span>
-            );
-          })}
-          {line.note ? ` • ${line.note}` : null}
-        </div>
-      </div>
-      <div className="qty">× {line.quantity}</div>
-      <div className="lineTotal">{fmtTHB(line.total)}</div>
-      <button
-        onClick={() => cart.removeItem(line.id)}
-        className="btnPlain"
-      >
-        ลบ
-      </button>
-    </li>
-  ))}
-</ul>
-
+                {cart.items.map((line) => (
+                  <li key={line.id} className="cartLine">
+                    <img
+                      src={line.item.image}
+                      alt={line.item.name}
+                      className="itemImage"
+                    />
+                    <div className="lineBody">
+                      <div className="itemName">{line.item.name}</div>
+                      <div className="itemMeta">
+                        {Object.entries(line.selected).map(
+                          ([optId, choiceIds], idx) => {
+                            if (!Array.isArray(choiceIds)) return null;
+                            const opt = line.item.options?.find(
+                              (o) => o.id === optId
+                            );
+                            const names = choiceIds.map(
+                              (cid) =>
+                                opt?.choices.find((c) => c.id === cid)?.name ??
+                                cid
+                            );
+                            return (
+                              <span key={optId} className="itemMetaChip">
+                                {idx ? " | " : ""}
+                                {names.join(", ")}
+                              </span>
+                            );
+                          }
+                        )}
+                        {line.note ? ` • ${line.note}` : null}
+                      </div>
+                    </div>
+                    <div className="qty">× {line.quantity}</div>
+                    <div className="lineTotal">{fmtTHB(line.total)}</div>
+                    <button
+                      onClick={() => cart.removeItem(line.id)}
+                      className="btnPlain"
+                    >
+                      ลบ
+                    </button>
+                  </li>
+                ))}
+              </ul>
 
               <div className="actionsRow">
                 <button onClick={() => navigate(-1)} className="btnPlain">
@@ -148,7 +167,7 @@ export default function CartPage() {
             </div>
           </div>
 
-          {/* RIGHT: สรุปราคา + คูปอง + ที่อยู่ + ชำระเงิน */}
+          {/* RIGHT: ราคา + โปร + ที่อยู่ + ชำระเงิน */}
           <div className="rightCol">
             {/* สรุปราคา */}
             <div className="card">
@@ -163,35 +182,36 @@ export default function CartPage() {
               />
             </div>
 
-            {/* โค้ดโปรโมชั่น */}
+            {/* เลือกโปรโมชั่นจากที่เก็บไว้ */}
             <div className="card">
-              <strong className="blockTitle">โค้ดโปรโมชั่น</strong>
-              <div className="inlineFields">
-                <input
-                  value={appliedCode ? appliedCode : promoCode}
-                  onChange={(e) =>
-                    appliedCode
-                      ? setAppliedCode(e.target.value)
-                      : setPromoCode(e.target.value)
-                  }
-                  placeholder="เช่น SAVE10 / SAVE50 / SHIPFREE"
+              <strong className="blockTitle">เลือกโปรโมชั่น</strong>
+              {savedPromos.length === 0 ? (
+                <p className="helpText">ยังไม่มีโปรโมชั่นที่คุณเก็บไว้</p>
+              ) : (
+                <select
+                  value={appliedPromo?.id ?? ""}
+                  onChange={(e) => {
+                    const selected = savedPromos.find(
+                      (p) => p.id === Number(e.target.value)
+                    );
+                    setAppliedPromo(selected ?? null);
+                  }}
                   className="input"
-                  aria-label="ระบุโค้ดโปรโมชั่น"
-                />
-                {appliedCode ? (
-                  <button onClick={clearCode} className="btnPlain">
-                    ยกเลิก
-                  </button>
-                ) : (
-                  <button onClick={applyCode} className="btnPrimary">
-                    ใช้โค้ด
-                  </button>
-                )}
-              </div>
-              <div className="helpText">
-                ตัวอย่าง: <code>SAVE10</code> ลด 10% • <code>SAVE50</code> ลด 50฿ •{' '}
-                <code>SHIPFREE</code> ส่งฟรี
-              </div>
+                >
+                  <option value="">-- เลือกโปรโมชั่น --</option>
+                  {savedPromos.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title} ({p.code})
+                    </option>
+                  ))}
+                </select>
+              )}
+              {appliedPromo && (
+                <div className="helpText">
+                  ใช้งานแล้ว: <strong>{appliedPromo.title}</strong> • โค้ด:{" "}
+                  <code>{appliedPromo.code}</code>
+                </div>
+              )}
             </div>
 
             {/* ที่อยู่จัดส่ง */}
@@ -202,36 +222,40 @@ export default function CartPage() {
                   <input
                     type="radio"
                     name="addr"
-                    checked={addressId === 'addr1'}
-                    onChange={() => setAddressId('addr1')}
+                    checked={addressId === "addr1"}
+                    onChange={() => setAddressId("addr1")}
                   />
-                  <span>บ้าน: 99/99 ถ.สุขสบาย แขวงสดใส เขตอิ่มใจ กทม. 10110</span>
+                  <span>
+                    บ้าน: 99/99 ถ.สุขสบาย แขวงสดใส เขตอิ่มใจ กทม. 10110
+                  </span>
                 </label>
                 <label className="radioRow">
                   <input
                     type="radio"
                     name="addr"
-                    checked={addressId === 'addr2'}
-                    onChange={() => setAddressId('addr2')}
+                    checked={addressId === "addr2"}
+                    onChange={() => setAddressId("addr2")}
                   />
-                  <span>ที่ทำงาน: 123 อาคาร ABC ชั้น 12 ถ.พหลโยธิน จตุจักร กทม. 10900</span>
+                  <span>
+                    ที่ทำงาน: 123 อาคาร ABC ชั้น 12 ถ.พหลโยธิน จตุจักร กทม.
+                    10900
+                  </span>
                 </label>
                 <label className="radioRow">
                   <input
                     type="radio"
                     name="addr"
-                    checked={addressId === 'new'}
-                    onChange={() => setAddressId('new')}
+                    checked={addressId === "new"}
+                    onChange={() => setAddressId("new")}
                   />
                   <span>เพิ่มที่อยู่ใหม่</span>
                 </label>
-                {addressId === 'new' && (
+                {addressId === "new" && (
                   <textarea
                     value={newAddress}
                     onChange={(e) => setNewAddress(e.target.value)}
                     placeholder="พิมพ์ที่อยู่จัดส่งใหม่..."
-                    className={`$"input" $"textarea"`}
-                    aria-label="ที่อยู่ใหม่"
+                    className="input textarea"
                   />
                 )}
               </div>
@@ -245,8 +269,8 @@ export default function CartPage() {
                   <input
                     type="radio"
                     name="pay"
-                    checked={payment === 'promptpay'}
-                    onChange={() => setPayment('promptpay')}
+                    checked={payment === "promptpay"}
+                    onChange={() => setPayment("promptpay")}
                   />
                   <span>พร้อมเพย์ (PromptPay)</span>
                 </label>
@@ -254,8 +278,8 @@ export default function CartPage() {
                   <input
                     type="radio"
                     name="pay"
-                    checked={payment === 'credit'}
-                    onChange={() => setPayment('credit')}
+                    checked={payment === "credit"}
+                    onChange={() => setPayment("credit")}
                   />
                   <span>บัตรเครดิต/เดบิต</span>
                 </label>
@@ -263,8 +287,8 @@ export default function CartPage() {
                   <input
                     type="radio"
                     name="pay"
-                    checked={payment === 'cod'}
-                    onChange={() => setPayment('cod')}
+                    checked={payment === "cod"}
+                    onChange={() => setPayment("cod")}
                   />
                   <span>เก็บเงินปลายทาง</span>
                 </label>
@@ -274,7 +298,7 @@ export default function CartPage() {
             <button
               onClick={onCheckout}
               disabled={!canCheckout}
-              className={`$"btnPrimary" $"checkoutBtn"`}
+              className="btnPrimary checkoutBtn"
               aria-disabled={!canCheckout}
               aria-label={`ยืนยันคำสั่งซื้อ มูลค่า ${fmtTHB(total)}`}
             >
@@ -288,7 +312,13 @@ export default function CartPage() {
 }
 
 /** แถวสรุปราคา (label / value) */
-function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode }) {
+function Row({
+  label,
+  value,
+}: {
+  label: React.ReactNode;
+  value: React.ReactNode;
+}) {
   return (
     <div className="row">
       <div>{label}</div>

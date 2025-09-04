@@ -30,6 +30,7 @@ import RestaurantLayout from "./layouts/RestaurantLayout";
 import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu/index.tsx";
 import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
 import RestaurantAcc from "./pages/partner/restaurant/restaurant";
+import RestaurantRegisterForm from './pages/register/RestaurantRegisterForm';
 
 // Admin
 import AdminLayout from "./layouts/AdminLayout";
@@ -58,6 +59,7 @@ export default function App() {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+       
       </Route>
 
       {/* Main layout */}
@@ -71,6 +73,7 @@ export default function App() {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/review" element={<RestaurantReview/>}/>
         <Route path="/thankyou" element={<ThankYouPage/>}/>
+        <Route path="/partner/restaurant/register" element={<RestaurantRegisterForm />} />
         <Route path="/partner/rider/register" element={<RiderRegister/>}/>
       </Route>
 

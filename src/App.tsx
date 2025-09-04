@@ -76,8 +76,7 @@ export default function App() {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/review" element={<RestaurantReview/>}/>
         <Route path="/thankyou" element={<ThankYouPage/>}/>
-        
-        <Route path="/register/restaurant" element={<RestaurantRegisterForm />} />
+        <Route path="/partner/restaurant/register" element={<RestaurantRegisterForm />} />
       </Route>
 
       <Route

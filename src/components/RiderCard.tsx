@@ -1,6 +1,6 @@
 // components/RiderCard.tsx
-import './FoodCard.css'; // ⬅️ เปลี่ยนมาใช้ CSS ปกติ
-//import riderImg from '../assets/image/rider.png';
+import './FoodCard.css'; 
+import riderImg from '../assets/image/rider.png';
 import RatingStars from './RatingStars';
 import CommentBox from './CommentBox';
 import { useState } from 'react';

@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
-import { getToken } from "./services/tokenStore";
 
 import HomePage from "./pages/HomePage";
 import RestPage from "./pages/RestaurantsPage";          
@@ -24,12 +23,14 @@ import RiderDashboard from "./pages/partner/rider/dashboard.tsx";
 import RiderWork from "./pages/partner/rider/rider_work.tsx";
 import RiderHistories from "./pages/partner/rider/rider_work_histories.tsx";
 import RiderProfile from "./pages/partner/rider/rider_profile.tsx";
+import RiderRegister from "./pages/register/RiderRegisterForm.tsx"
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";
 import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu/index.tsx";
 import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
 import RestaurantAcc from "./pages/partner/restaurant/restaurant";
+import RestaurantRegisterForm from './pages/register/RestaurantRegisterForm';
 
 // Admin
 import AdminLayout from "./layouts/AdminLayout";
@@ -39,7 +40,6 @@ import AdminRider from "./pages/admin/admin_rider";
 import AdminRestaurants from "./pages/admin/admin_restaurant";
 import AdminProfile from "./pages/admin/admin_profile";
 import AdminPromotion from "./pages/admin/admin_promotion";
-
 
 // User pages
 import CartPage from "./pages/CartPage";
@@ -52,8 +52,6 @@ import PaymentSuccess from "./pages/payment/payment_success";
 import RestaurantReview from "./pages/RestaurantReview.tsx";
 import ThankYouPage from "./pages/ThankYouPage.tsx";
 
-const isLoggedIn = !!getToken();
-
 export default function App() {
   return (
     <Routes>
@@ -61,6 +59,7 @@ export default function App() {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+       
       </Route>
 
       {/* Main layout */}
@@ -74,6 +73,8 @@ export default function App() {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/review" element={<RestaurantReview/>}/>
         <Route path="/thankyou" element={<ThankYouPage/>}/>
+        <Route path="/partner/restaurant/register" element={<RestaurantRegisterForm />} />
+        <Route path="/partner/rider/register" element={<RiderRegister/>}/>
       </Route>
 
       <Route

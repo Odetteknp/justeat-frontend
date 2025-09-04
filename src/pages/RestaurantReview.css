@@ -48,6 +48,7 @@
 .rr__stars {
   display: inline-flex;
   gap: 6px;
+  margin-top: 16px;
 }
 
 .rr__star {
@@ -115,14 +116,14 @@
   cursor: not-allowed;
 }
 
-.rr_image {
+.rr__image {
   display: flex;
   justify-content: center;
   align-items: center;
   padding: 10px 0;
 }
 
-.rr_image img {
+.rr__image img {
   width: 30%;
 }
 

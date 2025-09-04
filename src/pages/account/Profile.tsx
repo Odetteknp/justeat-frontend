@@ -1,9 +1,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { Form, message } from "antd";
-import type { UploadChangeParam } from "antd/es/upload";
 import { useAuthGuard } from "../../hooks/useAuthGuard";
-import { api } from "../../services/api";
-import { getAvatar } from "../../services/user";
+import { getAvatarBase64, updateProfile, uploadAvatarBase64 } from "../../services/user";
 import "./Profile.css";
 
 import PageHeader from "../../components/account/PageHeader";
@@ -19,16 +17,14 @@ const MOCK_USER: UserProfile = {
   phoneNumber: "0812345678",
   address: "กรุงเทพมหานคร",
   role: "ลูกค้า",
-  avatar: "https://i.pravatar.cc/150?img=3",
+  avatarBase64: "https://i.pravatar.cc/150?img=3", // ✅ fallback URL
 };
 
 type ProfileUpdateDTO = {
-  email?: string;
   firstName?: string;
   lastName?: string;
   phoneNumber?: string;
   address?: string;
-  avatarUrl?: string;
 };
 
 export default function ProfilePage() {
@@ -41,21 +37,12 @@ export default function ProfilePage() {
   const [form] = Form.useForm<UserProfile>();
   const [submitting, setSubmitting] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
-  const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
+  const [avatarSrc, setAvatarSrc] = useState<string | undefined>(); // ✅ เปลี่ยนชื่อ
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
-  // ✅ โหลด avatar ผ่าน service
-  const fetchAvatar = useCallback(async () => {
-    try {
-      const blobUrl = await getAvatar();
-      setAvatarUrl(blobUrl);
-    } catch (e) {
-      console.error("โหลด avatar ไม่ได้", e);
-    }
-  }, []);
-
+  // โหลด profile + avatar
   useEffect(() => {
     if (loading || !allowed) return;
-    console.log("user from useAuthGuard:", user);
 
     const initial: UserProfile = {
       username: (user as any)?.username ?? MOCK_USER.username,
@@ -65,50 +52,64 @@ export default function ProfilePage() {
       phoneNumber: user?.phoneNumber ?? "",
       address: user?.address ?? "",
       role: user?.role ?? "customer",
+      avatarBase64: user?.avatarBase64 ?? MOCK_USER.avatarBase64,
     };
     form.setFieldsValue(initial as any);
 
-    if (user?.avatarUrl) {
-      fetchAvatar();
-    } else {
-      setAvatarUrl(MOCK_USER.avatar);
+    getAvatarBase64()
+      .then((b64) => {
+        if (b64) setAvatarSrc(b64);
+        else setAvatarSrc(MOCK_USER.avatarBase64);
+      })
+      .catch(() => setAvatarSrc(MOCK_USER.avatarBase64))
+      .finally(() => setIsFetching(false));
+  }, [loading, allowed, user, form]);
+
+  // ✅ เลือกรูปใหม่ → preview
+  const handleSelectFile = (file: File) => {
+    console.log("📂 handleSelectFile รับไฟล์:", file.name, file.size, file.lastModified);
+    setSelectedFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setAvatarSrc(previewUrl); // แสดง preview ชั่วคราว
+  };
+
+  // ✅ บันทึกรูป (Base64)
+  const handleSaveAvatar = async () => {
+    if (!selectedFile) {
+      message.warning("กรุณาเลือกรูปก่อน");
+      return;
     }
+    console.log("🚀 เริ่ม convert file -> base64", selectedFile);
 
-    setIsFetching(false);
-  }, [loading, allowed, user, form, fetchAvatar]);
+    const reader = new FileReader();
 
-  // cleanup blob url
-  useEffect(() => {
-    return () => {
-      if (avatarUrl?.startsWith("blob:")) URL.revokeObjectURL(avatarUrl);
-    };
-  }, [avatarUrl]);
-
-  // อัปโหลด Avatar
-  const handleAvatarChange = useCallback(
-    async (info: UploadChangeParam) => {
-      const file = info.file.originFileObj as File | undefined;
-      if (!file) return;
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      console.log("📦 base64 data (preview)", base64.substring(0, 50));
 
       try {
-        const formData = new FormData();
-        formData.append("avatar", file);
+        const updated = await uploadAvatarBase64(base64);
+        console.log("✅ response จาก backend:", updated);
 
-        await api.post("/auth/me/avatar", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
-
-        await fetchAvatar();
-        message.success("อัปโหลดรูปโปรไฟล์เรียบร้อย");
+        setAvatarSrc(updated.avatarBase64); // ใช้ state ที่ถูกต้อง
+        setSelectedFile(null);
+        message.success("บันทึกรูปโปรไฟล์เรียบร้อย");
       } catch (e: any) {
-        message.error(e?.response?.data?.error || "อัปโหลดไม่สำเร็จ");
+        console.error("❌ upload error:", e);
+        message.error("บันทึกรูปไม่สำเร็จ");
       }
-    },
-    [fetchAvatar]
-  );
+    };
 
-  // บันทึกข้อมูลอื่น
-  const handleSave = useCallback(
+    reader.onerror = (err) => {
+      console.error("❌ FileReader error:", err);
+    };
+
+    reader.readAsDataURL(selectedFile); // สำคัญมาก
+  };
+
+
+  // ✅ บันทึกข้อมูลทั่วไป
+  const handleSaveProfile = useCallback(
     async (values: UserProfile) => {
       setSubmitting(true);
       try {
@@ -119,14 +120,9 @@ export default function ProfilePage() {
           address: values.address,
         };
 
-        await api.patch("/auth/me", payload);
+        const refreshed = await updateProfile(payload);
+        form.setFieldsValue(refreshed);
 
-        const refreshed = await api.get("/auth/me");
-        form.setFieldsValue(refreshed.data.user);
-
-        if (refreshed.data.user.avatarUrl) {
-          await fetchAvatar();
-        }
         message.success("บันทึกโปรไฟล์เรียบร้อย");
       } catch (e: any) {
         message.error(
@@ -136,7 +132,7 @@ export default function ProfilePage() {
         setSubmitting(false);
       }
     },
-    [form, fetchAvatar]
+    [form]
   );
 
   if (!allowed) return null;
@@ -147,16 +143,17 @@ export default function ProfilePage() {
       <div className="content-grid">
         <AvatarCard
           isLoading={isFetching}
-          avatarUrl={avatarUrl || MOCK_USER.avatar}
+          avatarSrc={avatarSrc || MOCK_USER.avatarBase64} // ✅ ใช้ avatarSrc
           role={form.getFieldValue("role")}
           email={form.getFieldValue("email")}
-          onChangeAvatar={handleAvatarChange}
+          onSelectFile={handleSelectFile}
+          onSaveAvatar={handleSaveAvatar}
         />
         <ProfileForm
           form={form}
           isLoading={isFetching}
           submitting={submitting}
-          onSubmit={handleSave}
+          onSubmit={handleSaveProfile}
         />
       </div>
     </div>

@@ -15,6 +15,13 @@
   background: #fff;
 }
 
+.rider-Hero {
+  display: block;
+  margin: 0 auto 16px auto; /* จัดกลางแนวนอน และเว้นล่าง */
+  max-width: 200px;         /* จำกัดขนาดรูป */
+  height: auto;
+}
+
 .rider-register-title {
   font-size: 26px;
   font-weight: 600;

@@ -1,7 +1,8 @@
 import React from "react";
-import { Form, Input, Button, Upload, Checkbox, Card, Divider, Row, Col } from "antd";
+import { Form, Input, Button, Upload, Card, Divider, Row, Col } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import "./RiderRegisterForm.css";
+import RiderCartoon from "../../assets/image/riderMen.jpg"
 
 interface RiderRegisterForm {
   email: string;
@@ -27,6 +28,7 @@ const RiderRegister: React.FC = () => {
   return (
     <div className="rider-register-wrapper">
       <Card className="rider-register-card" bordered={false}>
+        <img className="rider-Hero" src={RiderCartoon} alt="" />
         <h1 className="rider-register-title">สมัคร Rider</h1>
 
         <Form form={form} layout="vertical" onFinish={onFinish}>

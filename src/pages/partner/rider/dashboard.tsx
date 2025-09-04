@@ -54,8 +54,8 @@ type RiderProfileSummary = {
   vehicleType?: "motorcycle" | "car" | "bicycle";
   licensePlate?: string;
   zone?: string;
-  serviceStart?: string; // "HH:mm"
-  serviceEnd?: string;   // "HH:mm"
+  // serviceStart?: string;
+  // serviceEnd?: string;
   avatarUrl?: string;
 };
 
@@ -74,7 +74,6 @@ const vehicleLabel = (v?: RiderProfileSummary["vehicleType"]) =>
   v === "motorcycle" ? "มอเตอร์ไซค์" : v === "car" ? "รถยนต์" : v === "bicycle" ? "จักรยาน" : "-";
 
 /* ---------------- Mock API ---------------- */
-// NOTE: ในอนาคตให้แทนที่ด้วยการเรียก Backend จริง
 async function fetchDashboardData(signal?: AbortSignal): Promise<{
   summary: DashboardSummary;
   recentWorks: RecentWork[];
@@ -114,8 +113,6 @@ async function fetchRiderProfileSummary(signal?: AbortSignal): Promise<RiderProf
     vehicleType: "motorcycle",
     licensePlate: "กทม-1234",
     zone: "ประตู 4",
-    serviceStart: "08:00",
-    serviceEnd: "20:00",
     avatarUrl: "",
   };
 }
@@ -133,8 +130,8 @@ const Dashboard: React.FC = () => {
   const abortRef = useRef<AbortController | null>(null);
 
   const handleStartWork = () => {
-  navigate("/partner/rider/work");
-};
+    navigate("/partner/rider/work");
+  };
 
   const loadAll = async () => {
     try {
@@ -162,7 +159,6 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     loadAll();
     return () => abortRef.current?.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onlineHhmm = useMemo(() => {
@@ -173,14 +169,7 @@ const Dashboard: React.FC = () => {
   }, [summary]);
 
   return (
-    <div
-      style={{
-        backgroundColor: "white",
-        minHeight: "100vh",
-        width: "100%",
-        paddingBottom: 24,
-      }}
-    >
+    <div style={{ backgroundColor: "white", minHeight: "100vh", width: "100%", paddingBottom: 24 }}>
       {contextHolder}
 
       {/* Header */}
@@ -213,7 +202,7 @@ const Dashboard: React.FC = () => {
           <Col>
             <Space wrap>
               <Button
-                onClick={handleStartWork }
+                onClick={handleStartWork}
                 type="primary"
                 size="large"
                 icon={<PlayCircleOutlined />}
@@ -260,7 +249,7 @@ const Dashboard: React.FC = () => {
           </Col>
         </Row>
 
-        {/* ซ้าย: โปรไฟล์ (แทนที่ 'งานปัจจุบัน'), ขวา: งานล่าสุด */}
+        {/* ซ้าย: โปรไฟล์, ขวา: งานล่าสุด */}
         <Row gutter={[16, 16]} style={{ padding: "0 12px", marginTop: 8 }}>
           <Col xs={24} lg={12}>
             <Card
@@ -289,15 +278,14 @@ const Dashboard: React.FC = () => {
                   <Row gutter={[12, 8]}>
                     <Col xs={24} md={12}>
                       <Text type="secondary">ยานพาหนะ</Text>
-                      <div>{vehicleLabel(profile.vehicleType)} {profile.licensePlate ? `• ${profile.licensePlate}` : ""}</div>
+                      <div>
+                        {vehicleLabel(profile.vehicleType)}{" "}
+                        {profile.licensePlate ? `• ${profile.licensePlate}` : ""}
+                      </div>
                     </Col>
                     <Col xs={24} md={12}>
                       <Text type="secondary">โซนประจำ</Text>
                       <div>{profile.zone || "-"}</div>
-                    </Col>
-                    <Col xs={24} md={12}>
-                      <Text type="secondary">เวลาให้บริการ</Text>
-                      <div>{profile.serviceStart && profile.serviceEnd ? `${profile.serviceStart} - ${profile.serviceEnd}` : "-"}</div>
                     </Col>
                   </Row>
                 </>
@@ -308,14 +296,15 @@ const Dashboard: React.FC = () => {
           </Col>
 
           <Col xs={24} lg={12}>
-            <Card 
-            title="งานล่าสุด" bordered
-            extra={
+            <Card
+              title="งานล่าสุด"
+              bordered
+              extra={
                 <Button type="primary" onClick={() => navigate("/partner/rider/histories")}>
                   ประวัติการจัดส่ง
                 </Button>
-                }
-              >
+              }
+            >
               {recentWorks.length ? (
                 <List
                   itemLayout="horizontal"
@@ -332,15 +321,19 @@ const Dashboard: React.FC = () => {
                         description={
                           <>
                             <div>
-                              <Text type="secondary">เมื่อ:</Text> {dayjs(item.when).format("YYYY-MM-DD HH:mm")}
+                              <Text type="secondary">เมื่อ:</Text>{" "}
+                              {dayjs(item.when).format("YYYY-MM-DD HH:mm")}
                             </div>
                             <div>
-                              <Text type="secondary">จาก:</Text> {item.pickupName} <Text type="secondary">→ ถึง:</Text> {item.dropoffName}
+                              <Text type="secondary">จาก:</Text> {item.pickupName}{" "}
+                              <Text type="secondary">→ ถึง:</Text> {item.dropoffName}
                             </div>
                           </>
                         }
                       />
-                      <div><Text strong>{item.fareTHB.toLocaleString("th-TH")} ฿</Text></div>
+                      <div>
+                        <Text strong>{item.fareTHB.toLocaleString("th-TH")} ฿</Text>
+                      </div>
                     </List.Item>
                   )}
                 />

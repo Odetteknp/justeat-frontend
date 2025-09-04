@@ -33,6 +33,12 @@ const getBase64 = (file: File): Promise<string> =>
     reader.onerror = reject;
   });
 
+// helper: แปลง base64 data URL เป็น base64 string อย่างเดียว
+const extractBase64 = (dataUrl: string): string => {
+  const base64Index = dataUrl.indexOf('base64,');
+  return base64Index !== -1 ? dataUrl.substring(base64Index + 7) : dataUrl;
+};
+
 const Payment: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
@@ -41,6 +47,10 @@ const Payment: React.FC = () => {
   const params = new URLSearchParams(search);
   const initialOrderCode = params.get("order") || "ODR-DEMO-001";
   const initialAmount = params.get("amount") ? Number(params.get("amount")) : 0;
+  const initialOrderId = params.get("orderId");
+  const [orderId, setOrderId] = useState<number | null>(
+  initialOrderId ? Number(initialOrderId) : null
+);
 
   const [orderCode, setOrderCode] = useState<string>(initialOrderCode);
   const [amount, setAmount] = useState<number | null>(initialAmount || null);
@@ -149,12 +159,13 @@ const Payment: React.FC = () => {
 
   // ---- แนบสลิป: config ----
   const beforeUpload: UploadProps["beforeUpload"] = (file) => {
-    const isImage = file.type.startsWith("image/");
-    if (!isImage) messageApi.error("อัปโหลดได้เฉพาะไฟล์รูปภาพเท่านั้น");
-    const isLt5M = file.size / 1024 / 1024 < 5;
-    if (!isLt5M) messageApi.error("ขนาดไฟล์ต้องไม่เกิน 5MB");
-    return isImage && isLt5M ? true : Upload.LIST_IGNORE; // ปล่อยให้ antd จัดการ (ไม่อัปโหลดขึ้นเซิร์ฟเวอร์จริง)
-  };
+  const isImage = file.type.startsWith("image/");
+  if (!isImage) messageApi.error("อัปโหลดได้เฉพาะไฟล์รูปภาพเท่านั้น");
+  const isLt5M = file.size / 1024 / 1024 < 5;
+  if (!isLt5M) messageApi.error("ขนาดไฟล์ต้องไม่เกิน 5MB");
+  // คืน false เพื่อไม่ให้อัปโหลดทันที
+  return isImage && isLt5M ? false : Upload.LIST_IGNORE;
+};
 
   const onChangeUpload: UploadProps["onChange"] = ({ fileList }) => {
     setSlipList(fileList.slice(-1)); // จำกัด 1 ไฟล์
@@ -169,28 +180,76 @@ const Payment: React.FC = () => {
   };
 
   const handleSubmitSlip = async () => {
-    if (!slipList.length || !slipList[0].originFileObj) {
-      messageApi.warning("โปรดแนบสลิปก่อนส่งยืนยัน");
-      return;
+  if (!slipList.length || !slipList[0].originFileObj) {
+    messageApi.warning("โปรดแนบสลิปก่อนส่งยืนยัน");
+    return;
+  }
+  if (!orderId) {
+    messageApi.error("ไม่พบ orderId — เปิดหน้านี้ด้วยพารามิเตอร์ ?orderId=<เลขคำสั่งซื้อ>");
+    return;
+  }
+  if (!amount || amount <= 0) {
+    messageApi.error("กรุณาใส่ยอดเงินที่ถูกต้อง");
+    return;
+  }
+
+  try {
+    setUploading(true);
+    const file = slipList[0].originFileObj as File;
+
+    // 1) แปลงไฟล์ -> base64 (ตัด prefix)
+    const dataUrl = await getBase64(file);
+    const base64Data = extractBase64(dataUrl);
+
+    // 2) เตรียม payload
+    const body = {
+      orderId: Number(orderId),
+      amount: Math.round(Number(amount) * 100), // ส่งเป็น "สตางค์"
+      contentType: file.type || "image/png",
+      slipBase64: base64Data,
+    };
+
+    // 3) ดึง token (ปรับ key ให้ตรงกับตอน login ของคุณ)
+    const token = localStorage.getItem("token") || "";
+
+    // 4) เรียก API ผ่าน proxy (วิธี A)
+    const url = "/payments/upload-slip";
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}), // << สำคัญ
+      },
+      body: JSON.stringify(body),
+    });
+
+    // 5) จัดการ error ที่อาจไม่มี JSON (เช่น 401)
+    if (!res.ok) {
+      const text = await res.text();
+      let errMsg = text || `${res.status} ${res.statusText}`;
+      try {
+        const j = JSON.parse(text);
+        errMsg = j?.error || errMsg;
+      } catch { /* ไม่ใช่ JSON ก็ข้ามไป */ }
+      throw new Error(errMsg);
     }
-    try {
-      setUploading(true);
-      const file = slipList[0].originFileObj as File;
-      // ตัวอย่างอัปโหลดจริง:
-      // const form = new FormData();
-      // form.append('slip', file);
-      // form.append('orderCode', orderCode);
-      // form.append('amount', String(amount ?? ''));
-      // if (paymentIntentId) form.append('paymentIntentId', paymentIntentId);
-      // await fetch('/api/payments/upload-slip', { method: 'POST', body: form });
-      messageApi.success("เดโม UI: แนบสลิปสำเร็จ (ยังไม่เชื่อม backend)");
-    } catch (e) {
-      console.error(e);
-      messageApi.error("อัปโหลดสลิปไม่สำเร็จ");
-    } finally {
-      setUploading(false);
+
+    const result = await res.json(); // ok แน่ ๆ แล้วค่อย parse
+    if (!result?.ok) {
+      throw new Error(result?.error || "Upload failed");
     }
-  };
+
+    messageApi.success(`อัปโหลดสลิปสำเร็จ (paymentId=${result.paymentId})`);
+    setSlipList([]);
+    // navigate("/payment/success");
+  } catch (e) {
+    console.error(e);
+    messageApi.error("อัปโหลดสลิปไม่สำเร็จ: " + (e as Error).message);
+  } finally {
+    setUploading(false);
+  }
+};
 
 
   return (
@@ -236,7 +295,7 @@ const Payment: React.FC = () => {
               )}
             </Space>
 
-            {/*  เพิ่มส่วน “แนบสลิป” ใต้ปุ่ม บันทึก QR  */}
+            {/*  เพิ่มส่วน "แนบสลิป" ใต้ปุ่ม บันทึก QR  */}
             <Divider />
             <Title level={5} style={{ marginBottom: 8 }}>แนบสลิปการโอนเงิน</Title>
             <Upload
@@ -271,8 +330,8 @@ const Payment: React.FC = () => {
                 { title: 'คลิกปุ่ม "บันทึก QR" หรือแคปหน้าจอ' },
                 { title: "เปิดแอปพลิเคชันธนาคารบนอุปกรณ์ของท่าน" },
                 { title: 'เลือกไปที่เมนู "สแกน" หรือ "QR Code" และกดที่ "รูปภาพ"' },
-                { title: "เลือกภาพที่บันทึกไว้และทำการชำระเงิน โดยกรุณาเช็คชื่อบัญชีผู้รับ คือ “บริษัท ช้อปปี้เพย์ (ประเทศไทย) จำกัด”" },
-                { title: "อัปโหลดสลิปยืนยันการโอนในหน้านี้ แล้วกด “ส่งสลิปยืนยันการชำระ”" },
+                { title: 'เลือกภาพที่บันทึกไว้และทำการชำระเงิน โดยกรุณาเช็คชื่อบัญชีผู้รับ คือ "บริษัท ช้อปปี้เพย์ (ประเทศไทย) จำกัด"' },
+                { title: 'อัปโหลดสลิปยืนยันการโอนในหน้านี้ แล้วกด "ส่งสลิปยืนยันการชำระ"' },
               ]} />
               <Paragraph style={{ marginTop: 16 }}>
                 <Text type="secondary">
@@ -303,9 +362,15 @@ const Payment: React.FC = () => {
           <Card bordered style={{ borderRadius: 12 }}>
             <Title level={4} style={{ marginTop: 0 }}>รายละเอียดคำสั่งซื้อ</Title>
             <Descriptions column={1} size="middle">
-              <Descriptions.Item label="รหัสคำสั่งซื้อ">
-                <Input value={orderCode} onChange={(e) => setOrderCode(e.target.value)} placeholder="เช่น ODR-2025-0001" />
-              </Descriptions.Item>
+              <Descriptions.Item label="Order ID (สำหรับอัปโหลดสลิป)">
+  <InputNumber
+    style={{ width: "100%" }}
+    value={orderId ?? undefined}
+    onChange={(v) => setOrderId(v == null ? null : Number(v))}
+    min={1}
+    placeholder="เช่น 123"
+  />
+</Descriptions.Item>
               <Descriptions.Item label="ยอดชำระ (บาท)">
                 <InputNumber
                   style={{ width: "100%" }}

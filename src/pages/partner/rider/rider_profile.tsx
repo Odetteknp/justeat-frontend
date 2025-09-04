@@ -10,9 +10,7 @@ import {
   message,
   Form,
   Input,
-  Select,
   Upload,
-  TimePicker,
   Divider,
   Space,
   Spin,
@@ -23,62 +21,62 @@ import {
   InboxOutlined,
   SaveOutlined,
   ReloadOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
-import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
-const { Option } = Select;
 
 type RiderProfileData = {
   firstName: string;
   lastName: string;
   phone: string;
   nationalId?: string;
-  vehicleType?: "motorcycle" | "car" | "bicycle";
   licensePlate?: string;
-  zone?: string;
+  zone?: string; // โซนประจำ
   addressLine?: string;
   bankName?: string;
   bankAccountName?: string;
   bankAccountNumber?: string;
   emergencyName?: string;
   emergencyPhone?: string;
-  serviceStart?: string; // "HH:mm"
-  serviceEnd?: string;   // "HH:mm"
+  serviceStart?: string;
+  serviceEnd?: string;
   ready?: boolean;
   avatarUrl?: string;
-  timeRange?: [dayjs.Dayjs, dayjs.Dayjs];
+  driverLicenseBase64?: string;
 };
 
 const RiderProfile: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [preview, setPreview] = useState<string>("");
   const [messageApi, contextHolder] = message.useMessage();
   const [form] = Form.useForm<RiderProfileData>();
 
+  const orders = [{ id : 123, total : 500 }];
+
   const navigate = useNavigate();
-
-  const GotoPayment = () => {
-  navigate("/payment");
-};
-
   const riderId = useMemo(() => localStorage.getItem("riderId") || "demo-rider", []);
 
-  // อัปโหลดเฉพาะฝั่งหน้า (ยังไม่อัปขึ้น server)
+  const fileToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string) || "");
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
   const beforeUpload = () => false;
 
-  // โหลดข้อมูล (mock) + map serviceStart/serviceEnd -> timeRange
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      // const { data } = await axios.get<RiderProfileData>(`/api/riders/${riderId}`);
       const data: RiderProfileData = {
         firstName: "สมชาย",
         lastName: "ใจดี",
         phone: "0812345678",
         nationalId: "1234567890123",
-        vehicleType: "motorcycle",
         licensePlate: "กทม-1234",
         zone: "ประตู 4",
         addressLine: "123/45 ถ.มิตรภาพ ต.สุรนารี อ.เมือง จ.นครราชสีมา",
@@ -91,23 +89,12 @@ const RiderProfile: React.FC = () => {
         serviceEnd: "20:00",
         ready: true,
         avatarUrl: "",
+        driverLicenseBase64: "",
       };
 
-      form.setFieldsValue({
-        ...data,
-        timeRange:
-          data.serviceStart && data.serviceEnd
-            ? [dayjs(data.serviceStart, "HH:mm"), dayjs(data.serviceEnd, "HH:mm")]
-            : undefined,
-      });
-
-      if (data.avatarUrl) {
-        setFileList([
-          { uid: "-1", name: "avatar.jpg", status: "done", url: data.avatarUrl },
-        ]);
-      } else {
-        setFileList([]);
-      }
+      form.setFieldsValue({ ...data });
+      setFileList([]);
+      setPreview(data.driverLicenseBase64 || "");
     } catch {
       messageApi.error("โหลดข้อมูลโปรไฟล์ไม่สำเร็จ");
     } finally {
@@ -123,16 +110,7 @@ const RiderProfile: React.FC = () => {
   const onFinish = async (values: RiderProfileData) => {
     setSubmitting(true);
     try {
-      const timeRange = form.getFieldValue("timeRange") as [dayjs.Dayjs, dayjs.Dayjs] | undefined;
-      const [start, end] = timeRange || [];
-      const payload: RiderProfileData = {
-        ...values,
-        serviceStart: start ? start.format("HH:mm") : undefined,
-        serviceEnd: end ? end.format("HH:mm") : undefined,
-      };
-
-      // อัปโหลดไฟล์จริง: ทำที่นี่ -> ได้ URL -> payload.avatarUrl = url
-      // await axios.put(`/api/riders/${riderId}`, payload);
+      const payload: RiderProfileData = { ...values };
       messageApi.success("บันทึกโปรไฟล์สำเร็จ (เดโม)");
     } catch {
       messageApi.error("บันทึกโปรไฟล์ไม่สำเร็จ");
@@ -172,14 +150,20 @@ const RiderProfile: React.FC = () => {
             </Text>
           </Col>
           <Col>
-            <Button size="large" onClick={GotoPayment}>
-              Payment
-            </Button>
+            {orders.map((o) => (
+        <button
+          key={o.id}
+          onClick={() =>
+            navigate(`/payment?orderId=${o.id}&amount=${(o.total / 100).toFixed(2)}`)
+          }
+        >
+          ไปชำระเงิน (#{o.id})
+        </button>
+      ))}
           </Col>
         </Row>
       </Card>
 
-      {/* ครอบด้วย Spin ตอน loading */}
       <Spin spinning={loading} tip="กำลังโหลดข้อมูล..." size="large">
         <Card style={{ borderRadius: 16 }}>
           <Form<RiderProfileData>
@@ -194,20 +178,12 @@ const RiderProfile: React.FC = () => {
                 <Title level={4} style={{ marginTop: 0 }}>ข้อมูลส่วนตัว</Title>
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <Form.Item
-                      label="ชื่อ"
-                      name="firstName"
-                      rules={[{ required: true, message: "กรอกชื่อ" }]}
-                    >
+                    <Form.Item label="ชื่อ" name="firstName" rules={[{ required: true, message: "กรอกชื่อ" }]}>
                       <Input placeholder="สมชาย" />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Form.Item
-                      label="สกุล"
-                      name="lastName"
-                      rules={[{ required: true, message: "กรอกสกุล" }]}
-                    >
+                    <Form.Item label="สกุล" name="lastName" rules={[{ required: true, message: "กรอกสกุล" }]}>
                       <Input placeholder="ใจดี" />
                     </Form.Item>
                   </Col>
@@ -236,17 +212,8 @@ const RiderProfile: React.FC = () => {
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>
-                    <Form.Item
-                      label="ที่อยู่"
-                      name="addressLine"
-                      rules={[{ required: true, message: "กรอกที่อยู่" }]}
-                    >
+                    <Form.Item label="ที่อยู่" name="addressLine" rules={[{ required: true, message: "กรอกที่อยู่" }]}>
                       <Input.TextArea rows={3} placeholder="บ้านเลขที่/ถนน/ตำบล/อำเภอ/จังหวัด" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item label="เวลาให้บริการ" name="timeRange">
-                      <TimePicker.RangePicker format="HH:mm" minuteStep={5} />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -256,36 +223,13 @@ const RiderProfile: React.FC = () => {
                 <Title level={4}>ข้อมูลยานพาหนะ</Title>
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <Form.Item
-                      label="ประเภทยานพาหนะ"
-                      name="vehicleType"
-                      rules={[{ required: true, message: "เลือกประเภทยานพาหนะ" }]}
-                    >
-                      <Select placeholder="เลือกประเภท">
-                        <Option value="motorcycle">มอเตอร์ไซค์</Option>
-                        <Option value="car">รถยนต์</Option>
-                        <Option value="bicycle">จักรยาน</Option>
-                      </Select>
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      label="ป้ายทะเบียน"
-                      name="licensePlate"
-                      rules={[{ required: true, message: "กรอกป้ายทะเบียน" }]}
-                    >
+                    <Form.Item label="ป้ายทะเบียน" name="licensePlate" rules={[{ required: true, message: "กรอกป้ายทะเบียน" }]}>
                       <Input placeholder="เช่น กทม-1234" />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>
                     <Form.Item label="โซนประจำ" name="zone">
-                      <Select placeholder="เลือกโซน">
-                        <Option value="ประตู 4">ประตู 4</Option>
-                        <Option value="ประตู 1">ประตู 1</Option>
-                        <Option value="ประตู 2">ประตู 2</Option>
-                        <Option value="ประตู 3">ประตู 3</Option>
-                        <Option value="ในเมือง">ในเมือง</Option>
-                      </Select>
+                      <Input placeholder="เช่น ประตู 1 / ประตู 2 / ในเมือง" />
                     </Form.Item>
                   </Col>
                 </Row>
@@ -310,30 +254,82 @@ const RiderProfile: React.FC = () => {
                   </Col>
                 </Row>
 
-                {/* ✅ ย้ายส่วนนี้มาต่อใต้ผู้ติดต่อฉุกเฉิน */}
                 <Divider />
 
-                <Title level={4}>การตั้งค่า / รูปโปรไฟล์</Title>
-                <Form.Item label="รูปโปรไฟล์">
+                <Title level={4}>อัปโหลดใบขับขี่</Title>
+                <Form.Item label="ไฟล์ใบขับขี่ (รูปภาพ)">
                   <Upload.Dragger
                     listType="picture"
                     multiple={false}
                     beforeUpload={beforeUpload}
                     fileList={fileList}
-                    onChange={({ fileList: fl }) => setFileList(fl.slice(-1))}
+                    onChange={async ({ fileList: fl }) => {
+                      const latest = fl.slice(-1);
+                      setFileList(latest);
+
+                      const f = latest[0]?.originFileObj as File | undefined;
+                      if (f) {
+                        try {
+                          const b64 = await fileToBase64(f);
+                          form.setFieldsValue({ driverLicenseBase64: b64 });
+                          setPreview(b64);
+                        } catch {
+                          messageApi.error("ไม่สามารถอ่านไฟล์เป็น Base64 ได้");
+                          form.setFieldsValue({ driverLicenseBase64: "" });
+                          setPreview("");
+                        }
+                      } else {
+                        form.setFieldsValue({ driverLicenseBase64: "" });
+                        setPreview("");
+                      }
+                    }}
                     maxCount={1}
                     accept="image/*"
                     disabled={loading}
+                    showUploadList={false}
+                    style={{ height: 260 }}
                   >
-                    <p className="ant-upload-drag-icon">
-                      <InboxOutlined />
-                    </p>
-                    <p className="ant-upload-text">ลากไฟล์รูปมาวาง หรือคลิกเพื่อเลือก</p>
-                    <p className="ant-upload-hint">รองรับไฟล์ภาพเท่านั้น</p>
+                    {preview ? (
+                      <img
+                        src={preview}
+                        alt="Driver License Preview"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "contain",
+                          display: "block",
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <p className="ant-upload-drag-icon">
+                          <InboxOutlined />
+                        </p>
+                        <p className="ant-upload-text">ลากไฟล์รูปมาวาง หรือคลิกเพื่อเลือก</p>
+                        <p className="ant-upload-hint">
+                          รองรับไฟล์ภาพเท่านั้น (เช่น .jpg, .png) • ระบบจะเตรียม Base64 ให้โดยอัตโนมัติ
+                        </p>
+                      </>
+                    )}
                   </Upload.Dragger>
                 </Form.Item>
 
-                <Space style={{ marginTop: 8 }}>
+                <Form.Item name="driverLicenseBase64" hidden>
+                  <Input />
+                </Form.Item>
+
+                <Space style={{ marginTop: 16 }}>
+                  <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    onClick={() => {
+                      setFileList([]);
+                      setPreview("");
+                      form.setFieldsValue({ driverLicenseBase64: "" });
+                    }}
+                  >
+                    ลบรูป
+                  </Button>
                   <Button
                     type="primary"
                     icon={<SaveOutlined />}
@@ -352,7 +348,6 @@ const RiderProfile: React.FC = () => {
                 </Space>
               </Col>
 
-              {/* ถ้าต้องการพื้นที่ว่างด้านขวาในจอใหญ่ ให้คอลัมน์นี้ว่างไว้ */}
               <Col xs={24} md={8} />
             </Row>
           </Form>

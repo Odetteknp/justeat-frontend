@@ -102,7 +102,7 @@ export type UserProfile = {
   phoneNumber?: string;
   address?: string;
   role: string;
-  avatar?: string;
+  avatarBase64?: string;
 };
 
 /** Response ของการ Login */

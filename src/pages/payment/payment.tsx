@@ -33,6 +33,12 @@ const getBase64 = (file: File): Promise<string> =>
     reader.onerror = reject;
   });
 
+// helper: แปลง base64 data URL เป็น base64 string อย่างเดียว
+const extractBase64 = (dataUrl: string): string => {
+  const base64Index = dataUrl.indexOf('base64,');
+  return base64Index !== -1 ? dataUrl.substring(base64Index + 7) : dataUrl;
+};
+
 const Payment: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
@@ -41,6 +47,7 @@ const Payment: React.FC = () => {
   const params = new URLSearchParams(search);
   const initialOrderCode = params.get("order") || "ODR-DEMO-001";
   const initialAmount = params.get("amount") ? Number(params.get("amount")) : 0;
+  const orderId = params.get("orderId") ? Number(params.get("orderId")) : 1; // สมมติใช้ orderId จาก URL parameter
 
   const [orderCode, setOrderCode] = useState<string>(initialOrderCode);
   const [amount, setAmount] = useState<number | null>(initialAmount || null);
@@ -173,25 +180,69 @@ const Payment: React.FC = () => {
       messageApi.warning("โปรดแนบสลิปก่อนส่งยืนยัน");
       return;
     }
+    if (!amount || amount <= 0) {
+      messageApi.error("กรุณาใส่ยอดเงินที่ถูกต้อง");
+      return;
+    }
+    
     try {
       setUploading(true);
       const file = slipList[0].originFileObj as File;
-      // ตัวอย่างอัปโหลดจริง:
-      // const form = new FormData();
-      // form.append('slip', file);
-      // form.append('orderCode', orderCode);
-      // form.append('amount', String(amount ?? ''));
-      // if (paymentIntentId) form.append('paymentIntentId', paymentIntentId);
-      // await fetch('/api/payments/upload-slip', { method: 'POST', body: form });
-      messageApi.success("เดโม UI: แนบสลิปสำเร็จ (ยังไม่เชื่อม backend)");
-    } catch (e) {
-      console.error(e);
-      messageApi.error("อัปโหลดสลิปไม่สำเร็จ");
+      
+      // แปลงไฟล์เป็น base64
+      const dataUrl = await getBase64(file);
+      const base64Data = extractBase64(dataUrl);
+      
+      // เตรียมข้อมูลส่ง API
+      const requestData = {
+        orderId: orderId,
+        amount: Math.round(amount * 100), // แปลงเป็นสตางค์ (ถ้า backend ต้องการ)
+        contentType: file.type,
+        slipBase64: base64Data
+      };
+
+      // ส่งไป backend API
+      const response = await fetch('http://localhost:8000/api/payments/upload-slip', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        messageApi.success(`✅ ตรวจสอบสลิปสำเร็จ! จำนวนเงิน: ${result.slipData.amount} บาท`);
+        messageApi.info(`📋 รหัสธุรกรรม: ${result.slipData.transRef}`);
+        
+        // เคลียร์รูปเมื่อสำเร็จ
+        setSlipList([]);
+        
+        // อาจจะเปลี่ยนไปหน้า success
+        setTimeout(() => handleSuccess(), 2000);
+        
+      } else {
+        messageApi.error(`❌ ตรวจสอบสลิปไม่สำเร็จ: ${result.error}`);
+        if (result.validationErrors && result.validationErrors.length > 0) {
+          result.validationErrors.forEach((error: string) => {
+            messageApi.warning(error);
+          });
+        }
+      }
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      messageApi.error("อัปโหลดสลิปไม่สำเร็จ: " + (error as Error).message);
     } finally {
       setUploading(false);
     }
   };
-
 
   return (
     <div style={{ backgroundColor: "white", minHeight: "100vh", width: "100%" }}>
@@ -236,7 +287,7 @@ const Payment: React.FC = () => {
               )}
             </Space>
 
-            {/*  เพิ่มส่วน “แนบสลิป” ใต้ปุ่ม บันทึก QR  */}
+            {/*  เพิ่มส่วน "แนบสลิป" ใต้ปุ่ม บันทึก QR  */}
             <Divider />
             <Title level={5} style={{ marginBottom: 8 }}>แนบสลิปการโอนเงิน</Title>
             <Upload
@@ -271,8 +322,8 @@ const Payment: React.FC = () => {
                 { title: 'คลิกปุ่ม "บันทึก QR" หรือแคปหน้าจอ' },
                 { title: "เปิดแอปพลิเคชันธนาคารบนอุปกรณ์ของท่าน" },
                 { title: 'เลือกไปที่เมนู "สแกน" หรือ "QR Code" และกดที่ "รูปภาพ"' },
-                { title: "เลือกภาพที่บันทึกไว้และทำการชำระเงิน โดยกรุณาเช็คชื่อบัญชีผู้รับ คือ “บริษัท ช้อปปี้เพย์ (ประเทศไทย) จำกัด”" },
-                { title: "อัปโหลดสลิปยืนยันการโอนในหน้านี้ แล้วกด “ส่งสลิปยืนยันการชำระ”" },
+                { title: 'เลือกภาพที่บันทึกไว้และทำการชำระเงิน โดยกรุณาเช็คชื่อบัญชีผู้รับ คือ "บริษัท ช้อปปี้เพย์ (ประเทศไทย) จำกัด"' },
+                { title: 'อัปโหลดสลิปยืนยันการโอนในหน้านี้ แล้วกด "ส่งสลิปยืนยันการชำระ"' },
               ]} />
               <Paragraph style={{ marginTop: 16 }}>
                 <Text type="secondary">

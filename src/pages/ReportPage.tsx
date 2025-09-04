@@ -109,7 +109,7 @@ const ReportPage = () => {
               getValueFromEvent={normFile}
             >
               <Upload listType="picture-card" maxCount={5} beforeUpload={() => false}>
-                <button>
+                <div>
                   <PlusOutlined />
                   <div style={{ marginTop: 8 }}>Upload Now!</div>
                 </div>

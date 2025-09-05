@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Form, message } from "antd";
 import { useAuthGuard } from "../../hooks/useAuthGuard";
 import { getAvatarBase64, updateProfile, uploadAvatarBase64 } from "../../services/user";

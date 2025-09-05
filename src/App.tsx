@@ -91,9 +91,7 @@ export default function App() {
       <Route
         path="/partner/rider"
         element={
-          <RiderProvider>
             <RiderLayout />
-          </RiderProvider>
         }
       >
         <Route index element={<RiderDashboard />} />

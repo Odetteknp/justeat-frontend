@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import Lottie from "lottie-react";
+import loadingDotsBlue from "../../assets/Lottie/Loading Dots Blue.json"
 import {
   Card,
   Row,
@@ -21,24 +23,36 @@ import {
   EyeOutlined,
 } from "@ant-design/icons";
 
+import {
+  listApplications,
+  approveApplication,
+  rejectApplication,
+} from "../../services/restaurantApplication";
+
 const { Title, Text } = Typography;
 
 type PendingRestaurant = {
-  id: string;
+  id: number;
   name: string;
   phone: string;
   description: string;
-  restaurantType: string;
   address: string;
   openingTime: string;
   closingTime: string;
   logo?: string;
   submittedAt: string;
 
-  ownerFirstName: string;
-  ownerLastName: string;
-  ownerEmail: string;
-  ownerPhone: string;
+  restaurantCategory: {
+    id: number;
+    name: string;
+  }
+
+  ownerUser: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phoneNumber: string;
+  };
 
   status: "pending" | "approved" | "rejected";
 };
@@ -46,87 +60,51 @@ type PendingRestaurant = {
 const AdminRestaurant: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState<boolean>(true);
-  const [restaurants, setRestaurants] = useState<PendingRestaurant[]>([]);
+  const [restaurants, setRestaurants] = useState<PendingRestaurant[]>([]); // 👈 default เป็น []
   const [selectedRestaurant, setSelectedRestaurant] = useState<PendingRestaurant | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
-  // ✅ เพิ่ม mock data ชั่วคราวเพื่อแสดงผล
+  // ✅ โหลดจาก backend
   useEffect(() => {
-    const mockData: PendingRestaurant[] = [
-      {
-        id: "1",
-        name: "คลายหิว",
-        phone: "0891234567",
-        description: "ร้านอาหารชื่อดัง เปิดมายาวนานกว่า 20 ปี",
-        restaurantType: "Rice Dishes",
-        address: "123/4 ถนนพระราม 2 แขวงบางมด เขตจอมทอง กทม",
-        openingTime: "08:00",
-        closingTime: "18:00",
-        logo: "https://via.placeholder.com/100",
-        submittedAt: "2025-09-01",
-        ownerFirstName: "กนกพร",
-        ownerLastName: "จำปาหอม",
-        ownerEmail: "chaauay@example.com",
-        ownerPhone: "0812345678",
-        status: "pending",
-      },
-      {
-        id: "2",
-        name: "BB Bubble Tea",
-        phone: "0912345678",
-        description: "ชาไข่มุกหอมหวาน กลมกล่อม พร้อมไข่มุกหนึบหนับ",
-        restaurantType: "Bubble Tea",
-        address: "88 ซอยสุขสันต์ แขวงลาดพร้าว เขตลาดพร้าว กทม",
-        openingTime: "10:00",
-        closingTime: "20:00",
-        logo: "https://via.placeholder.com/100",
-        submittedAt: "2025-09-02",
-        ownerFirstName: "ปิ่น",
-        ownerLastName: "พิมพ์ใจ",
-        ownerEmail: "pinpimjai@example.com",
-        ownerPhone: "0823456789",
-        status: "pending",
-      },
-      {
-        id: "3",
-        name: "Healthy House",
-        phone: "0923456789",
-        description: "อาหารคลีนเพื่อสุขภาพ สด สะอาด ปลอดภัย",
-        restaurantType: "Healthy",
-        address: "55/7 ถนนสุขภาพดี ตำบลในเมือง อำเภอเมือง ขอนแก่น",
-        openingTime: "09:00",
-        closingTime: "17:00",
-        logo: "https://via.placeholder.com/100",
-        submittedAt: "2025-09-03",
-        ownerFirstName: "โกวิท",
-        ownerLastName: "ภูอ่าง",
-        ownerEmail: "kengky@example.com",
-        ownerPhone: "0834567890",
-        status: "pending",
-      },
-    ];
+    const fetchData = async () => {
+      try {
+        const apps = await listApplications("pending");
+        setRestaurants(apps ?? []); // 👈 ถ้า apps เป็น null ให้เป็น []
+      } catch (err) {
+        console.error("❌ โหลด applications ล้มเหลว", err);
+        messageApi.error("โหลดข้อมูลไม่สำเร็จ");
+        setRestaurants([]); // กัน error
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [messageApi]);
 
-    // จำลองโหลดข้อมูล
-    setTimeout(() => {
-      setRestaurants(mockData);
-      setLoading(false);
-    }, 1000);
-  }, []);
-
-  const handleApprove = (id: string) => {
-    setRestaurants((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "approved" } : r))
-    );
-    messageApi.success("✅ อนุมัติร้านเรียบร้อยแล้ว");
-    setModalVisible(false);
+  const handleApprove = async (id: number) => {
+    try {
+      await approveApplication(id);
+      messageApi.success("✅ อนุมัติร้านเรียบร้อยแล้ว");
+      setRestaurants((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status: "approved" } : r))
+      );
+      setModalVisible(false);
+    } catch (err) {
+      messageApi.error("❌ อนุมัติไม่สำเร็จ");
+    }
   };
 
-  const handleReject = (id: string) => {
-    setRestaurants((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status: "rejected" } : r))
-    );
-    messageApi.error("❌ ปฏิเสธร้านเรียบร้อยแล้ว");
-    setModalVisible(false);
+  const handleReject = async (id: number) => {
+    try {
+      await rejectApplication(id, "ไม่ผ่านการตรวจสอบ");
+      messageApi.error("❌ ปฏิเสธร้านเรียบร้อยแล้ว");
+      setRestaurants((prev) =>
+        prev.map((r) => (r.id === id ? { ...r, status: "rejected" } : r))
+      );
+      setModalVisible(false);
+    } catch (err) {
+      messageApi.error("❌ ปฏิเสธไม่สำเร็จ");
+    }
   };
 
   const showDetails = (restaurant: PendingRestaurant) => {
@@ -134,6 +112,7 @@ const AdminRestaurant: React.FC = () => {
     setModalVisible(true);
   };
 
+  // 👇 ปลอดภัยจาก null เสมอ เพราะ restaurants เป็น array ว่างได้
   const pendingRestaurants = restaurants.filter((r) => r.status === "pending");
 
   return (
@@ -156,13 +135,12 @@ const AdminRestaurant: React.FC = () => {
               style={{ backgroundColor: "rgba(255, 255, 255, 0.2)" }}
             />
           </Col>
-
           <Col flex="1">
             <Title level={2} style={{ color: "white", margin: 0 }}>
               Admin 👨‍💼
             </Title>
             <Text style={{ color: "rgba(255, 255, 255, 0.9)", fontSize: 16 }}>
-              ตรวจสอบและอนุมัติร้านอาหาร 
+              ตรวจสอบและอนุมัติร้านอาหาร
             </Text>
           </Col>
         </Row>
@@ -170,10 +148,14 @@ const AdminRestaurant: React.FC = () => {
 
       {loading ? (
         <div style={{ textAlign: "center", padding: "50px" }}>
-          <Spin size="large" />
+          <Lottie animationData={loadingDotsBlue} loop={true} style={{ height:200 }}/>
+          <p>กำลังโหลดข้อมูลร้านค้า...</p>
         </div>
       ) : pendingRestaurants.length === 0 ? (
-        <Text>ไม่มีร้านที่รอการอนุมัติในขณะนี้</Text>
+          <div style={{ textAlign: "center", padding: "50px" }}>
+            <Lottie animationData={loadingDotsBlue} loop={true} style={{ height: 250 }} />
+            <p>ไม่มีร้านที่รอการอนุมัติในขณะนี้</p>
+          </div>
       ) : (
         <List
           itemLayout="vertical"
@@ -186,7 +168,7 @@ const AdminRestaurant: React.FC = () => {
             >
               <Space direction="vertical" size="small">
                 <Text>
-                  เจ้าของร้าน: {item.ownerFirstName} {item.ownerLastName}
+                  เจ้าของร้าน: {item.ownerUser.firstName} {item.ownerUser.lastName}
                 </Text>
                 <Button icon={<EyeOutlined />} onClick={() => showDetails(item)}>
                   ดูรายละเอียด
@@ -210,18 +192,22 @@ const AdminRestaurant: React.FC = () => {
               <Descriptions.Item label="ชื่อร้าน">{selectedRestaurant.name}</Descriptions.Item>
               <Descriptions.Item label="คำอธิบาย">{selectedRestaurant.description}</Descriptions.Item>
               <Descriptions.Item label="เบอร์โทรร้าน">{selectedRestaurant.phone}</Descriptions.Item>
-              <Descriptions.Item label="ประเภทอาหาร">{selectedRestaurant.restaurantType}</Descriptions.Item>
+              <Descriptions.Item label="ประเภทอาหาร">{selectedRestaurant.restaurantCategory.name}</Descriptions.Item>
               <Descriptions.Item label="เวลาเปิด - ปิด">
                 {selectedRestaurant.openingTime} - {selectedRestaurant.closingTime}
               </Descriptions.Item>
               <Descriptions.Item label="ที่อยู่">{selectedRestaurant.address}</Descriptions.Item>
               <Descriptions.Item label="ชื่อเจ้าของร้าน">
-                {selectedRestaurant.ownerFirstName} {selectedRestaurant.ownerLastName}
+                {selectedRestaurant.ownerUser.firstName} {selectedRestaurant.ownerUser.lastName}
               </Descriptions.Item>
-              <Descriptions.Item label="อีเมลเจ้าของร้าน">{selectedRestaurant.ownerEmail}</Descriptions.Item>
-              <Descriptions.Item label="เบอร์เจ้าของร้าน">{selectedRestaurant.ownerPhone}</Descriptions.Item>
+              <Descriptions.Item label="อีเมลเจ้าของร้าน">{selectedRestaurant.ownerUser.email}</Descriptions.Item>
+              <Descriptions.Item label="เบอร์เจ้าของร้าน">{selectedRestaurant.ownerUser.phoneNumber}</Descriptions.Item>
               <Descriptions.Item label="โลโก้ร้าน">
-                <Image width={100} src={selectedRestaurant.logo} alt="โลโก้ร้าน" />
+                <Image
+                  width={100}
+                  src={selectedRestaurant.logo || "https://via.placeholder.com/100"} // 👈 กัน null ด้วย placeholder
+                  alt="โลโก้ร้าน"
+                />
               </Descriptions.Item>
             </Descriptions>
 

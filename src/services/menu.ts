@@ -81,9 +81,11 @@ export async function fetchMenuItems(restaurantId?: string): Promise<MenuItem[]>
 }
 
 export const menu = {
+  // Public
   listByRestaurant: (restaurantId: number) =>
     api.get(`/restaurants/${restaurantId}/menus`),
 
+  // Owner
   create: (restaurantId: number, body: any, token: string) =>
     api.post(`/owner/restaurants/${restaurantId}/menus`, body, {
       headers: { Authorization: `Bearer ${token}` },
@@ -96,6 +98,29 @@ export const menu = {
 
   remove: (id: number, token: string) =>
     api.delete(`/owner/menus/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  updateStatus: (id: number, statusId: number, token: string) =>
+    api.patch(
+      `/owner/menus/${id}/status`,
+      { menuStatusId: statusId },
+      { headers: { Authorization: `Bearer ${token}` } }
+    ),
+
+  listOptionsByMenu: (menuId: number) =>
+  api.get(`/menus/${menuId}/options`),
+
+  // Menu Options
+  attachOption: (menuId: number, optionId: number, token: string) =>
+    api.post(
+      `/owner/menus/${menuId}/options`,
+      { optionId },
+      { headers: { Authorization: `Bearer ${token}` } }
+    ),
+
+  detachOption: (menuId: number, optionId: number, token: string) =>
+    api.delete(`/owner/menus/${menuId}/options/${optionId}`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
 };

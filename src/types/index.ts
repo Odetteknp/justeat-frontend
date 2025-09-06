@@ -32,6 +32,13 @@ export interface PopularStore {
   tags?: string[];
 }
 
+export interface listRestaurant {
+  id: string;
+  name: string;
+  cover: string;
+  rating?: number; 
+}
+
 // ==============================
 // ร้าน (Restaurant)
 // ==============================

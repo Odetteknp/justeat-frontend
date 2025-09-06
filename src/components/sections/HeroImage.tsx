@@ -1,5 +1,5 @@
 import React from "react";
-import type { HeroImage } from "../../types/sections";
+import type { HeroImage } from "../../types";
 
 export default function HeroImage({ image, href, alt }: HeroImage) {
   return (

@@ -1,5 +1,5 @@
 import React from "react";
-import type { PromoImage } from "../../types/sections";
+import type { PromoImage } from "../../types";
 
 export default function PromoImageGrid({ items }: { items: PromoImage[] }) {
   if (!items?.length) return null;

@@ -142,3 +142,40 @@ export interface RefreshResponse {
   ok: boolean;
   token: string;
 }
+
+export interface MeResponse {
+  ok: boolean;
+  user: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    address?: string;
+    role: string;
+    avatarUrl?: string;
+  };
+}
+
+export interface MeRestaurantResponse {
+  ok: boolean;
+  restaurant: {
+    ID: number;
+    name: string;
+    address: string;
+    description?: string;
+    openingTime?: string;
+    closingTime?: string;
+    pictureBase64?: string | null;
+  };
+}
+
+export interface Menu {
+  id: number;
+  menuName: string;
+  price: number;
+  detail?: string;
+  picture?: string | null; 
+  menuTypeId: number;
+  menuStatusId: number;
+}

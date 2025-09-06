@@ -1,301 +1,262 @@
-import React, { useState } from "react";
-import { FaCamera } from "react-icons/fa";
-import "./index.css"; // import ไฟล์ CSS ที่แยกออกมา
+import { useEffect, useState } from "react";
+import {
+  Form,
+  Input,
+  InputNumber,
+  Select,
+  Upload,
+  Button,
+  Modal,
+  Table,
+  Space,
+  message,
+} from "antd";
+import { UploadOutlined } from "@ant-design/icons";
+import { menu } from "../../../../services/menu";
+import { auth } from "../../../../services/auth";
+import { getToken } from "../../../../services/tokenStore";
 
-type MenuType = "เมนูหลัก" | "ของทานเล่น" | "ของหวาน" | "เครื่องดื่ม";
-type SizeType = "S" | "M" | "L";
-type SpicyType = "เผ็ดน้อย" | "เผ็ดกลาง" | "เผ็ดมาก";
-
-interface MenuItem {
-  id: number;
-  name: string;
-  price: number;
-  type: MenuType;
-  size: SizeType;
-  spicy?: SpicyType | null;
-  toppings: string[];
-  toppingLimit: number;
-  image?: string | null;
-}
+// Map menuTypeId <-> label ภาษาไทย
+const MENU_TYPES: Record<number, string> = {
+  1: "เมนูหลัก",
+  2: "ของทานเล่น",
+  3: "ของหวาน",
+  4: "เครื่องดื่ม",
+};
 
 export default function MenuManagementUI() {
-  const [menus, setMenus] = useState<MenuItem[]>([]);
-  const [showForm, setShowForm] = useState(false);
+  const [menus, setMenus] = useState<any[]>([]);
+  const [visible, setVisible] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [form] = Form.useForm();
+  const [restaurantId, setRestaurantId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  // form state
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState<number | "">("");
-  const [type, setType] = useState<MenuType>("เมนูหลัก");
-  const [size, setSize] = useState<SizeType>("M");
-  const [spicy, setSpicy] = useState<SpicyType | "">("เผ็ดน้อย");
-  const [toppings, setToppings] = useState<string[]>([]);
-  const [newTopping, setNewTopping] = useState("");
-  const [toppingLimit, setToppingLimit] = useState<number>(1);
-  const [image, setImage] = useState<string | null>(null);
+  const token = getToken();
+  if (!token) {
+    message.error("กรุณาเข้าสู่ระบบก่อน");
+    return;
+  }
 
-  const resetForm = () => {
-    setName("");
-    setPrice("");
-    setType("เมนูหลัก");
-    setSize("M");
-    setSpicy("เผ็ดน้อย");
-    setToppings([]);
-    setNewTopping("");
-    setToppingLimit(1);
-    setImage(null);
-    setEditingId(null);
-  };
+  // โหลดเมนูจาก backend
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const meRest = await auth.meRestaurant();
+        console.log("meRest =", meRest);
+        setRestaurantId(meRest.restaurant.ID);
 
-  const openAddForm = () => {
-    resetForm();
-    setShowForm(true);
-  };
-
-  const openEditForm = (menu: MenuItem) => {
-    setEditingId(menu.id);
-    setName(menu.name);
-    setPrice(menu.price);
-    setType(menu.type);
-    setSize(menu.size);
-    setSpicy(menu.spicy ?? "");
-    setToppings([...menu.toppings]);
-    setToppingLimit(menu.toppingLimit);
-    setImage(menu.image ?? null);
-    setShowForm(true);
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    const reader = new FileReader();
-    reader.onload = () => setImage(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  const handleAddTopping = () => {
-    if (!newTopping) return;
-    if (toppings.length >= 20) return;
-    setToppings((t) => [...t, newTopping]);
-    setNewTopping("");
-  };
-
-  const handleRemoveTopping = (index: number) => {
-    setToppings((t) => t.filter((_, i) => i !== index));
-  };
-
-  const handleUpdateTopping = (index: number, value: string) => {
-    setToppings((t) => t.map((it, i) => (i === index ? value : it)));
-  };
-
-  const validateForm = () => {
-    if (!name.trim()) return false;
-    if (price === "" || Number.isNaN(Number(price))) return false;
-    if (!["S", "M", "L"].includes(size)) return false;
-    if ((type === "เมนูหลัก" || type === "ของทานเล่น") && !spicy) return false;
-    if (toppings.length > toppingLimit) return false;
-    return true;
-  };
-
-  const handleSave = () => {
-    if (!validateForm()) {
-      alert("กรุณากรอกข้อมูลให้ครบถ้วน (เช่น ชื่อ, ราคา และเงื่อนไขที่จำเป็น)");
-      return;
-    }
-
-    const payload: MenuItem = {
-      id: editingId ?? Date.now(),
-      name: name.trim(),
-      price: Number(price),
-      type,
-      size,
-      spicy: type === "เมนูหลัก" || type === "ของทานเล่น" ? (spicy as SpicyType) : undefined,
-      toppings: [...toppings],
-      toppingLimit,
-      image,
+        const res = await menu.listByRestaurant(meRest.restaurant.ID);
+        setMenus(res.data.items);
+      } catch (err: any) {
+        message.error("โหลดร้านไม่สำเร็จ: " + err.message);
+      }
     };
+    load();
+  }, []);
 
-    if (editingId) {
-      setMenus((m) => m.map((it) => (it.id === editingId ? payload : it)));
-    } else {
-      setMenus((m) => [payload, ...m]);
+  if (!restaurantId) return <p>กำลังโหลดร้าน...</p>;
+
+  // เปิด modal สร้างเมนู
+  const openAddForm = () => {
+    form.resetFields();
+    setEditingId(null);
+    setVisible(true);
+  };
+
+  // เปิด modal แก้ไข (set ค่า + preview รูปเก่า)
+  const openEditForm = (record: any) => {
+    form.setFieldsValue({
+      name: record.menuName,
+      price: record.price,
+      type: record.menuTypeId,
+      detail: record.detail,
+      image: record.picture
+        ? [
+            {
+              uid: "-1",
+              name: "current-image.png",
+              status: "done",
+              url: record.picture,
+            },
+          ]
+        : [],
+    });
+    setEditingId(record.id);
+    setVisible(true);
+  };
+
+  // ลบเมนู
+  const handleDelete = async (id: number) => {
+    try {
+      await menu.remove(id, token);
+      setMenus(menus.filter((m) => m.id !== id));
+      message.success("ลบเมนูสำเร็จ");
+    } catch (err: any) {
+      message.error("ลบเมนูล้มเหลว: " + err.message);
     }
-
-    setShowForm(false);
-    resetForm();
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("ต้องการลบเมนูนี้หรือไม่?")) setMenus((m) => m.filter((it) => it.id !== id));
+  // แปลงไฟล์ -> base64
+  const toBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          resolve(reader.result);
+        } else {
+          reject(new Error("ไม่สามารถแปลงไฟล์ได้"));
+        }
+      };
+      reader.onerror = (err) => reject(err);
+    });
+
+  // บันทึกข้อมูล
+  const handleSave = async () => {
+    try {
+      const values = await form.validateFields();
+
+      // handle image (AntD Upload -> fileList)
+      let picture = "";
+      if (values.image && values.image.length > 0) {
+        const fileObj = values.image[0].originFileObj;
+        if (fileObj) {
+          picture = await toBase64(fileObj as File);
+        } else if (values.image[0].url) {
+          picture = values.image[0].url; // กรณีแก้ไขแล้วใช้รูปเก่า
+        }
+      }
+
+      const payload = {
+        menuName: values.name,
+        price: values.price,
+        detail: values.detail ?? "",
+        picture: picture ?? "",
+        menuTypeId: values.type,
+        menuStatusId: 1,
+      };
+
+      setLoading(true);
+      if (editingId) {
+        await menu.update(editingId, payload, token);
+        message.success("แก้ไขเมนูสำเร็จ");
+      } else {
+        await menu.create(restaurantId, payload, token);
+        message.success("เพิ่มเมนูสำเร็จ");
+      }
+
+      const res = await menu.listByRestaurant(restaurantId);
+      setMenus(res.data.items);
+      setVisible(false);
+      setLoading(false);
+    } catch (err: any) {
+      message.error("เกิดข้อผิดพลาด: " + err.message);
+      setLoading(false);
+    }
   };
+
+  // คอลัมน์ Table
+  const columns = [
+    {
+      title: "รูป",
+      dataIndex: "picture",
+      render: (val: string) =>
+        val ? (
+          <img src={val} alt="menu" style={{ width: 50, height: 50, objectFit: "cover" }} />
+        ) : (
+          "-"
+        ),
+    },
+    { title: "ชื่อเมนู", dataIndex: "menuName" },
+    { title: "ราคา", dataIndex: "price" },
+    {
+      title: "ประเภท",
+      dataIndex: "menuTypeId",
+      render: (val: number) => MENU_TYPES[val] || "-",
+    },
+    {
+      title: "การจัดการ",
+      render: (_: any, record: any) => (
+        <Space>
+          <Button onClick={() => openEditForm(record)}>แก้ไข</Button>
+          <Button danger onClick={() => handleDelete(record.id)}>
+            ลบ
+          </Button>
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <div className="menu-management-container">
-      <div className="header-section">
-        <h1 className="main-title">จัดการเมนูอาหาร</h1>
-        <button onClick={openAddForm} className="add-menu-button">
-          เพิ่มเมนูใหม่
-        </button>
-      </div>
+    <div style={{ padding: 20 }}>
+      <h1>จัดการเมนูอาหาร</h1>
+      <Button type="primary" onClick={openAddForm}>
+        เพิ่มเมนูใหม่
+      </Button>
 
-      {menus.length === 0 ? (
-        <div className="empty-state-card">
-          <p className="empty-message">ไม่พบเมนูอาหาร</p>
-        </div>
-      ) : (
-        <div className="menu-grid">
-          {menus.map((menu) => (
-            <div key={menu.id} className="menu-card">
-              <div className="menu-image-container">
-                {menu.image ? (
-                  <img src={menu.image} alt={menu.name} className="menu-image" />
-                ) : (
-                  <div className="no-image-placeholder">no image</div>
-                )}
-              </div>
-              <div className="menu-details">
-                <div className="menu-header">
-                  <div>
-                    <h3 className="menu-name">{menu.name}</h3>
-                    <div className="menu-price">{menu.price.toLocaleString()} บาท</div>
-                  </div>
-                  <div className="menu-actions">
-                    <button onClick={() => openEditForm(menu)} className="edit-button">
-                      แก้ไข
-                    </button>
-                    <button onClick={() => handleDelete(menu.id)} className="delete-button">
-                      ลบ
-                    </button>
-                  </div>
-                </div>
+      <Table
+        dataSource={menus}
+        columns={columns}
+        rowKey="id"
+        style={{ marginTop: 16 }}
+      />
 
-                <div className="menu-info-section">
-                  <div>ประเภท: {menu.type}</div>
-                  <div>ขนาด: {menu.size}</div>
-                  {(menu.type === "เมนูหลัก" || menu.type === "ของทานเล่น") && (
-                    <div>ระดับความเผ็ด: {menu.spicy}</div>
-                  )}
-                  <div>ท็อปปิ้ง: {menu.toppings.length ? menu.toppings.join(", ") : "-"} (เลือกได้สูงสุด {menu.toppingLimit})</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Modal Form */}
+      <Modal
+        title={editingId ? "แก้ไขเมนู" : "เพิ่มเมนูใหม่"}
+        open={visible}
+        onCancel={() => setVisible(false)}
+        onOk={handleSave}
+        okText="บันทึก"
+        cancelText="ยกเลิก"
+        confirmLoading={loading}
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            label="ชื่อเมนู"
+            name="name"
+            rules={[{ required: true, message: "กรุณากรอกชื่อเมนู" }]}
+          >
+            <Input placeholder="ชื่อเมนู" />
+          </Form.Item>
 
-      {showForm && (
-        <div className="form-modal-backdrop">
-          <div className="form-modal-panel">
-            <div className="form-header">
-              <h2 className="form-title">{editingId ? "แก้ไขเมนู" : "เพิ่มเมนูใหม่"}</h2>
-              <button onClick={() => { setShowForm(false); resetForm(); }} className="close-button">
-                ปิด
-              </button>
-            </div>
+          <Form.Item
+            label="ราคา"
+            name="price"
+            rules={[{ required: true, message: "กรุณากรอกราคา" }]}
+          >
+            <InputNumber min={1} style={{ width: "100%" }} />
+          </Form.Item>
 
-            <div className="form-content">
-              <div>
-                <label className="form-label">ชื่อเมนู</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  placeholder="ใส่ชื่อเมนู"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
+          <Form.Item label="รายละเอียด" name="detail">
+            <Input.TextArea rows={3} placeholder="รายละเอียดเมนู" />
+          </Form.Item>
 
-              <div>
-                <label className="form-label">ราคา</label>
-                <input
-                  type="number"
-                  className="form-input"
-                  placeholder="ใส่ราคา"
-                  value={price === "" ? "" : String(price)}
-                  onChange={(e) => setPrice(e.target.value === "" ? "" : Number(e.target.value))}
-                />
-              </div>
+          <Form.Item
+            label="ประเภทอาหาร"
+            name="type"
+            rules={[{ required: true }]}
+          >
+            <Select>
+              <Select.Option value={1}>เมนูหลัก</Select.Option>
+              <Select.Option value={2}>ของทานเล่น</Select.Option>
+              <Select.Option value={3}>ของหวาน</Select.Option>
+              <Select.Option value={4}>เครื่องดื่ม</Select.Option>
+            </Select>
+          </Form.Item>
 
-              <div>
-                <label className="form-label">ประเภทอาหาร</label>
-                <select className="form-select" value={type} onChange={(e) => setType(e.target.value as MenuType)}>
-                  <option>เมนูหลัก</option>
-                  <option>ของทานเล่น</option>
-                  <option>ของหวาน</option>
-                  <option>เครื่องดื่ม</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="form-label">ขนาด</label>
-                <div className="form-radio-group">
-                  {(["S", "M", "L"] as SizeType[]).map((s) => (
-                    <label key={s} className="form-radio-label">
-                      <input type="radio" name="size" checked={size === s} onChange={() => setSize(s)} /> {s}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              {(type === "เมนูหลัก" || type === "ของทานเล่น") && (
-                <div>
-                  <label className="form-label">ระดับความเผ็ด</label>
-                  <div className="form-radio-group">
-                    {(["เผ็ดน้อย", "เผ็ดกลาง", "เผ็ดมาก"] as SpicyType[]).map((sp) => (
-                      <label key={sp} className="form-radio-label">
-                        <input type="radio" name="spicy" checked={spicy === sp} onChange={() => setSpicy(sp)} /> {sp}
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="form-label">ท็อปปิ้ง</label>
-                <div className="topping-input-group">
-                  <input className="form-input topping-input" placeholder="ชื่อท็อปปิ้ง" value={newTopping} onChange={(e) => setNewTopping(e.target.value)} />
-                  <button onClick={handleAddTopping} className="add-topping-button">
-                    เพิ่ม
-                  </button>
-                </div>
-                <div className="topping-limit-group">
-                  <label className="topping-limit-label">จำนวนท็อปปิ้งสูงสุดที่ลูกค้าสามารถเลือกได้:</label>
-                  <input type="number" min={1} className="topping-limit-input" value={toppingLimit} onChange={(e) => setToppingLimit(Math.max(1, Number(e.target.value) || 1))} />
-                </div>
-                <ul className="topping-list">
-                  {toppings.map((t, idx) => (
-                    <li key={idx} className="topping-item">
-                      <input className="form-input topping-item-input" value={t} onChange={(e) => handleUpdateTopping(idx, e.target.value)} />
-                      <button onClick={() => handleRemoveTopping(idx)} className="remove-topping-button">
-                        ลบ
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <label className="form-label">รูปภาพเมนู</label>
-                <label className="image-upload-label">
-                  <FaCamera className="camera-icon" />
-                  <span>คลิกเพื่ออัปโหลด</span>
-                  <input type="file" accept="image/*" className="image-upload-input" onChange={handleImageUpload} />
-                </label>
-                {image && <img src={image} alt="preview" className="image-preview" />}
-              </div>
-
-              <div className="form-actions">
-                <button onClick={() => { setShowForm(false); resetForm(); }} className="cancel-button">
-                  ยกเลิก
-                </button>
-                <button onClick={handleSave} className="save-button">
-                  บันทึก
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+          <Form.Item label="รูปภาพ" name="image" valuePropName="fileList" getValueFromEvent={(e) => e.fileList}>
+            <Upload
+              listType="picture"
+              maxCount={1}
+              beforeUpload={() => false} // ป้องกัน auto-upload
+            >
+              <Button icon={<UploadOutlined />}>อัปโหลดรูป</Button>
+            </Upload>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

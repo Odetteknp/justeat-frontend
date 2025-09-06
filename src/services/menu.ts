@@ -1,6 +1,7 @@
 // src/services/menu.ts
 import { SECTIONS, menuItems } from "../mock/menuData";        // ← mock ของเพื่อน
 import type { MenuItem, MenuSection } from "../types";
+import { api } from "../services/api"
 
 // ใช้ .env ของ Vite (ต้อง restart dev server เมื่อแก้ค่า)
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -78,3 +79,23 @@ export async function fetchMenuItems(restaurantId?: string): Promise<MenuItem[]>
     return normalizeMenuItems();
   }
 }
+
+export const menu = {
+  listByRestaurant: (restaurantId: number) =>
+    api.get(`/restaurants/${restaurantId}/menus`),
+
+  create: (restaurantId: number, body: any, token: string) =>
+    api.post(`/owner/restaurants/${restaurantId}/menus`, body, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  update: (id: number, body: any, token: string) =>
+    api.patch(`/owner/menus/${id}`, body, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+
+  remove: (id: number, token: string) =>
+    api.delete(`/owner/menus/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+};

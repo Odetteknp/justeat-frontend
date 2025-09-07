@@ -2,10 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Card, Row, Col, Button, Typography, message,
-  Space, Alert, Steps, Tooltip
+  Space, Alert, Steps,
 } from "antd";
 import {
-  DownloadOutlined, QrcodeOutlined, ReloadOutlined
+  DownloadOutlined, QrcodeOutlined, DeleteOutlined, CreditCardOutlined,
 } from "@ant-design/icons";
 import QRCode from "qrcode";
 // @ts-ignore
@@ -16,7 +16,7 @@ import type { ImageListType } from "react-images-uploading";
 const { Title, Text, Paragraph } = Typography;
 
 const PROMPTPAY_MOBILE = "0934719687";
-const QR_EXPIRE_SECONDS = 300;
+const QR_EXPIRE_SECONDS = 5;
 
 function formatMMSS(seconds: number) {
   const s = Math.max(0, Math.floor(seconds));
@@ -47,13 +47,13 @@ const extractBase64 = (dataUrl: string): string => {
 
 // ข้อมูลคำสั่งซื้อจำลอง - ในการใช้งานจริงควรได้มาจาก API
 const mockOrderData = {
-  orderCode: "ODR-2025-001234",
+  orderID: "ODR-2025-001234",
   customerName: "คุณสมชาย ใจดี",
   customerPhone: "081-234-5678",
   subtotal: 2688,
   shippingFee: 20,
   discount: 100,
-  totalAmount: 5, // ยอดที่ต้องชำระจริง
+  totalAmount: 1, // ยอดที่ต้องชำระจริง
   orderDate: "2025-01-15 14:30:25",
 };
 
@@ -63,13 +63,13 @@ const Payment: React.FC = () => {
   const { search } = useLocation();
 
   const params = new URLSearchParams(search);
-  const initialOrderCode = params.get("order") || mockOrderData.orderCode;
+  const initialOrderCode = params.get("order") || mockOrderData.orderID;
   const qAmount = params.get("amount");
   const initialAmount =
     qAmount !== null && !Number.isNaN(Number(qAmount))
       ? Number(qAmount)
       : mockOrderData.totalAmount;
-  const orderId = params.get("orderId") ? Number(params.get("orderId")) : 1;
+  const orderId = params.get("orderId") ? Number(params.get("orderId")) : 3; //  =========== mock orderId
 
   const [orderCode] = useState<string>(initialOrderCode);
   const [amount] = useState<number>(initialAmount);
@@ -113,14 +113,6 @@ const Payment: React.FC = () => {
   }, [qrDataUrl, expireAt, messageApi]);
 
   const handleGenerateQR = async () => {
-    if (qrDataUrl && remainingSec > 0) {
-      messageApi.warning("QR ปัจจุบันยังไม่หมดอายุ กรุณาล้างหรือรอให้หมดอายุ");
-      return;
-    }
-    if (!amount || Number(amount) <= 0) {
-      messageApi.error("ยอดเงินไม่ถูกต้อง");
-      return;
-    }
     try {
       setGenerating(true);
       const payload = generatePayload(PROMPTPAY_MOBILE, {
@@ -131,17 +123,11 @@ const Payment: React.FC = () => {
       setExpireAt(Date.now() + QR_EXPIRE_SECONDS * 1000);
       messageApi.success("สร้าง QR สำเร็จ");
     } catch (err) {
-      console.error(err);
+      console.error("QR Generation Error:", err);
       messageApi.error("สร้าง QR ไม่สำเร็จ");
     } finally {
       setGenerating(false);
     }
-  };
-
-  const handleClearQR = () => {
-    setQrDataUrl(null);
-    setExpireAt(null);
-    setRemainingSec(0);
   };
 
   const [downloading, setDownloading] = useState(false);
@@ -165,21 +151,14 @@ const Payment: React.FC = () => {
   };
 
   const handleSubmitSlip = async () => {
-    if (!images.length || !images[0].file) {
-      messageApi.warning("โปรดแนบสลิปก่อนส่งยืนยัน");
-      return;
-    }
-    if (!amount || amount <= 0) {
-      messageApi.error("กรุณาใส่ยอดเงินที่ถูกต้อง");
-      return;
-    }
+    if (uploading) return;  // กันกดรัว
+    setUploading(true);
 
     try {
-      setUploading(true);
-      const file = images[0].file as File;
-
       // ตรวจชนิด/ขนาดไฟล์ "ก่อน" อ่าน Base64
-      if (!/^image\/(png|jpe?g)$/.test(file.type)) {
+      const file = images[0].file as File;
+      const typeOk = /^image\/(png|jpe?g)$/.test(file.type) || /\.(png|jpe?g)$/i.test(file.name);
+      if (!typeOk) {
         messageApi.error("รองรับเฉพาะไฟล์ PNG/JPG เท่านั้น");
         return;
       }
@@ -201,12 +180,13 @@ const Payment: React.FC = () => {
       };
 
       const API_BASE = import.meta.env?.VITE_API_BASE_URL ?? "http://localhost:8000";
+      const token = localStorage.getItem("token");
 
-      const response = await fetch(`${API_BASE}/api/payments/upload-slip`, {
+      const response = await fetch(`${API_BASE}/api/payments/verify-easyslip`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Authorization: `Bearer ${token}` // ถ้ามีระบบล็อกอิน
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(requestData),
       });
@@ -214,24 +194,30 @@ const Payment: React.FC = () => {
       if (!response.ok) {
         let errorMsg = "Upload failed";
         try {
-          const errorData = await response.json();
-          errorMsg = errorData.error || errorMsg;
-        } catch {
-          /* ignore non-JSON */
-        }
+          const ct = response.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorMsg;
+          } else {
+            const text = await response.text();
+            if (text) errorMsg = text;
+          }
+        } catch { /* ignore */ }
         throw new Error(errorMsg);
       }
 
-      const result = await response.json();
+      const ct = response.headers.get("content-type") || "";
+      const result = ct.includes("application/json") ? await response.json() : {};
 
       if (result.success || result.ok) {
+        //แสดงผลเป็น “บาท”
         const displayAmount =
-          typeof result.slipData?.amount === "number"
-            ? result.slipData.amount
+          typeof result.slipData?.amountSatang === "number"
+            ? result.slipData.amountSatang / 100
             : amount;
 
         const transRef =
-          result.slipData?.transRef || `TXN-${result.paymentId}`;
+          result.slipData?.transRef || (result.paymentId ? `TXN-${result.paymentId}` : "-");
 
         messageApi.success(`ตรวจสอบสลิปสำเร็จ! จำนวนเงิน: ${fmtTHB(displayAmount)}`);
         messageApi.info(`รหัสธุรกรรม: ${transRef}`);
@@ -249,7 +235,7 @@ const Payment: React.FC = () => {
     } finally {
       setUploading(false);
     }
-  }; // <-- ปิดฟังก์ชันให้เรียบร้อย
+  };
 
   return (
     <div style={{ backgroundColor: "white", minHeight: "100%", width: "100%" }}>
@@ -262,7 +248,7 @@ const Payment: React.FC = () => {
             bordered
             style={{ borderRadius: 12, height: "fit-content", position: "sticky", top: 16 }}
           >
-            <Title level={4} style={{ marginBottom: 20 }}>
+            <Title level={4} style={{ marginBottom: 32 }}>
               กรุณาทำตามขั้นตอนที่แนะนำ
             </Title>
             <Steps
@@ -277,7 +263,7 @@ const Payment: React.FC = () => {
                 { title: 'อัปโหลดสลิปยืนยันการโอนในหน้านี้ แล้วกด "ส่งสลิปยืนยันการชำระ"' },
               ]}
             />
-            <Paragraph style={{ marginTop: 16 }}>
+            <Paragraph style={{ marginTop: 85 }}>
               <Text type="secondary">
                 หมายเหตุ: ช่องทางชำระเงินพร้อมเพย์ใช้ได้กับแอป/วอลเล็ตที่รองรับพร้อมเพย์เท่านั้น
               </Text>
@@ -327,13 +313,13 @@ const Payment: React.FC = () => {
               {qrDataUrl ? (
                 <img
                   src={qrDataUrl}
-                  alt={`PromptPay QR Code สำหรับชำระเงิน ${amount?.toFixed(2)} บาท`}
+                  alt={`PromptPay QR สำหรับชำระเงิน ${fmtTHB(amount)}`}
                   style={{ width: 280, height: 280, objectFit: "contain" }}
                 />
               ) : (
                 <div
                   style={{
-                    width: 280,
+                    width: 300,
                     height: 280,
                     display: "flex",
                     alignItems: "center",
@@ -354,53 +340,34 @@ const Payment: React.FC = () => {
             </div>
 
             <Space wrap>
-              <Tooltip title="บันทึกภาพ QR เพื่อไปใช้จ่ายในแอปธนาคาร">
-                <Button
-                  icon={<DownloadOutlined />}
-                  disabled={!qrDataUrl}
-                  loading={downloading}
-                  onClick={handleDownloadQR}
-                  aria-label="ดาวน์โหลด QR Code สำหรับชำระเงิน"
-                >
-                  บันทึก QR
-                </Button>
-              </Tooltip>
+              <Button
+                className={`Payment-white-button ${qrDataUrl ? "is-ready" : ""}`}
+                style={{
+                  height: 48,
+                  width: 120,
+                }}
+                icon={<DownloadOutlined />}
+                disabled={!qrDataUrl}
+                loading={downloading}
+                onClick={handleDownloadQR}
+              >
+                บันทึก QR
+              </Button>
 
               <Button
-                type="primary"
+                style={{
+                  height: 48,
+                  width: 180,
+                }}
+                className={`Payment-orange-button ${qrDataUrl ? "" : "is-ready"}`}
                 icon={<QrcodeOutlined />}
                 onClick={handleGenerateQR}
                 loading={generating}
                 disabled={isQRAlive || generating}
-                aria-label="สร้าง QR Code PromptPay สำหรับการชำระเงิน"
               >
                 สร้าง QR PromptPay
               </Button>
-
-              <Button
-                icon={<ReloadOutlined />}
-                onClick={handleClearQR}
-                disabled={!qrDataUrl}
-                aria-label="ลบ QR Code ปัจจุบัน"
-              >
-                ล้าง QR
-              </Button>
             </Space>
-
-            <Button
-              size="large"
-              onClick={handleSuccess}
-              style={{
-                height: 48,
-                width: 256,
-                color: "white",
-                backgroundColor: "rgb(239, 102, 75)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                marginTop: 24,
-              }}
-            >
-              ตกลง
-            </Button>
           </Card>
         </Col>
 
@@ -435,7 +402,7 @@ const Payment: React.FC = () => {
                     onClick={handleClick}
                     style={{
                       width: 200,
-                      height: 300,
+                      height: 334,
                       border: "1px dashed #EF664B",
                       borderRadius: 8,
                       display: "flex",
@@ -445,7 +412,6 @@ const Payment: React.FC = () => {
                       overflow: "hidden",
                     }}
                     role="button"
-                    aria-label={hasImg ? "คลิกเพื่อเปลี่ยนสลิป" : "คลิกเพื่ออัปโหลดสลิป"}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
                         e.preventDefault();
@@ -468,21 +434,35 @@ const Payment: React.FC = () => {
             </ImageUploading>
 
             <Space wrap style={{ marginTop: 16 }}>
-              <Button onClick={() => setImages([])} disabled={!images.length}>
+              <Button
+                className={`Payment-white-button ${images.length && !uploading ? "is-ready" : ""}`}
+                style={{
+                  height: 48,
+                  width: 80,
+                }}
+                icon={<DeleteOutlined />}
+                onClick={() => setImages([])}
+                disabled={!images.length}
+              >
                 ลบรูป
               </Button>
-              <Button type="primary" onClick={handleSubmitSlip} loading={uploading} disabled={!images.length}>
-                ส่งสลิปยืนยันการชำระ
+              <Button
+                className={`Payment-orange-button ${images.length && !uploading ? "is-ready" : ""}`}
+                icon={<CreditCardOutlined />}
+                onClick={handleSubmitSlip}
+                loading={uploading}
+                disabled={!images.length || uploading}
+                style={{
+                  height: 48,
+                  maxWidth: 180, // ป้องกันปุ่มกระตุก
+                }}
+              >
+                {uploading ? "กำลังตรวจสอบสลิป..." : "แจ้งชำระเงิน"}
               </Button>
             </Space>
           </Card>
         </Col>
       </Row>
-
-      {/* Footer */}
-      <div style={{ padding: "0 16px 32px", textAlign: "center", marginTop: 16 }}>
-        <Text type="secondary">*เดโม—ยังไม่ได้เชื่อมระบบชำระเงินจริง/ตรวจสถานะอัตโนมัติ</Text>
-      </div>
     </div>
   );
 };

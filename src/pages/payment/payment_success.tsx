@@ -13,12 +13,12 @@ import {
     Space,
     Result,
 } from "antd";
-import { ReloadOutlined, HomeOutlined, FileTextOutlined } from "@ant-design/icons";
+import { HomeOutlined, FileTextOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
 /* ---------------- Types ---------------- */
-type PaymentMethod = "PromptPay" | "CreditCard" | "MobileBanking" | "Cash";
+type PaymentMethod = "PromptPay" | "Cash";
 type PaymentStatus = "SUCCESS" | "PENDING" | "FAILED";
 
 interface PaymentSuccessData {
@@ -119,19 +119,14 @@ const PaymentSuccessPage: React.FC = () => {
 
     const GoMainPage = () => {  // ไปหน้าหลัก
         setTimeout(() => {
-            navigate("/");      
+            navigate("/");
         }, 200);
     };
 
     const handleViewOrder = () => {
-        if (!data?.orderCode) return;
-        navigate(`/orders/${encodeURIComponent(data.orderCode)}`, { replace: false });
-    };
-
-    const handleReload = () => {
-        setLoading(true);
-        // force refetch
-        navigate(0); // reload route (ง่ายและตรง)
+        setTimeout(() => {
+            navigate("/profile/order");
+        }, 200);
     };
 
     return (
@@ -181,7 +176,7 @@ const PaymentSuccessPage: React.FC = () => {
                                     column={1}
                                     labelStyle={{ width: 180 }}
                                 >
-                                    <Descriptions.Item label="รหัสคำสั่งซื้อ">
+                                    <Descriptions.Item label="หมายเลขคำสั่งซื้อ">
                                         {data?.orderCode ?? "-"}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="จำนวนเงินที่ชำระ">
@@ -189,29 +184,22 @@ const PaymentSuccessPage: React.FC = () => {
                                             ? `${data.paidAmount.toLocaleString()} ${data.currency}`
                                             : "-"}
                                     </Descriptions.Item>
-                                    <Descriptions.Item label="วิธีการชำระเงิน">
-                                        {data?.method ?? "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="เลขอ้างอิงธุรกรรม">
-                                        {data?.txnId ?? "-"}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="เวลาที่ชำระเงิน">
+                                    <Descriptions.Item label="วันที่สั่งซื้อ">
                                         {data
                                             ? new Date(data.paidAt).toLocaleString()
                                             : "-"}
                                     </Descriptions.Item>
                                 </Descriptions>
-                                <div style={{ display: "flex", justifyContent: "center", 
-                                        marginTop: 24 }}>
+                                <div style={{
+                                    display: "flex", justifyContent: "center",
+                                    marginTop: 24
+                                }}>
                                     <Space wrap size="middle" style={{ display: "flex", justifyContent: "center", width: "100%" }}>
-                                        <Button type="primary" size="large" style={{ backgroundColor: "rgb(239, 102, 75)"}} className="Payment-ok-button" icon={<HomeOutlined />} onClick={GoMainPage}>
-                                            กลับไปหน้าหลัก
+                                        <Button size="large" className="Paymentsuccess-orange-button" icon={<HomeOutlined />} onClick={GoMainPage}>
+                                            กลับหน้าหลัก
                                         </Button>
-                                        <Button size="large" className="white-outline-button" icon={<FileTextOutlined />} onClick={handleViewOrder}>
+                                        <Button size="large" className="Paymentsuccess-white-button" icon={<FileTextOutlined />} onClick={handleViewOrder}>
                                             ดูคำสั่งซื้อ
-                                        </Button>   
-                                        <Button size="large" className="white-outline-button" icon={<ReloadOutlined />} onClick={handleReload}>
-                                            โหลดใหม่
                                         </Button>
                                     </Space>
                                 </div>

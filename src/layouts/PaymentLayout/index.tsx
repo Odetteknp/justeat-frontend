@@ -2,35 +2,19 @@ import React, { useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
 import "../../App.css";
 import {
-  UserOutlined,
-  DashboardOutlined,
-  PlayCircleOutlined,
-  HeartOutlined,
-  HistoryOutlined,
-  EditOutlined,
-  LeftSquareOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  DingdingOutlined,
   ArrowLeftOutlined
 } from "@ant-design/icons";
 
 import {
   Layout,
-  Menu,
   theme,
-  Button,
   message,
   Typography,
   Avatar,
-  Space,
-  Col,
 } from "antd";
-import type { MenuProps } from "antd";
-import logo from "../../assets/LOGO.png";
 
-const { Header, Content, Sider } = Layout;
-const { Title, Text } = Typography;
+const { Header, Content,  } = Layout;
+const { Title,  } = Typography;
 
 const ROUTE_KEY_MAP: Record<string, string> = {
   "/payment": "payment",
@@ -57,9 +41,9 @@ const PaymentLayout: React.FC = () => {
     return "payment";
   }, [location.pathname]);
 
-  const GoMainPage = () => {
-    setTimeout(() => navigate("/"), 200);
-  };
+  // const GoMainPage = () => {
+  //   setTimeout(() => navigate("/"), 200);
+  // };
 
   return (
     <Layout style={{ height: "100vh", overflow: "hidden" }}>
@@ -78,7 +62,7 @@ const PaymentLayout: React.FC = () => {
         }}
       >
         <Avatar
-          onClick={GoMainPage}
+          onClick={() => navigate(-1)} // กลับไปหน้าก่อนหน้า => cart
           size={42}
           icon={<ArrowLeftOutlined />}
           style={{

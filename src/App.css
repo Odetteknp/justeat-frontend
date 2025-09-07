@@ -13,7 +13,6 @@ body {
 }
 
 
-/*---------- Rider Style ----------*/
 /* Modern Sidebar Styles */
 .modern-sidebar-menu .ant-menu-item {
   margin: 4px 8px;
@@ -93,4 +92,62 @@ body {
   background: #555;
 }
 
-/*---------- Rider Style ----------*/
+
+
+/* ========== ปุ่มไปที่หน้าหลัก ========== */
+.GoMainPage-button:hover {
+  background: rgb(240, 140, 120) !important;
+  transform: translateY(-1px);
+  /* ลอยขึ้นเมื่อเอาเม้าไปวาง */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+
+
+/* ========== Payment $ PaymentSuccess ========== */
+/* hover เฉพาะตอนปุ่มใช้งานได้จริง (ไม่ disabled /  ไม่เป็นสถานะ loading ของ AntD) */
+/*   Payment ปุุ่มสีส้ม   */
+.Payment-orange-button.is-ready:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-loading) {
+  background: rgb(240, 120, 100) !important;
+  border-color: rgb(240, 120, 100) !important;
+  color: #fff !important;
+}
+
+/* เม้าชี้แล้วเด้งขึ้นนิดหน่อย + เงา */
+.Payment-orange-button.is-ready:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-loading):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+/*   Payment ปุุ่มสีขาว   */
+.Payment-white-button.is-ready:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-loading) {
+  background: rgb(255, 255, 255) !important;
+  border-color: rgb(217, 217, 217) !important;
+  color: #000000 !important;
+}
+.Payment-white-button.is-ready:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-loading):hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+/*   PaymentSuccess ปุุ่มสีส้ม   */
+.Paymentsuccess-orange-button{
+  background: rgb(240, 120, 100) !important;
+  border-color: rgb(240, 120, 100) !important;
+  color: #ffffff !important;
+}
+.Paymentsuccess-orange-button:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}
+
+/*   PaymentSuccess ปุุ่มสีขาว   */
+.Paymentsuccess-white-button{
+  background: rgb(255, 255, 255) !important;
+  border-color: rgb(217, 217, 217) !important;
+  color: #000000 !important;
+}
+.Paymentsuccess-white-button:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+}

@@ -61,29 +61,11 @@ export interface SimpleMenuItem {
   category: string;
 }
 
-export type MenuItem = { 
-    id: string; 
-    sectionId: string; 
-    name: string; imageUrl?: 
-    string; basePrice: number; // หน่วย: สตางค์ (5000 = ฿50.00) options?: MenuOption[]; 
-};
 
 // ==============================
 // เมนูแบบมีออปชัน (ใช้กับ UI เลือกตัวเลือก)
 // ==============================
-export interface Choice {
-  id: string;
-  name: string;
-  priceDelta: number;    // หน่วย: สตางค์ (500 = ฿5.00)
-}
 
-export interface MenuOption {
-  id: string;
-  name: string;
-  type: "single" | "multi";
-  required?: boolean;
-  choices: Choice[];
-}
 
 export interface ConfigurableMenuItem {
   id: string;
@@ -186,3 +168,29 @@ export interface Menu {
   menuTypeId: number;
   menuStatusId: number;
 }
+
+export type Choice = {
+  id: string;
+  name: string;
+  price?: number; // ราคาเพิ่มเป็นบาท (เช่น 10) ไม่ใส่ = 0
+};
+
+/** option ของเมนู (single=เลือกได้ 1, multiple=เลือกได้หลายอัน) */
+export type MenuOption = {
+  id: string;
+  label: string;
+  type: "single" | "multiple";
+  required?: boolean;
+  max?: number; // เผื่ออนาคต
+  choices: Choice[];
+};
+
+/** เมนูที่ UI ใช้ (price เป็นข้อความ format แล้ว เช่น '฿65') */
+export type MenuItem = {
+  id: string;
+  sectionId: string; // ใช้ชื่อหมวด/ประเภทที่โชว์บนแท็บ
+  name: string;
+  image: string;
+  price: string; // "฿65"
+  options?: MenuOption[];
+};

@@ -1,54 +1,22 @@
 // src/components/RestaurantMenu.tsx
-
 import React, { useEffect, useMemo, useRef, useState, createRef } from 'react';
 import './RestaurantMenu.css';
 import MenuItemCard from './MenuItemCard';
 import MenuOptionModal from './MenuOptionModal';
-import { type MenuItem } from '../../data/menuData'; // ✅ คง type ไว้ใช้ร่วมกับ Modal
+import { type MenuItem } from '../../types'; // ✅ ใช้ type กลางของ UI
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCart } from '../../state/CartContext';
 
 import Header from './ImageRest';
-import { getMenusByRestaurant, type Menu as ApiMenu } from '../../services/menu';
+import { getMenusByRestaurant } from '../../services/menu';
+
+// ใช้ HOOK ฝั่งเซิร์ฟเวอร์
+import { useCartServer } from '../../hooks/useCartServer';
 
 type Section = { id: string; label: string };
 type SectionRefs = Record<string, React.RefObject<HTMLDivElement | null>>;
 
 const fmtTHB = (n: number) =>
   new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(n);
-
-// รองรับ base64 หรือ URL
-function toImgSrc(img?: string) {
-  if (!img) return undefined;
-  if (img.startsWith('http://') || img.startsWith('https://') || img.startsWith('data:')) return img;
-  return `data:image/jpeg;base64,${img}`;
-}
-
-// แปลงจาก API -> รูปแบบ MenuItem ที่ FE ใช้
-function adapt(api: ApiMenu): MenuItem {
-  const sectionName = api.menuType?.typeName || String(api.menuTypeId);
-  return {
-    id: String(api.id),
-    name: api.name,
-    price: fmtTHB(api.price),             // FE ต้องการ string เช่น "฿199"
-    image: toImgSrc(api.image) || '',     // ป้องกัน null
-    sectionId: sectionName,               // ใช้ชื่อ type เป็น id/label
-    // map options เป็นรูปแบบเดิมของ Modal (single/multi + choices)
-    options: (api.options ?? []).map(op => ({
-      id: String(op.id),
-      label: op.name,
-      // GORM: Option.Type => 'radio'|'checkbox' -> FE: 'single'|'multiple'
-      type: op.type === 'radio' ? 'single' : 'multiple',
-      required: !!op.isRequired,
-      max: op.maxSelect ?? (op.type === 'radio' ? 1 : undefined),
-      choices: (op.optionValues ?? []).map(v => ({
-        id: String(v.id),
-        name: v.name,
-        price: Number(v.priceAdjustment || 0),
-      })),
-    })),
-  };
-}
 
 export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>();
@@ -61,9 +29,9 @@ export default function RestaurantMenu() {
   const [active, setActive] = useState<string>('');
   const tabsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const cart = useCart();
 
-  // สร้าง refs ตามจำนวน section แบบ dynamic
+  const { add, count, subtotal, refresh } = useCartServer(); // มี refresh สำหรับรีโหลด
+
   const sectionRefs = useMemo<SectionRefs>(() => {
     return sections.reduce<SectionRefs>((acc, s) => {
       acc[s.id] = createRef<HTMLDivElement>();
@@ -77,29 +45,58 @@ export default function RestaurantMenu() {
 
   const openOptions = (item: MenuItem) => { setChoosing(item); setOpen(true); };
   const closeOptions = () => { setOpen(false); setChoosing(null); };
-  const handleConfirm = (payload: { 
+
+  const handleConfirm = async (payload: { 
     item: MenuItem; quantity: number; 
     selected: Record<string,string[]>; note?: string; total: number; 
   }) => {
-    cart.addItem({ ...payload, restaurantId: restId });
-    closeOptions();
+    const optionValueIds = Object.values(payload.selected)
+      .flat()
+      .map((v) => Number(v))
+      .filter((n) => !Number.isNaN(n));
+
+    const menuIdNum = Number(payload.item.id);
+    if (Number.isNaN(menuIdNum) || menuIdNum <= 0) {
+      console.error("[add-to-cart] invalid menuId from item.id =", payload.item.id, payload);
+      alert("เมนูนี้ไม่มีรหัสที่ถูกต้อง (menuId)");
+      return;
+    }
+
+    const body = {
+      restaurantId: restId,
+      menuId: menuIdNum,
+      qty: payload.quantity,
+      note: payload.note,
+      selections: optionValueIds.map((id) => ({ optionValueId: id })),
+    };
+
+    console.log("[add-to-cart] request body =", body);
+
+    try {
+      await add(body);
+      closeOptions();
+    } catch (e: any) {
+      if (e?.response?.status === 409) {
+        if (confirm("ตะกร้าของคุณเป็นร้านอื่น ต้องล้างก่อนเพิ่มรายการนี้ไหม?")) {
+          navigate('/cart');
+        }
+      } else {
+        alert(e?.response?.data?.error || "เพิ่มลงตะกร้าไม่สำเร็จ");
+      }
+    }
   };
 
   const goCart = () => navigate('/cart');
 
-  // โหลดเมนูจาก API
+  // โหลดเมนูจาก API (ไม่ต้อง adapt อีกแล้ว)
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         setLoading(true);
-        const menus = await getMenusByRestaurant(restId);
+        const items = await getMenusByRestaurant(restId); // ← คืน MenuItem[] ที่พร้อมใช้
         if (!mounted) return;
 
-        // แปลงทั้งหมดเป็น MenuItem (FE shape)
-        const items = menus.map(adapt);
-
-        // สร้าง sections จาก menuTypeName ที่มีจริง และเรียงตามชุดที่อยากแสดง
         const ORDER = ['เมนูหลัก', 'ของทานเล่น', 'ของหวาน', 'เครื่องดื่ม'];
         const labels = Array.from(new Set(items.map(i => i.sectionId)));
         labels.sort((a, b) => {
@@ -194,7 +191,7 @@ export default function RestaurantMenu() {
                     <MenuItemCard
                       key={`${sec.id}-${index}`}
                       name={item.name}
-                      price={item.price}   // string ที่ format แล้ว
+                      price={item.price}
                       image={item.image}
                       onAdd={() => openOptions(item)}
                     />
@@ -214,18 +211,18 @@ export default function RestaurantMenu() {
           onConfirm={handleConfirm}
         />
 
-        {/* Floating cart */}
-        {cart.count > 0 && (
+      </div>
+        {/* Floating cart จาก BE */}
+        {count > 0 && (
           <button className="floating-cart" onClick={goCart}>
             <span className="floating-cart__left">
-              ตะกร้า • {cart.count} รายการ
+              ตะกร้า • {count} รายการ
             </span>
             <span className="floating-cart__right">
-              {fmtTHB(cart.totalAmount)}
+              {fmtTHB(subtotal)}
             </span>
           </button>
         )}
-      </div>
     </>
   );
 }

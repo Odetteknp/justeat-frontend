@@ -1,89 +1,115 @@
 // src/services/menu.ts
-import { SECTIONS, menuItems } from "../mock/menuData";        // ← mock ของเพื่อน
-import type { MenuItem, MenuSection } from "../types";
-import { api } from "../services/api"
+import { api } from "./api";
+import type { MenuItem, MenuOption, Choice } from "../types";
+export interface Menu {
+  id: number;
+  menuName: string;
+  price: number;
+  detail?: string;
+  picture?: string | null; 
+  menuTypeId: number;
+  menuStatusId: number;
+}
+/** =========================
+ * API Types (ตาม Backend)
+ * ========================= */
+export type OptionValue = {
+  id: number;
+  name: string;
+  priceAdjustment: number;
+  defaultSelect?: boolean;
+  isAvailable?: boolean;
+  sortOrder?: number;
+};
 
-// ใช้ .env ของ Vite (ต้อง restart dev server เมื่อแก้ค่า)
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
+export type MenuOptionBE = {
+  id: number;
+  name: string;
+  type: "radio" | "checkbox"; // BE
+  minSelect?: number;
+  maxSelect?: number;
+  isRequired?: boolean;
+  sortOrder?: number;
+  optionValues?: OptionValue[];
+};
 
-/* -------------------- Normalizers (แปลง mock → type กลางของคุณ) -------------------- */
+export type MenuBE = {
+  id: number;
+  name: string;
+  detail: string;
+  price: number;      // int/number (บาท)
+  image?: string;     // base64 หรือ URL
+  menuTypeId: number;
+  menuStatusId: number;
+  menuType?: { typeName: string };
+  menuStatus?: { statusName: string };
+  options?: MenuOptionBE[];
+};
 
-function normalizeSections(): MenuSection[] {
-  return SECTIONS.map(s => ({ id: s.id, name: s.label }));
+/** =========================
+ * Helpers
+ * ========================= */
+const fmtTHB = (n: number) =>
+  new Intl.NumberFormat("th-TH", {
+    style: "currency",
+    currency: "THB",
+    maximumFractionDigits: 0,
+  }).format(n);
+
+function toImgSrc(img?: string) {
+  if (!img) return "";
+  if (img.startsWith("http://") || img.startsWith("https://") || img.startsWith("data:")) return img;
+  return `data:image/jpeg;base64,${img}`;
 }
 
-function normalizeMenuItems(): MenuItem[] {
-  return menuItems.map((m, idx) => ({
-    id: String(idx), // mock เดิมไม่มี id → ใช้ index ชั่วคราว (หรือ crypto.randomUUID())
-    sectionId: m.sectionId,
-    name: m.name,
-    imageUrl: m.image,
-    // mock เก็บราคาเป็น "$50" → แปลงเป็นสตางค์ (5000)
-    basePrice: parsePriceToCents(m.price),
-    options: m.options?.map(o => ({
-      id: o.id,
-      name: o.label,
-      type: o.type === "multiple" ? "multi" : "single",
-      required: o.required,
-      choices: o.choices.map(c => ({
-        id: c.id,
-        name: c.name,
-        priceDelta: ((c.price ?? 0) * 100), // เพิ่มราคาเป็นสตางค์
-      })),
+/** =========================
+ * Adapter: API -> UI MenuItem
+ * ========================= */
+// ---- Adapter: BE -> UI ----
+function adaptMenu(be: any): MenuItem {
+  // รองรับทั้ง id และ ID จาก BE
+  const rawId = be?.id ?? be?.ID;
+  const idNum = Number(rawId || 0);
+
+  const sectionName = be?.menuType?.typeName || String(be?.menuTypeId);
+
+  const options: MenuOption[] | undefined = (be?.options ?? []).map((op: any) => ({
+    id: String(op.id),
+    label: op.name,
+    type: op.type === "radio" ? "single" : "multiple",
+    required: !!op.isRequired,
+    max: op.maxSelect ?? (op.type === "radio" ? 1 : undefined),
+    choices: (op.optionValues ?? []).map((v: any) => ({
+      id: String(v.id),
+      name: v.name,
+      price: Number(v.priceAdjustment || 0),
     })),
   }));
+
+  return {
+    id: String(idNum),                              // <-- ตรงนี้สำคัญ
+    name: be?.name ?? "",
+    price: fmtTHB(Number(be?.price || 0)),
+    image: toImgSrc(be?.image),
+    sectionId: sectionName,
+    options,
+  };
 }
 
-function parsePriceToCents(priceStr: string): number {
-  // "$50" / "50" / "฿50" → 5000
-  const digits = priceStr.replace(/[^\d.]/g, "");
-  const value = Number(digits || 0);
-  return Math.round(value * 100);
+// ---- API ----
+export async function getMenusByRestaurant(restId: number): Promise<MenuItem[]> {
+  const res = await api.get<{ items: MenuBE[] }>(`/restaurants/${restId}/menus`);
+  const items = res.data.items ?? [];
+  return items.map(adaptMenu);
 }
-
-/* -------------------- Services (API-first, fallback → mock) -------------------- */
-
-export async function fetchSections(restaurantId?: string): Promise<MenuSection[]> {
-  // ถ้าไม่ได้ตั้ง BASE_URL → ใช้ mock
-  if (!BASE_URL) return normalizeSections();
-
-  // ปรับ path ให้ตรง backend ของคุณเอง
-  const url = restaurantId
-    ? `${BASE_URL}/v1/restaurants/${restaurantId}/sections`
-    : `${BASE_URL}/v1/sections`;
-
-  try {
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    // ล้มเหลว → ใช้ mock
-    console.warn("[fetchSections] fallback to mock:", err);
-    return normalizeSections();
-  }
-}
-
-export async function fetchMenuItems(restaurantId?: string): Promise<MenuItem[]> {
-  if (!BASE_URL) return normalizeMenuItems();
-
-  const url = restaurantId
-    ? `${BASE_URL}/v1/restaurants/${restaurantId}/menu-items`
-    : `${BASE_URL}/v1/menu-items`;
-
-  try {
-    const res = await fetch(url, { credentials: "include" });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.warn("[fetchMenuItems] fallback to mock:", err);
-    return normalizeMenuItems();
-  }
-}
-
+/** =========================
+ * Owner / Management APIs
+ * (คงรูปแบบเดิมไว้)
+ * ========================= */
 export const menu = {
-  // Public
+  // Public (raw)
   listByRestaurant: (restaurantId: number) =>
-    api.get(`/restaurants/${restaurantId}/menus`),
+    api.get<{ items: Menu[] }>(`/restaurants/${restaurantId}/menus`),
 
   // Owner
   create: (restaurantId: number, body: any, token: string) =>
@@ -108,8 +134,7 @@ export const menu = {
       { headers: { Authorization: `Bearer ${token}` } }
     ),
 
-  listOptionsByMenu: (menuId: number) =>
-  api.get(`/menus/${menuId}/options`),
+  listOptionsByMenu: (menuId: number) => api.get(`/menus/${menuId}/options`),
 
   // Menu Options
   attachOption: (menuId: number, optionId: number, token: string) =>
@@ -124,41 +149,3 @@ export const menu = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 };
-
-export type OptionValue = {
-  id: number;
-  name: string;
-  priceAdjustment: number;
-  defaultSelect: boolean;
-  isAvailable: boolean;
-  sortOrder: number;
-};
-
-export type MenuOption = {
-  id: number;
-  name: string;
-  type: string;          // "radio" | "checkbox" (ฝั่ง FE จะ map เป็น single/multi)
-  minSelect: number;
-  maxSelect: number;
-  isRequired: boolean;
-  sortOrder: number;
-  optionValues: OptionValue[];
-};
-
-export type Menu = {
-  id: number;
-  name: string;
-  detail: string;
-  price: number;         // int64 -> number
-  image?: string;        // base64 (longtext) หรือ URL
-  menuTypeId: number;
-  menuStatusId: number;
-  menuType?: { typeName: string };
-  menuStatus?: { statusName: string };
-  options?: MenuOption[];
-};
-
-export async function getMenusByRestaurant(restId: number) {
-  const res = await api.get<{ items: Menu[] }>(`/restaurants/${restId}/menus`);
-  return res.data.items ?? [];
-}

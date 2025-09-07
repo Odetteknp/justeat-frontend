@@ -3,14 +3,20 @@
 type Props = {
   name: string;
   price: string;
-  image: string;
+  image?: string | null;
   onAdd?: () => void;
 };
 
 export default function MenuItemCard({ name, price, image, onAdd }: Props) {
+  const imgSrc = image || undefined;
+
   return (
     <div className="menu-item-card" style={{ position:'relative', border:'1px solid #eee', borderRadius:12, padding:12 }}>
-      <img src={image} alt={name} style={{ width:'100%', height:140, objectFit:'cover', borderRadius:8 }} />
+      {imgSrc ? (
+        <img src={imgSrc} alt={name} style={{ width:'100%', height:140, objectFit:'cover', borderRadius:8 }} />
+      ) : (
+        <div style={{ width:'100%', height:140, borderRadius:8, background:'#f3f3f3' }} />
+      )}
       <div style={{ marginTop:8 }}>
         <div style={{ fontWeight:700 }}>{name}</div>
         <div style={{ color:'#666' }}>{price}</div>
@@ -22,4 +28,5 @@ export default function MenuItemCard({ name, price, image, onAdd }: Props) {
     </div>
   );
 }
+
 

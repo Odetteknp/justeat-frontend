@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../state/CartContext";
+import { createOrder } from "../services/order"; // ✅ เพิ่ม import
 import "./CartPage.css";
 
 // --- Promotion type ---
@@ -35,9 +36,7 @@ export default function CartPage() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem("savedPromotions");
-      if (raw) {
-        setSavedPromos(JSON.parse(raw));
-      }
+      if (raw) setSavedPromos(JSON.parse(raw)); 
     } catch {
       setSavedPromos([]);
     }
@@ -60,16 +59,10 @@ export default function CartPage() {
 
     if (appliedPromo?.code) {
       const code = appliedPromo.code.toUpperCase();
-
-      if (code === "SHIPFREE") {
-        delivery = 0;
-      } else if (code === "FOOD30") {
-        discountVal = Math.round(subtotal * 0.3);
-      } else if (code === "DRINKB1G1") {
-        discountVal = 40; // ตัวอย่าง fix ค่า
-      } else if (code === "NEW50") {
-        discountVal = 50;
-      }
+      if (code === "SHIPFREE") delivery = 0;
+      else if (code === "FOOD30") discountVal = Math.round(subtotal * 0.3);
+      else if (code === "DRINKB1G1") discountVal = 40;
+      else if (code === "NEW50") discountVal = 50;
     }
 
     if (discountVal > subtotal) discountVal = subtotal;
@@ -82,13 +75,46 @@ export default function CartPage() {
     (addressId && addressId !== "new") ||
     (addressId === "new" && newAddress.trim().length > 8);
 
+  // ✅ ประกาศ canCheckout (ของเดิมหายไป)
   const canCheckout = cart.items.length > 0 && hasAddress && !!payment;
 
-  const onCheckout = () => {
+  // ✅ คง onCheckout ที่ยิง API จริง แล้วลบตัวที่ alert ธรรมดาออก
+  const onCheckout = async () => {
     if (!canCheckout) return;
-    alert("สั่งซื้อสำเร็จ ขอบคุณค่ะ 🧡");
-    cart.clear();
-    navigate("/");
+
+    try {
+      // 1) แปลง cart → payload
+      const items = cart.items.map((line) => {
+        const selections: { optionId: number; optionValueId: number }[] = [];
+        Object.entries(line.selected).forEach(([optId, valIds]) => {
+          (valIds || []).forEach((v) => {
+            selections.push({ optionId: Number(optId), optionValueId: Number(v) });
+          });
+        });
+        return {
+          menuId: Number(line.item.id), // ต้องมั่นใจว่า MenuItem มี id (string) มาจากหน้าเมนู
+          qty: line.quantity,
+          selections,
+        };
+      });
+
+      const restaurantId = Number(cart.restaurantId);
+      if (!restaurantId) {
+        alert("ไม่พบร้านของตะกร้า (restaurantId)");
+        return;
+      }
+
+      // 2) เรียก API
+      const res = await createOrder({ restaurantId, items });
+
+      // 3) แจ้งผล + เคลียร์ + ไปหน้าอื่น
+      alert(`สั่งซื้อสำเร็จ เลขที่คำสั่งซื้อ #${res.id}`);
+      cart.clear();
+      navigate(`/orders/${res.id}`);
+    } catch (e: any) {
+      console.error(e);
+      alert(e?.response?.data?.error || "สั่งซื้อไม่สำเร็จ");
+    }
   };
 
   return (
@@ -117,42 +143,29 @@ export default function CartPage() {
               <ul className="listReset">
                 {cart.items.map((line) => (
                   <li key={line.id} className="cartLine">
-                    <img
-                      src={line.item.image}
-                      alt={line.item.name}
-                      className="itemImage"
-                    />
+                    <img src={line.item.image} alt={line.item.name} className="itemImage" />
                     <div className="lineBody">
                       <div className="itemName">{line.item.name}</div>
                       <div className="itemMeta">
-                        {Object.entries(line.selected).map(
-                          ([optId, choiceIds], idx) => {
-                            if (!Array.isArray(choiceIds)) return null;
-                            const opt = line.item.options?.find(
-                              (o) => o.id === optId
-                            );
-                            const names = choiceIds.map(
-                              (cid) =>
-                                opt?.choices.find((c) => c.id === cid)?.name ??
-                                cid
-                            );
-                            return (
-                              <span key={optId} className="itemMetaChip">
-                                {idx ? " | " : ""}
-                                {names.join(", ")}
-                              </span>
-                            );
-                          }
-                        )}
+                        {Object.entries(line.selected).map(([optId, choiceIds], idx) => {
+                          if (!Array.isArray(choiceIds)) return null;
+                          const opt = line.item.options?.find((o) => o.id === optId);
+                          const names = choiceIds.map(
+                            (cid) => opt?.choices.find((c) => c.id === cid)?.name ?? cid
+                          );
+                          return (
+                            <span key={optId} className="itemMetaChip">
+                              {idx ? " | " : ""}
+                              {names.join(", ")}
+                            </span>
+                          );
+                        })}
                         {line.note ? ` • ${line.note}` : null}
                       </div>
                     </div>
                     <div className="qty">× {line.quantity}</div>
                     <div className="lineTotal">{fmtTHB(line.total)}</div>
-                    <button
-                      onClick={() => cart.removeItem(line.id)}
-                      className="btnPlain"
-                    >
+                    <button onClick={() => cart.removeItem(line.id)} className="btnPlain">
                       ลบ
                     </button>
                   </li>
@@ -191,9 +204,7 @@ export default function CartPage() {
                 <select
                   value={appliedPromo?.id ?? ""}
                   onChange={(e) => {
-                    const selected = savedPromos.find(
-                      (p) => p.id === Number(e.target.value)
-                    );
+                    const selected = savedPromos.find((p) => p.id === Number(e.target.value));
                     setAppliedPromo(selected ?? null);
                   }}
                   className="input"
@@ -208,8 +219,7 @@ export default function CartPage() {
               )}
               {appliedPromo && (
                 <div className="helpText">
-                  ใช้งานแล้ว: <strong>{appliedPromo.title}</strong> • โค้ด:{" "}
-                  <code>{appliedPromo.code}</code>
+                  ใช้งานแล้ว: <strong>{appliedPromo.title}</strong> • โค้ด: <code>{appliedPromo.code}</code>
                 </div>
               )}
             </div>
@@ -225,9 +235,7 @@ export default function CartPage() {
                     checked={addressId === "addr1"}
                     onChange={() => setAddressId("addr1")}
                   />
-                  <span>
-                    บ้าน: 99/99 ถ.สุขสบาย แขวงสดใส เขตอิ่มใจ กทม. 10110
-                  </span>
+                  <span>บ้าน: 99/99 ถ.สุขสบาย แขวงสดใส เขตอิ่มใจ กทม. 10110</span>
                 </label>
                 <label className="radioRow">
                   <input
@@ -236,10 +244,7 @@ export default function CartPage() {
                     checked={addressId === "addr2"}
                     onChange={() => setAddressId("addr2")}
                   />
-                  <span>
-                    ที่ทำงาน: 123 อาคาร ABC ชั้น 12 ถ.พหลโยธิน จตุจักร กทม.
-                    10900
-                  </span>
+                  <span>ที่ทำงาน: 123 อาคาร ABC ชั้น 12 ถ.พหลโยธิน จตุจักร กทม. 10900</span>
                 </label>
                 <label className="radioRow">
                   <input
@@ -312,13 +317,7 @@ export default function CartPage() {
 }
 
 /** แถวสรุปราคา (label / value) */
-function Row({
-  label,
-  value,
-}: {
-  label: React.ReactNode;
-  value: React.ReactNode;
-}) {
+function Row({ label, value }: { label: React.ReactNode; value: React.ReactNode }) {
   return (
     <div className="row">
       <div>{label}</div>

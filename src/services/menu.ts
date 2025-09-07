@@ -124,3 +124,41 @@ export const menu = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 };
+
+export type OptionValue = {
+  id: number;
+  name: string;
+  priceAdjustment: number;
+  defaultSelect: boolean;
+  isAvailable: boolean;
+  sortOrder: number;
+};
+
+export type MenuOption = {
+  id: number;
+  name: string;
+  type: string;          // "radio" | "checkbox" (ฝั่ง FE จะ map เป็น single/multi)
+  minSelect: number;
+  maxSelect: number;
+  isRequired: boolean;
+  sortOrder: number;
+  optionValues: OptionValue[];
+};
+
+export type Menu = {
+  id: number;
+  name: string;
+  detail: string;
+  price: number;         // int64 -> number
+  image?: string;        // base64 (longtext) หรือ URL
+  menuTypeId: number;
+  menuStatusId: number;
+  menuType?: { typeName: string };
+  menuStatus?: { statusName: string };
+  options?: MenuOption[];
+};
+
+export async function getMenusByRestaurant(restId: number) {
+  const res = await api.get<{ items: Menu[] }>(`/restaurants/${restId}/menus`);
+  return res.data.items ?? [];
+}

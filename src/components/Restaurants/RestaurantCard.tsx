@@ -18,7 +18,7 @@ function resolveImage(src?: string, fallback: string = PLACEHOLDER) {
 }
 
 export default function RestaurantCard({ restaurant }: Props) {
-  const to = `/restaurants/${restaurant.id}`;
+  const to = `/restaurants/${restaurant.id}/menus`;
   const coverSrc = resolveImage(restaurant.cover);
 
   return (

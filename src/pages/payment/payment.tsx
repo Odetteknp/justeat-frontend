@@ -16,7 +16,7 @@ import type { ImageListType } from "react-images-uploading";
 const { Title, Text, Paragraph } = Typography;
 
 const PROMPTPAY_MOBILE = "0934719687";
-const QR_EXPIRE_SECONDS = 5;
+const QR_EXPIRE_SECONDS = 10;
 
 function formatMMSS(seconds: number) {
   const s = Math.max(0, Math.floor(seconds));
@@ -174,7 +174,8 @@ const Payment: React.FC = () => {
 
       const requestData = {
         orderId: orderId,
-        amount: Math.round(amount * 100), // ส่งเป็นสตางค์
+        amount: 0, // <= ชั่วคราวเพื่อข้ามการเช็คยอด padi_at
+        //amount: Math.round(amount * 100), // ส่งเป็นสตางค์
         contentType: file.type,
         slipBase64: base64Data,
       };
@@ -327,8 +328,6 @@ const Payment: React.FC = () => {
                     border: "1px dashed #ddd",
                     borderRadius: 12,
                   }}
-                  role="img"
-                  aria-label="พื้นที่แสดง QR Code PromptPay"
                 >
                   <div style={{ textAlign: "center" }}>
                     <Text type="secondary">

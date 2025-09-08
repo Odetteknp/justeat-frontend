@@ -1,7 +1,9 @@
 // src/pages/CartPage.tsx
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCartServer } from "../hooks/useCartServer"; // ⬅️ ใช้ hook ใหม่
+import { useCartServer } from "../hooks/useCartServer";
+import { getProfile, updateProfile } from "../services/user"; // ⬅️ ปรับ path หากต่างจากนี้
+import type { UserProfile } from "../types";                  // ⬅️ ปรับ path หากต่างจากนี้
 import "./CartPage.css";
 
 // --- Promotion type (คงไว้ได้) ---
@@ -35,9 +37,34 @@ export default function CartPage() {
     }
   }, []);
 
-  // ---------- Address ----------
-  const [addressId, setAddressId] = useState<string>("addr1");
+  // ---------- Address (ใช้จากโปรไฟล์ + เพิ่มใหม่ได้) ----------
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [addrChoice, setAddrChoice] = useState<"saved" | "new">("saved");
   const [newAddress, setNewAddress] = useState("");
+  const [saveAsDefault, setSaveAsDefault] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const u = await getProfile();
+        if (cancelled) return;
+        setProfile(u);
+        const hasSaved = !!u.address && u.address.trim().length >= 8;
+        setAddrChoice(hasSaved ? "saved" : "new");
+      } catch {
+        if (cancelled) return;
+        setProfile(null);
+        setAddrChoice("new");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const selectedAddress =
+    addrChoice === "saved"
+      ? (profile?.address?.trim() ?? "")
+      : newAddress.trim();
 
   // ---------- Payment ----------
   const [payment, setPayment] = useState<PaymentMethod | null>(null);
@@ -62,16 +89,20 @@ export default function CartPage() {
   }, [appliedPromo, subtotal]);
 
   // ---------- Checkout ----------
-  const hasAddress =
-    (addressId && addressId !== "new") ||
-    (addressId === "new" && newAddress.trim().length > 8);
-
+  const hasAddress = selectedAddress.length >= 8;
   const canCheckout = (cart?.items?.length ?? 0) > 0 && hasAddress && !!payment;
 
   const onCheckout = async () => {
     if (!canCheckout) return;
     try {
-      const res = await checkout(); // POST /orders/checkout-from-cart
+      // ถ้าเพิ่มใหม่และติ๊กบันทึกเป็นโปรไฟล์ → อัปเดตโปรไฟล์ก่อน
+      if (addrChoice === "new" && saveAsDefault) {
+        await updateProfile({ address: selectedAddress });
+        const u = await getProfile();
+        setProfile(u);
+      }
+      // ส่ง snapshot address + paymentMethod ไปที่ BE
+      const res = await checkout({ address: selectedAddress, paymentMethod: payment! });
       alert(`สั่งซื้อสำเร็จ เลขที่คำสั่งซื้อ #${res.id}`);
       navigate(`/orders/${res.id}`);
     } catch (e: any) {
@@ -115,7 +146,6 @@ export default function CartPage() {
               <ul className="listReset">
                 {cart.items.map((line) => (
                   <li key={line.id} className="cartLine">
-                    {/* ถ้า BE ส่ง menu.image มาแล้ว ใช้ได้เลย; ถ้ายังไม่ส่ง จะไม่แสดงรูป */}
                     {line.menu?.image ? (
                       <img src={line.menu.image} alt={line.menu?.name || `เมนู #${line.menuId}`} className="itemImage" />
                     ) : (
@@ -125,7 +155,6 @@ export default function CartPage() {
                     <div className="lineBody">
                       <div className="itemName">{line.menu?.name ?? `เมนู #${line.menuId}`}</div>
                       <div className="itemMeta">
-                        {/* ตอนนี้ selections ไม่มีชื่อจาก BE → แสดง count แทน (หรือแก้ BE ส่งชื่อมา) */}
                         {line.selections?.length ? <span className="itemMetaChip">ตัวเลือก {line.selections.length} รายการ</span> : null}
                         {line.note ? ` • ${line.note}` : null}
                       </div>
@@ -133,13 +162,12 @@ export default function CartPage() {
 
                     <div className="qty">
                       × {line.qty}
-                      {/* ถ้าชอบแบบเดิมไม่ต้องมีปุ่ม +/− ก็ลบทิ้งสองปุ่มนี้ได้ */}
-                      <button className="btnPlain" onClick={() => setQty((line.id ?? (line as any).ID), line.qty + 1)}>+</button>
-                      <button className="btnPlain" onClick={() => setQty((line.id ?? (line as any).ID), line.qty - 1)}>-</button>
+                      <button className="btnPlain" onClick={() => setQty(line.id, line.qty + 1)}>+</button>
+                      <button className="btnPlain" onClick={() => setQty(line.id, line.qty - 1)}>-</button>
                     </div>
 
                     <div className="lineTotal">{fmtTHB(line.total)}</div>
-                    <button onClick={() => remove((line.id ?? (line as any).ID))} className="btnPlain">
+                    <button onClick={() => remove(line.id)} className="btnPlain">
                       ลบ
                     </button>
                   </li>
@@ -198,7 +226,7 @@ export default function CartPage() {
               )}
             </div>
 
-            {/* ที่อยู่จัดส่ง */}
+            {/* ที่อยู่จัดส่ง (โปรไฟล์ / เพิ่มใหม่) */}
             <div className="card">
               <strong className="blockTitle">ที่อยู่จัดส่ง</strong>
               <div className="vStack">
@@ -206,36 +234,45 @@ export default function CartPage() {
                   <input
                     type="radio"
                     name="addr"
-                    checked={addressId === "addr1"}
-                    onChange={() => setAddressId("addr1")}
+                    checked={addrChoice === "saved"}
+                    onChange={() => setAddrChoice("saved")}
+                    disabled={!profile?.address || profile.address.trim().length < 8}
                   />
-                  <span>บ้าน: 99/99 ถ.สุขสบาย แขวงสดใส เขตอิ่มใจ กทม. 10110</span>
+                  <span>
+                    ใช้ที่อยู่ในโปรไฟล์
+                    {!profile?.address || profile.address.trim().length < 8
+                      ? " (ยังไม่ได้ตั้งค่า)"
+                      : `: ${profile.address}`}
+                  </span>
                 </label>
+
                 <label className="radioRow">
                   <input
                     type="radio"
                     name="addr"
-                    checked={addressId === "addr2"}
-                    onChange={() => setAddressId("addr2")}
-                  />
-                  <span>ที่ทำงาน: 123 อาคาร ABC ชั้น 12 ถ.พหลโยธิน จตุจักร กทม. 10900</span>
-                </label>
-                <label className="radioRow">
-                  <input
-                    type="radio"
-                    name="addr"
-                    checked={addressId === "new"}
-                    onChange={() => setAddressId("new")}
+                    checked={addrChoice === "new"}
+                    onChange={() => setAddrChoice("new")}
                   />
                   <span>เพิ่มที่อยู่ใหม่</span>
                 </label>
-                {addressId === "new" && (
-                  <textarea
-                    value={newAddress}
-                    onChange={(e) => setNewAddress(e.target.value)}
-                    placeholder="พิมพ์ที่อยู่จัดส่งใหม่..."
-                    className="input textarea"
-                  />
+
+                {addrChoice === "new" && (
+                  <div className="vStack" style={{ gap: 8 }}>
+                    <textarea
+                      className="input textarea"
+                      placeholder="พิมพ์ที่อยู่จัดส่งใหม่..."
+                      value={newAddress}
+                      onChange={(e) => setNewAddress(e.target.value)}
+                    />
+                    <label className="checkboxRow">
+                      <input
+                        type="checkbox"
+                        checked={saveAsDefault}
+                        onChange={(e) => setSaveAsDefault(e.target.checked)}
+                      />
+                      <span>บันทึกเป็นที่อยู่โปรไฟล์</span>
+                    </label>
+                  </div>
                 )}
               </div>
             </div>

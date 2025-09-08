@@ -120,7 +120,7 @@ export type AddToCartPayload = {
 // เพิ่ม type ไว้บนสุดใกล้ๆ type อื่น
 export type CheckoutPayload = {
   address: string;
-  paymentMethod?: "promptpay" | "cod";
+  paymentMethod?: "PromptPay" | "Cash on Delivery";
 };
 
 // แทนที่ฟังก์ชันนี้

@@ -2,11 +2,10 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCartServer } from "../hooks/useCartServer";
-import { getProfile, updateProfile } from "../services/user"; // ⬅️ ปรับ path หากต่างจากนี้
-import type { UserProfile } from "../types";                  // ⬅️ ปรับ path หากต่างจากนี้
+import { getProfile, updateProfile } from "../services/user";
+import type { UserProfile } from "../types";
 import "./CartPage.css";
 
-// --- Promotion type (คงไว้ได้) ---
 interface Promotion {
   id: number;
   title: string;
@@ -19,7 +18,8 @@ interface Promotion {
 const fmtTHB = (n: number) =>
   new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 }).format(n);
 
-type PaymentMethod = "promptpay" | "cod";
+// ✅ ส่งชื่อเต็มไป BE
+type PaymentMethod = "PromptPay" | "Cash on Delivery";
 
 export default function CartPage() {
   const navigate = useNavigate();
@@ -37,7 +37,7 @@ export default function CartPage() {
     }
   }, []);
 
-  // ---------- Address (ใช้จากโปรไฟล์ + เพิ่มใหม่ได้) ----------
+  // ---------- Address (จากโปรไฟล์ + เพิ่มใหม่ได้) ----------
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [addrChoice, setAddrChoice] = useState<"saved" | "new">("saved");
   const [newAddress, setNewAddress] = useState("");
@@ -69,6 +69,16 @@ export default function CartPage() {
   // ---------- Payment ----------
   const [payment, setPayment] = useState<PaymentMethod | null>(null);
 
+  // ---------- Confirm window (15s) ----------
+  const [confirming, setConfirming] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(15);
+  const timerRef = React.useRef<number | null>(null);
+  const [placing, setPlacing] = useState(false);
+
+  useEffect(() => {
+    return () => { if (timerRef.current) { clearInterval(timerRef.current); } };
+  }, []);
+
   // ---------- Pricing ----------
   const baseDelivery = 15;
   const { discount, deliveryFee, total } = useMemo(() => {
@@ -88,27 +98,60 @@ export default function CartPage() {
     return { discount: discountVal, deliveryFee: delivery, total: t };
   }, [appliedPromo, subtotal]);
 
-  // ---------- Checkout ----------
+  // ---------- Checkout gating ----------
   const hasAddress = selectedAddress.length >= 8;
   const canCheckout = (cart?.items?.length ?? 0) > 0 && hasAddress && !!payment;
 
-  const onCheckout = async () => {
+  // เปิดหน้าต่างยืนยันและเริ่มนับถอยหลัง
+  const onCheckoutClick = () => {
+    if (!canCheckout || confirming || placing) return;
+
+    setSecondsLeft(15);
+    setConfirming(true);
+
+    if (timerRef.current) clearInterval(timerRef.current);
+    timerRef.current = window.setInterval(() => {
+      setSecondsLeft((s) => {
+        if (s <= 1) {
+          if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+          // หมดเวลา → ยิงออเดอร์อัตโนมัติ
+          submitCheckout();
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  };
+
+  // ยิงออเดอร์จริง
+  const submitCheckout = async () => {
     if (!canCheckout) return;
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setConfirming(false);
+    setPlacing(true);
     try {
-      // ถ้าเพิ่มใหม่และติ๊กบันทึกเป็นโปรไฟล์ → อัปเดตโปรไฟล์ก่อน
+      // ถ้ากรอกใหม่และติ๊กบันทึก → อัปเดตโปรไฟล์ก่อน
       if (addrChoice === "new" && saveAsDefault) {
         await updateProfile({ address: selectedAddress });
         const u = await getProfile();
         setProfile(u);
       }
-      // ส่ง snapshot address + paymentMethod ไปที่ BE
+      // ส่ง snapshot address + paymentMethod ไป BE
       const res = await checkout({ address: selectedAddress, paymentMethod: payment! });
       alert(`สั่งซื้อสำเร็จ เลขที่คำสั่งซื้อ #${res.id}`);
-      navigate(`/orders/${res.id}`);
+      navigate(`/profile/orders`);
     } catch (e: any) {
       console.error(e);
       alert(e?.response?.data?.error || "สั่งซื้อไม่สำเร็จ");
+    } finally {
+      setPlacing(false);
     }
+  };
+
+  // ยกเลิกก่อนครบเวลา
+  const cancelCheckout = () => {
+    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+    setConfirming(false);
   };
 
   if (loading) {
@@ -285,8 +328,8 @@ export default function CartPage() {
                   <input
                     type="radio"
                     name="pay"
-                    checked={payment === "promptpay"}
-                    onChange={() => setPayment("promptpay")}
+                    checked={payment === "PromptPay"}
+                    onChange={() => setPayment("PromptPay")}
                   />
                   <span>พร้อมเพย์ (PromptPay)</span>
                 </label>
@@ -295,8 +338,8 @@ export default function CartPage() {
                   <input
                     type="radio"
                     name="pay"
-                    checked={payment === "cod"}
-                    onChange={() => setPayment("cod")}
+                    checked={payment === "Cash on Delivery"}
+                    onChange={() => setPayment("Cash on Delivery")}
                   />
                   <span>เก็บเงินปลายทาง</span>
                 </label>
@@ -304,14 +347,54 @@ export default function CartPage() {
             </div>
 
             <button
-              onClick={onCheckout}
-              disabled={!canCheckout}
+              onClick={onCheckoutClick} // ⬅️ เปลี่ยนมาปุ่มเปิดหน้าต่างยืนยัน
+              disabled={!canCheckout || confirming || placing}
               className="btnPrimary checkoutBtn"
-              aria-disabled={!canCheckout}
+              aria-disabled={!canCheckout || confirming || placing}
               aria-label={`ยืนยันคำสั่งซื้อ มูลค่า ${fmtTHB(total)}`}
             >
-              ยืนยันคำสั่งซื้อ • {fmtTHB(total)}
+              {placing ? "กำลังสั่งซื้อ…" : `ยืนยันคำสั่งซื้อ • ${fmtTHB(total)}`}
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ⬇️ Overlay ยืนยันภายใน 15 วิ */}
+      {confirming && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999,
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: 12,
+              padding: 20,
+              width: "min(90vw, 420px)",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+            }}
+          >
+            <h3 style={{ margin: 0, marginBottom: 8 }}>ยืนยันการสั่งซื้อ</h3>
+            <p style={{ marginTop: 0 }}>
+              ระบบจะยืนยันอัตโนมัติใน <strong>{secondsLeft}</strong> วินาที
+            </p>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button className="btnPlain" onClick={cancelCheckout}>
+                ยกเลิก
+              </button>
+              <button className="btnPrimary" onClick={submitCheckout} disabled={placing}>
+                {placing ? "กำลังสั่งซื้อ…" : "สั่งเลยตอนนี้"}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -149,3 +149,15 @@ export const menu = {
       headers: { Authorization: `Bearer ${token}` },
     }),
 };
+
+export type MenuDetail = {
+  id: number;
+  name?: string;
+  menuName?: string;
+  price?: number;
+};
+
+export async function getMenuName(menuId: number): Promise<string> {
+  const { data } = await api.get<MenuDetail>(`/menus/${menuId}`);
+  return data.name ?? data.menuName ?? `เมนู #${menuId}`;
+}

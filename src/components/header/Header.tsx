@@ -70,7 +70,7 @@ export default function CustomerHeader({ isLoggedIn = false }: Props) {
     },
     {
       key: "order",
-      label: <Link to="/profile/order">My Orders</Link>,
+      label: <Link to="/profile/orders">My Orders</Link>,
       icon: <IoFastFood />,
     },
     {

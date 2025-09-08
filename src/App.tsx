@@ -27,9 +27,9 @@ import RiderRegister from "./pages/register/RiderRegisterForm.tsx"
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";
-import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu/index.tsx";
-import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
-import RestaurantAcc from "./pages/partner/restaurant/restaurant";
+import RestaurantMenu from "./pages/partner/restaurant/Restaurant_Menu.tsx";
+import RestaurantOrder from "./pages/partner/restaurant/Restaurant_Order.tsx";
+import RestaurantAcc from "./pages/partner/restaurant/OwnerRestaurantPage.tsx";
 import RestaurantRegisterForm from './pages/register/RestaurantRegisterForm';
 
 // Admin
@@ -82,7 +82,8 @@ export default function App() {
         element={<ProfileLayout />}
       >
         <Route index element={<ProfilePage/>}/>
-        <Route path="order" element={<ProfileOrderPage/>}/>
+        <Route path="orders" element={<ProfileOrderPage/>}/>
+        <Route path="orders/:id" element={<ProfileOrderPage/>} />
         <Route path="promotion" element={<ProfilePromoPage/>}/>
         <Route path="chat" element={<ProfileChatPage/>}/>
       </Route>

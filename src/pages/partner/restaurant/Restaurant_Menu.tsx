@@ -14,10 +14,11 @@ import {
   Card,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
-import { menu } from "../../../../services/menu";
-import { option } from "../../../../services/option";
-import { auth } from "../../../../services/auth";
-import { getToken } from "../../../../services/tokenStore";
+import { menu } from "../../../services/menu";
+import { option } from "../../../services/option";
+import { auth } from "../../../services/auth";
+import { getToken } from "../../../services/tokenStore";
+import "./Restaurant_Menu.css"
 
 const MENU_TYPES: Record<number, string> = {
   1: "เมนูหลัก",

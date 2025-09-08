@@ -10,7 +10,7 @@ import {
   type Cart, 
   type AddToCartPayload, 
   type GetCartRes,
-  type CheckoutPayload, // ใช้จริงแล้ว
+  type CheckoutPayload, 
 } from "../services/cart";
 
 import { api } from "../services/api";

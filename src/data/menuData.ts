@@ -39,6 +39,7 @@ export interface MenuItem {
   image: string;
   sectionId: string;
   options?: MenuOption[];  // สำหรับ Modal ตัวเลือก
+  id?: string;          // backend id ใช้เป็น key/route
 }
 
 export const SECTIONS: Section[] = [

@@ -14,7 +14,7 @@ export default function ShopMenuPage() {
   const grouped = useMemo(() => {
     const map: Record<string, typeof items> = {};
     sections.forEach(s => (map[s.id] = []));
-    items.forEach(it => (map[it.sectionId] ??= []).push(it));
+    items.forEach(it => (map[it.category] ??= []).push(it));
     return map;
   }, [sections, items]);
 
@@ -47,17 +47,21 @@ export default function ShopMenuPage() {
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:12 }}>
             {grouped[s.id]?.map(it => (
               <div key={it.id} style={{ border:"1px solid #eee", borderRadius:12, padding:12 }}>
-                {it.imageUrl && <img src={it.imageUrl} alt={it.name} style={{ width:"100%", height:140, objectFit:"cover", borderRadius:8 }} />}
+                {it.image && (
+                  <img
+                    src={it.image}
+                    alt={it.name}
+                    style={{ width:"100%", height:140, objectFit:"cover", borderRadius:8 }}
+                  />
+                )}
                 <div style={{ fontWeight:700, marginTop:8 }}>{it.name}</div>
-                <div style={{ color:"#777" }}>{formatPrice(it.basePrice)}</div>
+                <div style={{ color:"#777" }}>{formatPrice(it.price)}</div>
                 <button
                   style={{ marginTop:8 }}
                   onClick={() => {
-                    // TODO: แทนที่ด้วย Modal เลือกออปชัน (ถ้ามี)
                     const quantity = 1;
-                    const selected: Record<string,string[]> = {};
-                    const total = it.basePrice * quantity; // preview เท่านั้น
-                    addItem({ item: it, quantity, selected, total });
+                    const total = it.price * quantity; // ✅ ใช้ it.price
+                    addItem({ item: it, quantity, total });
                   }}
                 >
                   เพิ่ม

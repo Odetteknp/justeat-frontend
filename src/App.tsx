@@ -3,9 +3,8 @@ import MainLayout from "./layouts/MainLayout";
 import AuthLayout from "./layouts/AuthLayout";
 
 import HomePage from "./pages/HomePage";
-import RestPage from "./pages/RestaurantsPage";          
+import AllRestaurantPage from "./pages/AllRestaurantsPage.tsx";          
 import HelpPage from "./pages/HelpPage";
-import MenuPage from "./pages/MenuPage";
 import PromoPage from "./pages/PromotionPage";
 
 import LoginPage from "./pages/login/Login";
@@ -17,7 +16,6 @@ import ProfilePromoPage from "./pages/ProfilePromo.tsx";
 import RestaurantMenuPage from "./components/chaaim/RestaurantMenu.tsx";
 
 // Rider
-import { RiderProvider } from "./context/RiderContext";
 import RiderLayout from "./layouts/RiderLayout";
 import RiderDashboard from "./pages/partner/rider/dashboard.tsx";
 import RiderWork from "./pages/partner/rider/rider_work.tsx";
@@ -27,9 +25,9 @@ import RiderRegister from "./pages/register/RiderRegisterForm.tsx"
 
 // Restaurant
 import RestaurantLayout from "./layouts/RestaurantLayout";
-import RestaurantMenu from "./pages/partner/restaurant/restaurant_menu/index.tsx";
-import RestaurantOrder from "./pages/partner/restaurant/restaurant_order";
-import RestaurantAcc from "./pages/partner/restaurant/restaurant";
+import RestaurantMenu from "./pages/partner/restaurant/Restaurant_Menu.tsx";
+import RestaurantOrder from "./pages/partner/restaurant/Restaurant_Order.tsx";
+import RestaurantAcc from "./pages/partner/restaurant/OwnerRestaurantPage.tsx";
 import RestaurantRegisterForm from './pages/register/RestaurantRegisterForm';
 
 // Admin
@@ -65,9 +63,8 @@ export default function App() {
       {/* Main layout */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<HomePage />} />
-        <Route path="/menu" element={<MenuPage />} />
-        <Route path="/restaurants" element={<RestPage />} />
-        <Route path="/restaurants/:id" element={<RestaurantMenuPage />} />
+        <Route path="/restaurants" element={<AllRestaurantPage />} />
+        <Route path="/restaurants/:id/menus" element={<RestaurantMenuPage />} />
         <Route path="/promotions" element={<PromoPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/help" element={<HelpPage />} />
@@ -82,7 +79,8 @@ export default function App() {
         element={<ProfileLayout />}
       >
         <Route index element={<ProfilePage/>}/>
-        <Route path="order" element={<ProfileOrderPage/>}/>
+        <Route path="orders" element={<ProfileOrderPage/>}/>
+        <Route path="orders/:id" element={<ProfileOrderPage/>} />
         <Route path="promotion" element={<ProfilePromoPage/>}/>
         <Route path="chat" element={<ProfileChatPage/>}/>
       </Route>
@@ -91,9 +89,7 @@ export default function App() {
       <Route
         path="/partner/rider"
         element={
-          <RiderProvider>
             <RiderLayout />
-          </RiderProvider>
         }
       >
         <Route index element={<RiderDashboard />} />

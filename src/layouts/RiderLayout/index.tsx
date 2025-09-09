@@ -142,9 +142,14 @@ const RiderLayout: React.FC = () => {
                   ไปหน้าเข้าสู่ระบบ
                 </Button>
               ) : (
-                <Button type="primary" onClick={GoMainPage}>
-                  กลับหน้าหลัก
-                </Button>
+                <div style={{ gap: '10px' }}>
+                  <Button onClick={() => navigate("/")}>
+                    กลับหน้าหลัก
+                  </Button>
+                  <Button type="primary" onClick={() => navigate("/partner/rider/register")}>
+                    สมัครไรเดอร์
+                  </Button>
+                </div>
               )}
             </Space>
           }

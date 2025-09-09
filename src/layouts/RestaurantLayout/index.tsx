@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
-import "../../App.css";
+
 import {
   UserOutlined,
   LeftSquareOutlined,
@@ -110,15 +110,6 @@ const RestaurantLayout: React.FC = () => {
   };
 
   // เงื่อนไขการแสดงผล หลังจากเรียก hooks 
-  if (guard.loading) {
-    return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center0"}}>
-        {contextHolder}
-        <Spin tip="กำลังตรวจสอบสิทธิ์..." size="large"/>
-      </div>
-    )
-  }
-
   if (!guard.allowed) {
     const is401 = guard.status === 401;
     return (
@@ -126,28 +117,37 @@ const RestaurantLayout: React.FC = () => {
         {contextHolder}
         <Result
           status={is401 ? "warning" : "403"}
-          title={is401 ? "กรุณาเข้าสู่ระบบ" : "ไม่มีสิทธิ์เข้าหน้านี้"}
+          title={is401 ? "คุณต้องเข้าสู่ระบบก่อน" : "คุณไม่มีสิทธิ์เข้าใช้งานหน้านี้"}
           subTitle={
             is401
-              ? "บัญชีของคุณยังไม่เข้าสู่ระบบ หรือเซสชันหมดอายุ"
-              : "หน้านี้อนุญาตเฉพาะ Rider เท่านั้น"
+              ? "กรุณาเข้าสู่ระบบเพื่อเข้าใช้งานหน้านี้"
+              : "หน้านี้สำหรับร้านอาหารที่เป็นพาร์ทเนอร์เท่านั้น"
           }
           extra={
-            <Space>
-              {is401 ? (
-                <Button type="primary" onClick={() => navigate("/login", { state: { from: location.pathname }})}>
-                  ไปหน้าเข้าสู่ระบบ
-                </Button>
-              ) : (
-                <Button type="primary" onClick={GoMainPage}>
+            // ใช้ React.Fragment หรือ Array แทน Space หากมีปุ่มหลายอันใน div
+            is401 ? (
+              <Button
+                type="primary"
+                onClick={() =>
+                  navigate("/login", { state: { from: location.pathname } })
+                }
+              >
+                ไปหน้าเข้าสู่ระบบ
+              </Button>
+            ) : (
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <Button onClick={() => navigate("/")}>
                   กลับหน้าหลัก
                 </Button>
-              )}
-            </Space>
+                <Button type="primary" onClick={() => navigate("/partner/restaurant/register")}>
+                  สมัครร้านค้า
+                </Button>
+              </div>
+            )
           }
         />
       </>
-    )
+    );
   }
 
   return (

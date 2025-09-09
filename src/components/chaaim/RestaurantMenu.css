@@ -1,3 +1,7 @@
+.menu-layout {
+  padding-bottom: 120px; 
+}
+
 .category-tabs__holder{
   position: sticky;
   top: 0;

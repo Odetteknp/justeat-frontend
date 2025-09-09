@@ -4,6 +4,7 @@ import type {
   RegisterResponse,
   MeResponse,
   RefreshResponse,
+  MeRestaurantResponse,
 } from "../types";
 
 export const auth = {
@@ -20,6 +21,9 @@ export const auth = {
     api.post<LoginResponse>("/auth/login", body).then((res) => res.data),
 
   me: () => api.get<MeResponse>("/auth/me").then((res) => res.data),
+
+  meRestaurant: () =>
+    api.get<MeRestaurantResponse>("/auth/me/restaurant").then((res) => res.data),
 
   refresh: () =>
     api.post<RefreshResponse>("/auth/refresh").then((res) => res.data),

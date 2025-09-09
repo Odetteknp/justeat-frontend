@@ -32,6 +32,13 @@ export interface PopularStore {
   tags?: string[];
 }
 
+export interface listRestaurant {
+  id: string;
+  name: string;
+  cover: string;
+  rating?: number; 
+}
+
 // ==============================
 // ร้าน (Restaurant)
 // ==============================
@@ -54,29 +61,11 @@ export interface SimpleMenuItem {
   category: string;
 }
 
-export type MenuItem = { 
-    id: string; 
-    sectionId: string; 
-    name: string; imageUrl?: 
-    string; basePrice: number; // หน่วย: สตางค์ (5000 = ฿50.00) options?: MenuOption[]; 
-};
 
 // ==============================
 // เมนูแบบมีออปชัน (ใช้กับ UI เลือกตัวเลือก)
 // ==============================
-export interface Choice {
-  id: string;
-  name: string;
-  priceDelta: number;    // หน่วย: สตางค์ (500 = ฿5.00)
-}
 
-export interface MenuOption {
-  id: string;
-  name: string;
-  type: "single" | "multi";
-  required?: boolean;
-  choices: Choice[];
-}
 
 export interface ConfigurableMenuItem {
   id: string;
@@ -91,7 +80,6 @@ export interface MenuSection {
   id: string;
   name: string;
 }
-
 
 // type users
 export type UserProfile = {
@@ -142,3 +130,66 @@ export interface RefreshResponse {
   ok: boolean;
   token: string;
 }
+
+export interface MeResponse {
+  ok: boolean;
+  user: {
+    id: number;
+    email: string;
+    firstName: string;
+    lastName: string;
+    phoneNumber?: string;
+    address?: string;
+    role: string;
+    avatarUrl?: string;
+  };
+}
+
+export interface MeRestaurantResponse {
+  ok: boolean;
+  restaurant: {
+    ID: number;
+    name: string;
+    address: string;
+    description?: string;
+    openingTime?: string;
+    closingTime?: string;
+    pictureBase64?: string | null;
+  };
+}
+
+export interface Menu {
+  id: number;
+  menuName: string;
+  price: number;
+  detail?: string;
+  picture?: string | null; 
+  menuTypeId: number;
+  menuStatusId: number;
+}
+
+export type Choice = {
+  id: string;
+  name: string;
+  price?: number; // ราคาเพิ่มเป็นบาท (เช่น 10) ไม่ใส่ = 0
+};
+
+/** option ของเมนู (single=เลือกได้ 1, multiple=เลือกได้หลายอัน) */
+export type MenuOption = {
+  id: string;
+  label: string;
+  type: "single" | "multiple";
+  required?: boolean;
+  max?: number; // เผื่ออนาคต
+  choices: Choice[];
+};
+
+/** เมนูที่ UI ใช้ (price เป็นข้อความ format แล้ว เช่น '฿65') */
+export type MenuItem = {
+  id: string;
+  sectionId: string; // ใช้ชื่อหมวด/ประเภทที่โชว์บนแท็บ
+  name: string;
+  image: string;
+  price: string; // "฿65"
+  options?: MenuOption[];
+};

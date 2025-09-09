@@ -1,53 +1,63 @@
-
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import type { MenuItem } from '../data/menuData';
+import type { SimpleMenuItem } from '../types';
 
-type Selected = Record<string, string[]>;
 export type CartLine = {
   id: string;
-  item: MenuItem;
+  item: SimpleMenuItem;
   quantity: number;
-  selected: Selected;
   note?: string;
-  total: number;
+  total: number; // line total = unitPrice * qty
+};
+
+type AddItemInput = Omit<CartLine, 'id'> & {
+  restaurantId?: number;
 };
 
 type CartContextType = {
   items: CartLine[];
-  addItem: (line: Omit<CartLine, 'id'>) => void;
+  addItem: (line: AddItemInput) => void;
   removeItem: (id: string) => void;
   clear: () => void;
   count: number;
   totalAmount: number;
+  restaurantId?: number;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
 
-// ✅ ฟังก์ชัน gen id ปลอดภัย
+// ✅ generator id
 const genId = () =>
-  (typeof crypto !== 'undefined' && crypto.randomUUID)
-    ? crypto.randomUUID()
+  (typeof crypto !== 'undefined' && (crypto as any).randomUUID)
+    ? (crypto as any).randomUUID()
     : Math.random().toString(36).slice(2);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<CartLine[]>([]);
+type CartState = {
+  items: CartLine[];
+  restaurantId?: number;
+};
 
-  const addItem = (line: Omit<CartLine, 'id'>) => {
-    setItems((prev) => {
-      const sizeChoice = line.selected['size']?.[0] ?? '';
+export function CartProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<CartState>({ items: [], restaurantId: undefined });
+
+  const addItem = (line: AddItemInput) => {
+    setState((prev) => {
+      if (prev.restaurantId && line.restaurantId && prev.restaurantId !== line.restaurantId) {
+        console.warn('Cart contains items from another restaurant. Rejecting new item.');
+        return prev;
+      }
+
+      const itemsPrev = prev.items;
       const noteText = line.note?.trim() ?? '';
 
-      const idx = prev.findIndex(
+      // รวม item ถ้าชื่อเมนู + note ตรงกัน
+      const idx = itemsPrev.findIndex(
         (x) =>
-          x.item.name === line.item.name &&
-          (x.selected['size']?.[0] ?? '') === sizeChoice &&
+          x.item.id === line.item.id &&
           (x.note?.trim() ?? '') === noteText
       );
 
       if (idx >= 0) {
-        const copy = [...prev];
-
-        // ✅ ใช้ unitPrice ล่าสุด
+        const copy = [...itemsPrev];
         const latestUnitPrice = line.total / line.quantity;
         const newQty = copy[idx].quantity + line.quantity;
 
@@ -55,40 +65,51 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           ...copy[idx],
           quantity: newQty,
           total: latestUnitPrice * newQty,
-          selected: {
-            ...copy[idx].selected,
-            ...line.selected,
-            size: copy[idx].selected['size'], // size ใช้ค่าของเดิม
-          },
           note: line.note,
         };
 
-        return copy;
+        return {
+          restaurantId: prev.restaurantId ?? line.restaurantId,
+          items: copy,
+        };
       }
 
-      return [...prev, { ...line, id: genId() }];
+      return {
+        restaurantId: prev.restaurantId ?? line.restaurantId,
+        items: [...itemsPrev, { ...line, id: genId() }],
+      };
     });
   };
 
   const removeItem = (id: string) => {
-    setItems((prev) => prev.filter((x) => x.id !== id));
+    setState((prev) => {
+      const items = prev.items.filter((x) => x.id !== id);
+      return { items, restaurantId: items.length ? prev.restaurantId : undefined };
+    });
   };
 
-  const clear = () => setItems([]);
+  const clear = () => setState({ items: [], restaurantId: undefined });
 
   const count = useMemo(
-    () => items.reduce((sum, x) => sum + x.quantity, 0),
-    [items]
+    () => state.items.reduce((sum, x) => sum + x.quantity, 0),
+    [state.items]
   );
-
   const totalAmount = useMemo(
-    () => items.reduce((sum, x) => sum + x.total, 0),
-    [items]
+    () => state.items.reduce((sum, x) => sum + x.total, 0),
+    [state.items]
   );
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, clear, count, totalAmount }}
+      value={{
+        items: state.items,
+        addItem,
+        removeItem,
+        clear,
+        count,
+        totalAmount,
+        restaurantId: state.restaurantId,
+      }}
     >
       {children}
     </CartContext.Provider>

@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 // นำเข้าไฟล์ CSS สำหรับสไตล์การ์ดยอดนิยม
 import "./PopularStores.css";
 // ประเภทข้อมูล PopularStore (id, name, cover, rating, to?, href?)
-import type { PopularStore } from "../types/sections";
+import type { PopularStore } from "../types";
 
 // รูปสำรองกรณีที่ไม่มี cover (คุณใส่ path asset ของคุณเองได้)
 const PLACEHOLDER = "/images/placeholder-restaurant.png";

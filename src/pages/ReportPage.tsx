@@ -134,7 +134,7 @@ const ReportPage = () => {
               <Input className="input-field" />
             </Form.Item>
 
-            <Form.Item className="form-submit-item">
+            <Form.Item className="form-submit-item-submit">
               <Button
                 type="primary"
                 htmlType="submit"

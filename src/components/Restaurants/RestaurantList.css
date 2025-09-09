@@ -1,0 +1,14 @@
+.rest-list {
+  margin-top: 16px;
+}
+.rest-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f46a30;
+  margin-bottom: 1rem;
+}
+.rest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}

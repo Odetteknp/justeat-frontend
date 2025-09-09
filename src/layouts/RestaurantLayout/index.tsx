@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate, Link } from "react-router-dom";
-import "./restaurantLayout.css";
+
 import {
   UserOutlined,
   LeftSquareOutlined,

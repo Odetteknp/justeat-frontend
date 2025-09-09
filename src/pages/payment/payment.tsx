@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import {
   Card, Row, Col, Button, Typography, message,
   Space, Alert, Steps,
@@ -61,13 +61,19 @@ const Payment: React.FC = () => {
   const navigate = useNavigate();
   const { search } = useLocation();
 
+  // //(Guard หน้าชำระเงินต้องล็อกอินก่อน)
+  // const token = localStorage.getItem("token");
+  // if (!token) {
+  //   return <Navigate to={`/login?next=/payment${search}`} replace />;
+  // }
+
   const params = new URLSearchParams(search);
   const initialOrderCode = params.get("order") || mockOrderData.orderID;
   const qAmount = params.get("amount");
-const initialAmount = qAmount !== null && !Number.isNaN(Number(qAmount))
-  ? parseFloat(qAmount)         // ✅ ใช้ parseFloat ชัดเจน
-  : mockOrderData.totalAmount;
-  const orderId = params.get("orderId") ? Number(params.get("orderId")) : 1; //  =========== mock orderId
+  const initialAmount = qAmount !== null && !Number.isNaN(Number(qAmount))
+    ? parseFloat(qAmount)         //  ใช้ parseFloat ชัดเจน
+    : mockOrderData.totalAmount;
+  const orderId = params.get("orderId") ? Number(params.get("orderId")) : 2; //  =========== mock orderId
 
   const [orderCode] = useState<string>(initialOrderCode);
   const [amount] = useState<number>(initialAmount);
@@ -148,118 +154,139 @@ const initialAmount = qAmount !== null && !Number.isNaN(Number(qAmount))
     }
   };
 
-  // แก้ไขในส่วน handleSubmitSlip ใน Payment.tsx
+  const handleSubmitSlip = async () => {
+    if (uploading) return;
+    setUploading(true);
 
-const handleSubmitSlip = async () => {
-  if (uploading) return;
-  setUploading(true);
+    try {
+      // ตรวจชนิด/ขนาดไฟล์
+      const file = images[0].file as File;
+      const typeOk = /^image\/(png|jpe?g)$/.test(file.type) || /\.(png|jpe?g)$/i.test(file.name);
 
-  try {
-    // ตรวจชนิด/ขนาดไฟล์
-    const file = images[0].file as File;
-    const typeOk = /^image\/(png|jpe?g)$/.test(file.type) || /\.(png|jpe?g)$/i.test(file.name);
-    if (!typeOk) {
-      messageApi.error("รองรับเฉพาะไฟล์ PNG/JPG เท่านั้น");
-      return;
-    }
-    const MAX = 5 * 1024 * 1024;
-    if (file.size > MAX) {
-      messageApi.error("ไฟล์ใหญ่เกิน 5MB");
-      return;
-    }
-
-    // อ่านไฟล์
-    const dataUrl = await getBase64(file);
-    const base64Data = extractBase64(dataUrl);
-
-    const toSatang = (thb: number) =>
-  Number.isFinite(thb) ? Math.round((thb + Number.EPSILON) * 100) : 0;
-
-const expectedSatang = toSatang(amount);
-
-console.log("[PAY] amount(baht)=", amount, " expectedSatang=", expectedSatang);
-
-    // ✅ 3. แก้ไข request structure ให้ตรงกับ backend
-    const requestData = {
-      orderId: orderId,
-      amount: expectedSatang, // ✅ ส่งเป็นสตางค์ (ฟิลด์ amount ใน backend)
-      contentType: file.type,
-      slipBase64: base64Data,
-      checkDuplicate: true // ✅ เพิ่มฟิลด์นี้
-    };
-
-    console.log("Sending request data:", requestData); // ✅ เพิ่ม debug log
-
-    const API_BASE = import.meta.env?.VITE_API_BASE_URL ?? "http://localhost:8000";
-    const token = localStorage.getItem("token");
-
-    const response = await fetch(`${API_BASE}/api/payments/verify-easyslip`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      },
-      body: JSON.stringify(requestData),
-    });
-
-    if (!response.ok) {
-      let errorMsg = "Upload failed";
-      try {
-        const ct = response.headers.get("content-type") || "";
-        if (ct.includes("application/json")) {
-          const errorData = await response.json();
-          errorMsg = errorData.error || errorMsg;
-        } else {
-          const text = await response.text();
-          if (text) errorMsg = text;
-        }
-      } catch { /* ignore */ }
-      throw new Error(errorMsg);
-    }
-
-    const ct = response.headers.get("content-type") || "";
-    const result = ct.includes("application/json") ? await response.json() : {};
-    
-    console.log("Response from server:", result); // ✅ เพิ่ม debug log
-
-    if (result.success || result.ok) {
-      // ✅ 4. แก้ไขการแสดงผล - ให้แสดงยอดที่คาดหวังแทนยอดจากสลิป
-      const expectedAmount = amount; // ยอดที่เราคาดหวัง
-      const slipAmount = typeof result.slipData?.amountSatang === "number"
-        ? result.slipData.amountSatang / 100
-        : expectedAmount;
-
-      const transRef = result.slipData?.transRef || 
-        (result.paymentId ? `TXN-${result.paymentId}` : "-");
-
-      //  5. ตรวจสอบว่ายอดตรงกันหรือไม่
-      if (result.matchedAmount === false) {
-  messageApi.error(
-    `ยอดเงินในสลิปไม่ตรงกัน! คาดหวัง: ${fmtTHB(amount)} `
-    + `แต่สลิปแสดง: ${fmtTHB((result.slipData?.amountSatang ?? 0) / 100)}`
-  );
-  messageApi.info(`รหัสธุรกรรม: ${transRef}`);
-  return;
-} else {
-        //  ถ้าตรงกัน แสดงยอดจากสลิป
-        messageApi.success(`ตรวจสอบสลิปสำเร็จ! จำนวนเงิน: ${fmtTHB(slipAmount)}`);
-        messageApi.info(`รหัสธุรกรรม: ${transRef}`);
+      // ตรวจสอบขนาดไฟล์
+      if (!file) {
+        messageApi.error("ไม่พบไฟล์ที่เลือก");
+        return;
       }
-      
-      setImages([]);
-      setTimeout(() => handleSuccess(), 200);
-    } else {
-      const errorMsg = result.error || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ";
-      messageApi.error(`ตรวจสอบสลิปไม่สำเร็จ: ${errorMsg}`);
-      result.validationErrors?.forEach((error: string) => messageApi.warning(error));
+
+      if (!typeOk) {
+        messageApi.error("รองรับเฉพาะไฟล์ PNG/JPG เท่านั้น");
+        return;
+      }
+      const MAX = 5 * 1024 * 1024;
+      if (file.size > MAX) {
+        messageApi.error("ไฟล์ใหญ่เกิน 5MB");
+        return;
+      }
+
+      // อ่านไฟล์
+      const dataUrl = await getBase64(file);
+      const base64Data = extractBase64(dataUrl);
+
+      const toSatang = (thb: number) =>
+        Number.isFinite(thb) ? Math.round((thb + Number.EPSILON) * 100) : 0;
+
+      const expectedSatang = toSatang(amount);
+
+      console.log("[PAY] amount(baht)=", amount, " expectedSatang=", expectedSatang);
+
+      //  3. แก้ไข request structure ให้ตรงกับ backend
+      const requestData = {
+        orderId: orderId,
+        amount: expectedSatang, //  ส่งเป็นสตางค์ (ฟิลด์ amount ใน backend)
+        contentType: file.type,
+        slipBase64: base64Data,
+        checkDuplicate: true //  ให้ backend ตรวจสอบสลิปซ้ำ
+      };
+
+      console.log("Sending request data:", requestData); //  เพิ่ม debug log
+
+      const API_BASE = import.meta.env?.VITE_API_BASE_URL ?? "http://localhost:8000";
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${API_BASE}/api/payments/verify-easyslip`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      if (!response.ok) {
+        let errorMsg = "Upload failed";
+        try {
+          const ct = response.headers.get("content-type") || "";
+          if (ct.includes("application/json")) {
+            const errorData = await response.json();
+            errorMsg = errorData.error || errorMsg;
+          } else {
+            const text = await response.text();
+            if (text) errorMsg = text;
+          }
+        } catch { /* ignore */ }
+        throw new Error(errorMsg);
+      }
+
+      const ct = response.headers.get("content-type") || "";
+      const result = ct.includes("application/json") ? await response.json() : {};
+
+      console.log("Response from server:", result); //debug log
+
+      if (result.success || result.ok) {
+        //  4. แก้ไขการแสดงผล - ให้แสดงยอดที่คาดหวังแทนยอดจากสลิป
+        const expectedAmount = amount; // ยอดที่เราคาดหวัง
+        const slipAmount = typeof result.slipData?.amountSatang === "number"
+          ? result.slipData.amountSatang / 100
+          : expectedAmount;
+
+        const transRef = result.slipData?.transRef ||
+          (result.paymentId ? `TXN-${result.paymentId}` : "-");
+
+        //  5. ตรวจสอบว่ายอดตรงกันหรือไม่
+        if (result.matchedAmount === false) {
+          //  ถ้าไม่ตรงกัน ให้แสดงยอดที่คาดหวัง
+          messageApi.error(
+            `ยอดเงินในสลิปไม่ตรงกัน! คาดหวัง: ${fmtTHB(amount)} `
+            + `แต่สลิปแสดง: ${fmtTHB((result.slipData?.amountSatang ?? 0) / 100)}`
+          );
+          //messageApi.info(`รหัสธุรกรรม: ${transRef}`);
+          return;
+        } else {
+          //  ถ้าตรงกัน แสดงยอดจากสลิป
+          messageApi.success(`ตรวจสอบสลิปสำเร็จ! จำนวนเงิน: ${fmtTHB(slipAmount)}`);
+          messageApi.info(`รหัสธุรกรรม: ${transRef}`);
+        }
+
+        setImages([]);
+        setTimeout(() => handleSuccess(), 200);
+      } else {
+        const errorMsg = result.error || "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ";
+        messageApi.error(`ตรวจสอบสลิปไม่สำเร็จ: ${errorMsg}`);
+        result.validationErrors?.forEach((error: string) => messageApi.warning(error));
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+
+      const errorMessage = (error as Error).message;
+      if (errorMessage.includes("already_paid")) {
+        messageApi.error("คำสั่งซื้อนี้ชำระเงินแล้ว");
+      } else {
+        if (errorMessage.includes("duplicate_slip")) {
+          messageApi.error("สลิปนี้ถูกใช้งานแล้ว");
+        } else if (errorMessage.includes("amount_mismatch")) {
+          messageApi.error("ยอดเงินในสลิปไม่ตรงกับยอดที่ต้องชำระ");
+        } else if (errorMessage.includes("qrcode_not_found")) {
+          messageApi.error("ไม่พบ QR Code ในสลิป");
+        }
+         else {
+          messageApi.error("อัปโหลดสลิปไม่สำเร็จ: " + errorMessage);
+        }
+      }
+    } finally {
+      setUploading(false);
     }
-  } catch (error) {
-    console.error("Upload error:", error);
-    messageApi.error("อัปโหลดสลิปไม่สำเร็จ: " + (error as Error).message);
-  } finally {
-    setUploading(false);
-  }
-};
+  };
 
   return (
     <div style={{ backgroundColor: "white", minHeight: "100%", width: "100%" }}>

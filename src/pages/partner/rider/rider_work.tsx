@@ -1,38 +1,23 @@
 // src/pages/rider/RiderWork.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { riderWorkApi, type AvailableOrder } from "../../../services/riderWorkApi";
+import { chatApi } from "../../../services/chatApi";
 import {
-  Card,
-  Row,
-  Col,
-  Spin,
-  Button,
-  Avatar,
-  Typography,
-  message,
-  Tag,
-  Space,
-  Divider,
-  List,
-  Statistic,
-  Drawer,
+  Card, Row, Col, Spin, Button, Avatar, Typography, message, Tag,
+  Space, Divider, List, Statistic, Drawer, Tabs, Input
 } from "antd";
 import {
-  PlayCircleOutlined,
-  PauseCircleOutlined,
-  CheckCircleOutlined,
-  ThunderboltOutlined,
-  DingdingOutlined,
-  FieldTimeOutlined,
+  PlayCircleOutlined, PauseCircleOutlined, CheckCircleOutlined,
+  ThunderboltOutlined, DingdingOutlined, FieldTimeOutlined,
 } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
+const { TextArea } = Input;
 
 type RiderWorkStatus = "ASSIGNED" | "COMPLETED";
 type CurrentWork = {
   orderId: number;
   status: RiderWorkStatus;
-  // รายละเอียดที่มาจาก available list
   restaurantName?: string;
   customerName?: string;
   address?: string;
@@ -42,26 +27,168 @@ type CurrentWork = {
 
 function StatusTag({ code }: { code: RiderWorkStatus }) {
   switch (code) {
-    case "ASSIGNED":
-      return <Tag color="blue">กำลังจัดส่ง</Tag>;
-    case "COMPLETED":
-      return <Tag color="green">สำเร็จ</Tag>;
-    default:
-      return null;
+    case "ASSIGNED": return <Tag color="blue">กำลังจัดส่ง</Tag>;
+    case "COMPLETED": return <Tag color="green">สำเร็จ</Tag>;
+    default: return null;
   }
 }
-
 function THB(n?: number) {
   if (typeof n !== "number") return "-";
   return new Intl.NumberFormat("th-TH", { style: "currency", currency: "THB", maximumFractionDigits: 0 }).format(n);
 }
 
+/** ---------- Chat panel สำหรับออเดอร์ ---------- */
+function OrderChat({ orderId }: { orderId: number }) {
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
+  const [roomId, setRoomId] = useState<number | null>(null);
+  const [messages, setMessages] = useState<Awaited<ReturnType<typeof chatApi.listMessages>>>([]);
+  const [input, setInput] = useState("");
+  const [myId, setMyId] = useState<number | null>(null);
+  const listRef = useRef<HTMLDivElement | null>(null);
+  const [msgLoading, setMsgLoading] = useState(false);
+
+  // โหลด user id ของเราเพื่อจัดแนวซ้าย/ขวา
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await (await import("../../../services/api")).api.get("/auth/me");
+        if (!cancelled) setMyId(me.data?.id ?? me.data?.ID ?? null);
+      } catch {
+        setMyId(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const scrollToBottom = () => {
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  };
+
+  const loadRoomAndMessages = async () => {
+    setLoading(true);
+    try {
+      const rooms = await chatApi.listRooms();
+      const room = rooms.find(r => r.orderId === orderId) || null;
+      setRoomId(room?.id ?? null);
+      if (room) {
+        const msgs = await chatApi.listMessages(room.id);
+        setMessages(msgs);
+        setTimeout(scrollToBottom, 0);
+      } else {
+        setMessages([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // polling ข้อความทุก 3 วิ
+  useEffect(() => {
+    let timer: number | null = null;
+    (async () => { await loadRoomAndMessages(); })();
+    if (roomId) {
+      timer = window.setInterval(async () => {
+        setMsgLoading(true);
+        try {
+          const msgs = await chatApi.listMessages(roomId);
+          setMessages(msgs);
+        } finally {
+          setMsgLoading(false);
+        }
+      }, 3000);
+    }
+    return () => { if (timer) window.clearInterval(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderId, roomId]);
+
+  const onSend = async () => {
+    const text = input.trim();
+    if (!text || !roomId) return;
+    try {
+      setSending(true);
+      await chatApi.sendMessage(roomId, text);
+      setInput("");
+      const msgs = await chatApi.listMessages(roomId);
+      setMessages(msgs);
+      setTimeout(scrollToBottom, 0);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const rightIds = useMemo(() => new Set([myId ?? -1]), [myId]);
+
+  return (
+    <div>
+      {loading ? (
+        <Spin />
+      ) : roomId ? (
+        <>
+          <div
+            ref={listRef}
+            style={{ height: 300, overflowY: "auto", padding: 8, background: "#fafafa", borderRadius: 8, border: "1px solid #f0f0f0" }}
+          >
+            {messages.length === 0 && <Text type="secondary">ยังไม่มีข้อความ</Text>}
+            {messages.map(m => {
+              const isMe = rightIds.has(m.userSenderId);
+              return (
+                <div key={m.id} style={{ display: "flex", justifyContent: isMe ? "flex-end" : "flex-start", marginBottom: 6 }}>
+                  <div
+                    style={{
+                      background: isMe ? "#1677ff" : "#f5f5f5",
+                      color: isMe ? "#fff" : "inherit",
+                      padding: "8px 12px",
+                      borderRadius: 12,
+                      maxWidth: "72%",
+                    }}
+                  >
+                    <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.body}</div>
+                    <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4, textAlign: "right" }}>
+                      {new Date(m.createdAt).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <Space.Compact style={{ width: "100%", marginTop: 8 }}>
+            <TextArea
+              autoSize={{ minRows: 1, maxRows: 4 }}
+              placeholder="พิมพ์ข้อความ…"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onPressEnter={(e) => {
+                if (!e.shiftKey) { e.preventDefault(); onSend(); }
+              }}
+              disabled={sending || msgLoading}
+            />
+            <Button type="primary" onClick={onSend} loading={sending} disabled={!input.trim()}>
+              ส่ง
+            </Button>
+          </Space.Compact>
+        </>
+      ) : (
+        <Space direction="vertical">
+          <Text>ยังไม่มีห้องแชทสำหรับออเดอร์นี้</Text>
+          <Button onClick={loadRoomAndMessages}>ลองอีกครั้ง</Button>
+          {/* ถ้าจะให้สร้างห้องอัตโนมัติ แนะนำเพิ่ม BE endpoint: GET /chatrooms/ensure?orderId=xxx */}
+        </Space>
+      )}
+    </div>
+  );
+}
+
+/** ---------- หน้าไรเดอร์เดิม + ผนวกแชท ---------- */
 export default function RiderWork() {
   const [isWorking, setIsWorking] = useState(false);
   const [currentWork, setCurrentWork] = useState<CurrentWork | null>(null);
   const [available, setAvailable] = useState<AvailableOrder[]>([]);
-  const [loading, setLoading] = useState(false);       // ปุ่มหลัก
-  const [listLoading, setListLoading] = useState(false); // ลิสต์งานว่าง
+  const [loading, setLoading] = useState(false);
+  const [listLoading, setListLoading] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
 
@@ -98,7 +225,6 @@ export default function RiderWork() {
     }
   };
 
-  // รับงานจากรายการ (พกข้อมูลเต็ม ๆ มาด้วย เพื่อโชว์รายละเอียดทันที)
   const handleAccept = async (it: AvailableOrder) => {
     try {
       setLoading(true);
@@ -114,10 +240,10 @@ export default function RiderWork() {
       });
       setAvailable((prev) => prev.filter((x) => x.id !== it.id));
       messageApi.success(`รับงาน #${it.id} แล้ว`);
-      setDetailOpen(true); // เปิดรายละเอียดทันที
+      setDetailOpen(true);
     } catch (e: any) {
       messageApi.error(e?.response?.data?.error || "รับงานไม่สำเร็จ");
-      refreshAvailable(); // เผื่อโดนแย่งงาน
+      refreshAvailable();
     } finally {
       setLoading(false);
     }
@@ -187,18 +313,12 @@ export default function RiderWork() {
           {/* งานปัจจุบัน */}
           {currentWork ? (
             <Card
-              title={
-                <Space>
-                  <ThunderboltOutlined />
-                  <span>งานปัจจุบัน</span>
-                  <StatusTag code={currentWork.status} />
-                </Space>
-              }
+              title={<Space><ThunderboltOutlined /><span>งานปัจจุบัน</span><StatusTag code={currentWork.status} /></Space>}
               bordered
               style={{ borderRadius: 14, marginBottom: 16 }}
               extra={
                 <Space>
-                  <Button onClick={() => setDetailOpen(true)}>ดูรายละเอียด</Button>
+                  <Button onClick={() => setDetailOpen(true)}>ดูรายละเอียด/แชท</Button>
                   <Button type="primary" icon={<CheckCircleOutlined />} onClick={handleComplete} disabled={loading}>
                     ส่งสำเร็จ
                   </Button>
@@ -237,7 +357,6 @@ export default function RiderWork() {
                     </Button>
                   </Col>
                 </Row>
-
                 <List
                   loading={listLoading}
                   dataSource={available}
@@ -246,19 +365,11 @@ export default function RiderWork() {
                     <List.Item
                       key={it.id}
                       actions={[
-                        <Button type="primary" onClick={() => handleAccept(it)} disabled={loading}>
-                          รับงาน
-                        </Button>,
+                        <Button type="primary" onClick={() => handleAccept(it)} disabled={loading}>รับงาน</Button>,
                       ]}
                     >
                       <List.Item.Meta
-                        title={
-                          <Space size={8} wrap>
-                            <Tag>#{it.id}</Tag>
-                            <strong>{it.restaurantName}</strong>
-                            <span>→ {it.customerName}</span>
-                          </Space>
-                        }
+                        title={<Space size={8} wrap><Tag>#{it.id}</Tag><strong>{it.restaurantName}</strong><span>→ {it.customerName}</span></Space>}
                         description={
                           <Space direction="vertical" size={2}>
                             {it.address && <Text type="secondary">{it.address}</Text>}
@@ -280,44 +391,37 @@ export default function RiderWork() {
         </div>
       </Spin>
 
-      {/* Drawer รายละเอียดงานปัจจุบัน */}
+      {/* Drawer: รายละเอียด + แชท */}
       <Drawer
-        title={`รายละเอียดงาน #${currentWork?.orderId ?? ""}`}
+        title={`ออเดอร์ #${currentWork?.orderId ?? ""}`}
         open={detailOpen}
         onClose={() => setDetailOpen(false)}
-        width={420}
+        width={520}
       >
         {currentWork ? (
-          <Space direction="vertical" size="middle" style={{ width: "100%" }}>
-            <div>
-              <Text strong>ร้านอาหาร: </Text>
-              <Text>{currentWork.restaurantName ?? "-"}</Text>
-            </div>
-            <div>
-              <Text strong>ชื่อลูกค้า: </Text>
-              <Text>{currentWork.customerName ?? "-"}</Text>
-            </div>
-            <div>
-              <Text strong>ที่อยู่จัดส่ง: </Text>
-              <Text>{currentWork.address ?? "-"}</Text>
-            </div>
-            <div>
-              <Text strong>ยอดรวม: </Text>
-              <Text>{THB(currentWork.total)}</Text>
-            </div>
-            <div>
-              <Text type="secondary">
-                รับเมื่อ: {currentWork.createdAt ? new Date(currentWork.createdAt).toLocaleString() : "-"}
-              </Text>
-            </div>
-
-            {/* NOTE:
-              ถ้าต้องการแสดง "รายการเมนู" ด้วย
-              - สร้าง/ใช้ endpoint ฝั่ง Rider เช่น GET /rider/works/:orderId/detail
-                ให้คืน items ของออเดอร์นี้
-              - แล้วค่อยดึงมาแสดงในส่วน Drawer นี้
-            */}
-          </Space>
+          <Tabs
+            defaultActiveKey="detail"
+            items={[
+              {
+                key: "detail",
+                label: "รายละเอียด",
+                children: (
+                  <Space direction="vertical" size="middle" style={{ width: "100%" }}>
+                    <div><Text strong>ร้านอาหาร: </Text><Text>{currentWork.restaurantName ?? "-"}</Text></div>
+                    <div><Text strong>ชื่อลูกค้า: </Text><Text>{currentWork.customerName ?? "-"}</Text></div>
+                    <div><Text strong>ที่อยู่จัดส่ง: </Text><Text>{currentWork.address ?? "-"}</Text></div>
+                    <div><Text strong>ยอดรวม: </Text><Text>{THB(currentWork.total)}</Text></div>
+                    <div><Text type="secondary">รับเมื่อ: {currentWork.createdAt ? new Date(currentWork.createdAt).toLocaleString() : "-"}</Text></div>
+                  </Space>
+                ),
+              },
+              {
+                key: "chat",
+                label: "แชท",
+                children: <OrderChat orderId={currentWork.orderId} />,
+              },
+            ]}
+          />
         ) : (
           <Text type="secondary">ไม่มีข้อมูลงานปัจจุบัน</Text>
         )}

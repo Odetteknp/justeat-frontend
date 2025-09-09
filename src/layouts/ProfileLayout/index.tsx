@@ -59,7 +59,7 @@ const ProfileLayout: React.FC = () => {
   // --- แก้ selectedKey: เช็คอันเฉพาะเจาะจงก่อน ---
   const selectedKey = useMemo(() => {
     const clean = location.pathname.replace(/\/+$/, "");
-    if (clean.startsWith("/profile/order")) return "MyOrders";
+    if (clean.startsWith("/profile/orders")) return "MyOrders";
     if (clean.startsWith("/profile/promotion")) return "MyPromotions";
     if (clean.startsWith("/proflie/security")) return "Security";
     if (clean.startsWith("/profile")) return "MyProfile";
@@ -73,7 +73,7 @@ const ProfileLayout: React.FC = () => {
         key: "MyOrders",
         icon: <DashboardOutlined style={{ fontSize: 18 }} />,
         label: "รายการสั่งซื้อ",
-        onClick: () => navigate("/profile/order"),
+        onClick: () => navigate("/profile/orders"),
       },
       {
         key: "MyPromotions",

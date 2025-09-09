@@ -1,3 +1,4 @@
+// services/admin.ts
 import { api } from "./api";
 
 export const admin = {

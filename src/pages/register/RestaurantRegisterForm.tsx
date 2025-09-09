@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { getProfile } from "../../services/user";
+import type { UserProfile } from "../../types";
+import { applyRestaurant } from "../../services/restaurantApplication";
 import "./RestaurantRegisterForm.css";
 import Owner from "../../assets/Restaurants/Owner.png";
 import ResRegis from "../../assets/Restaurants/ResRegister.png";
@@ -20,6 +23,25 @@ const RestaurantRegisterForm: React.FC = () => {
     logo: null as File | null,
   });
 
+  // โหลด profile จาก backend
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profile: UserProfile = await getProfile();
+        setFormData((prev) => ({
+          ...prev,
+          ownerFirstName: profile.firstName || "",
+          ownerLastName: profile.lastName || "",
+          ownerEmail: profile.email || "",
+          ownerPhone: profile.phoneNumber || "",
+        }))
+      } catch(err) {
+        console.error("❌ โหลดข้อมูล user ไม่สำเร็จ:", err)
+      }
+    }
+    loadProfile();
+  }, []);
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -34,11 +56,50 @@ const RestaurantRegisterForm: React.FC = () => {
     setFormData((prev) => ({ ...prev, logo: file }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Data:", formData);
-    alert("สมัครร้านเรียบร้อยแล้ว!");
+
+    if (!formData.restaurantType) {
+      alert("กรุณาเลือกหมวดหมู่ร้านอาหาร");
+      return;
+    }
+
+    let base64: string | undefined;
+
+    if (formData.logo) {
+      console.log("🚀 convert file -> base64", formData.logo);
+
+      base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+
+        reader.readAsDataURL(formData.logo!);
+      });
+    }
+
+    try {
+      const payload = {
+        name: formData.name,
+        phone: formData.phone,
+        address: formData.address,
+        description: formData.description,
+        pictureBase64: base64,
+        openingTime: formData.openingTime,
+        closingTime: formData.closingTime,
+        restaurantCategoryId: Number(formData.restaurantType),
+      };
+
+      const res = await applyRestaurant(payload);
+      console.log("✅ สมัครร้าน response:", res);
+      alert("สมัครร้านเรียบร้อยแล้ว!");
+    } catch (err) {
+      console.error("❌ สมัครร้านล้มเหลว", err);
+      alert("สมัครร้านไม่สำเร็จ กรุณาลองใหม่");
+    }
   };
+
 
   return (
     <div className="register-restaurant-container">
@@ -54,8 +115,6 @@ const RestaurantRegisterForm: React.FC = () => {
 
         <form onSubmit={handleSubmit} className="register-form">
           <div className="owner-info">
-            
-
             <div className="form-group-row">
               <div className="form-group">
                 <label>First Name</label>
@@ -65,6 +124,7 @@ const RestaurantRegisterForm: React.FC = () => {
                   value={formData.ownerFirstName}
                   onChange={handleChange}
                   required
+                  readOnly
                 />
               </div>
 
@@ -76,6 +136,7 @@ const RestaurantRegisterForm: React.FC = () => {
                   value={formData.ownerLastName}
                   onChange={handleChange}
                   required
+                  readOnly
                 />
               </div>
             </div>
@@ -88,6 +149,7 @@ const RestaurantRegisterForm: React.FC = () => {
                 value={formData.ownerEmail}
                 onChange={handleChange}
                 required
+                readOnly
               />
             </div>
 
@@ -99,6 +161,7 @@ const RestaurantRegisterForm: React.FC = () => {
                 value={formData.ownerPhone}
                 onChange={handleChange}
                 required
+                readOnly
               />
             </div>
 

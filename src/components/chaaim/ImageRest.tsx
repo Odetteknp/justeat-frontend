@@ -1,19 +1,27 @@
-import hiwImage from '../../assets/image/hiw.png';
-import "./ImageRest.css"
+import "./ImageRest.css";
 
-const ImageRest = () => {
+type Props = {
+  name: string;
+  cover?: string;
+  rating?: number;
+};
+
+const ImageRest = ({ name, cover, rating }: Props) => {
   return (
-      <div className="header">
-        <div className="header-image-container">
-          <img src={hiwImage} alt="ผักบุ้ง" className="header-image" />
-          <div className="restaurant-overlay">
-            <h1 className="restaurant-name">คลายหิว</h1>
-            <span className="rating">⭐ 4.7</span>
-          </div>
+    <div className="header">
+      <div className="header-image-container">
+        <img
+          src={cover || "/fallback.png"}
+          alt={name}
+          className="header-image"
+        />
+        <div className="restaurant-overlay">
+          <h1 className="restaurant-name">{name}</h1>
+          {rating && <span className="rating">⭐ {rating.toFixed(1)}</span>}
         </div>
       </div>
+    </div>
   );
 };
 
 export default ImageRest;
-

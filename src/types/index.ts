@@ -81,7 +81,6 @@ export interface MenuSection {
   name: string;
 }
 
-
 // type users
 export type UserProfile = {
   username: string;

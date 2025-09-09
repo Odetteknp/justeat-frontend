@@ -5,7 +5,7 @@ import { api } from "../services/api";
 import "./RestaurantReview.css";
 
 // ===== Types =====
-type OrderStatusCode = "Pending" | "Delivering" | "Completed" | "Cancelled";
+type OrderStatusCode = "Pending" | "Preparing" | "Delivering" | "Completed" | "Cancelled";
 
 interface BEOrderSummary {
   id: number;
@@ -31,7 +31,7 @@ interface BEOrderDetail {
   total: number;
   orderStatusId: number;
   restaurantId: number;
-  items: Array<{ id: number; qty: number; unitPrice: number; total: number; menuId: number }>;
+  items: Array<{ id: number; qty: number; unitPrice: number; total: number; menuId?: number; MenuID?: number; menu_id?: number }>;
 }
 
 // สำหรับ hydrate เมนู/ร้าน
@@ -42,16 +42,19 @@ const fmtTHB = (n: number) =>
 const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleString("th-TH", { dateStyle: "medium", timeStyle: "short" });
 
+// ✅ map id → code ให้ตรงกับฝั่ง BE seed
 const statusMap: Record<number, OrderStatusCode> = {
   1: "Pending",
-  2: "Delivering",
-  3: "Completed",
-  4: "Cancelled",
+  2: "Preparing",
+  3: "Delivering",
+  4: "Completed",
+  5: "Cancelled",
 };
 
 const StatusBadge: React.FC<{ code: OrderStatusCode }> = ({ code }) => {
   const map: Record<OrderStatusCode, { text: string; bg: string; color: string }> = {
     Pending: { text: "Pending", bg: "#fff7ed", color: "#9a3412" },
+    Preparing: { text: "Preparing", bg: "#f0f9ff", color: "#0369a1" },
     Delivering: { text: "Delivering", bg: "#eff6ff", color: "#1d4ed8" },
     Completed: { text: "Completed", bg: "#f5f3ff", color: "#15803d" },
     Cancelled: { text: "Cancelled", bg: "#fef2f2", color: "#b91c1c" },
@@ -117,6 +120,13 @@ async function fetchMenusByRestaurant(restaurantId: number): Promise<Map<number,
     }
   }
 }
+
+// ✅ normalizer รองรับ menuId / MenuID / menu_id
+const normMenuId = (it: any): number => {
+  const v = it?.menuId ?? it?.MenuID ?? it?.menu_id;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
 
 // ===== Component =====
 const ProfileOrderPage: React.FC = () => {
@@ -214,6 +224,7 @@ const ProfileOrderPage: React.FC = () => {
         {[
           { label: "ทั้งหมด", code: "ALL" as const },
           { label: "รอดำเนินการ", code: "Pending" as const },
+          { label: "กำลังเตรียม", code: "Preparing" as const },   // ✅ เพิ่มตัวกรอง Preparing
           { label: "กำลังไป", code: "Delivering" as const },
           { label: "สำเร็จ", code: "Completed" as const },
           { label: "ยกเลิก", code: "Cancelled" as const },
@@ -416,8 +427,9 @@ const DetailModal: React.FC<{
         <h3 style={{ fontWeight: 700, marginTop: 12 }}>รายการอาหาร</h3>
         <ul style={{ paddingLeft: 18, marginTop: 6 }}>
           {detail.items.map((it) => {
-            const m = menuMap.get(it.menuId);
-            const name = m?.name ?? `เมนู #${it.menuId}`;
+            const mid = normMenuId(it);             // ✅ normalize
+            const m = menuMap.get(mid);
+            const name = m?.name ?? `เมนู #${mid}`;
             return (
               <li key={it.id}>
                 {name} × {it.qty} — {fmtTHB(it.total)}

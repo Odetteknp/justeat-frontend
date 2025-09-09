@@ -45,13 +45,19 @@ export const ownerOrders = {
 
   detail: (restaurantId: number, orderId: number) =>
     api.get<OwnerOrderDetail>(`/owner/restaurants/${restaurantId}/orders/${orderId}`),
+
+  // ✅ actions: ตาม BE routes ที่เพิ่มไว้
+  accept:   (orderId: number) => api.post(`/owner/orders/${orderId}/accept`),   // Pending -> Preparing
+  handoff:  (orderId: number) => api.post(`/owner/orders/${orderId}/handoff`),  // Preparing -> Delivering
+  complete: (orderId: number) => api.post(`/owner/orders/${orderId}/complete`), // Delivering -> Completed
+  cancel:   (orderId: number) => api.post(`/owner/orders/${orderId}/cancel`),   // Pending -> Cancelled
 };
 
-// mapping สถานะ (ปรับตามฐานข้อมูลจริงของคุณได้)
+// ✅ แก้ให้ครบ 5 สถานะ (เผื่อโชว์ชื่อไทยทีหลังจะมาแก้ตรงนี้)
 export const statusTH: Record<number, string> = {
-  1: "รอดำเนินการ",
-  2: "กำลังจัดเตรียม",
-  3: "กำลังจัดส่ง",
-  4: "สำเร็จ",
-  5: "ยกเลิก",
+  1: "Pending",
+  2: "Preparing",
+  3: "Delivering",
+  4: "Completed",
+  5: "Cancelled",
 };

@@ -2,13 +2,6 @@
 import { api } from "./api";
 
 // ---------- Types ----------
-export type CartItemSelection = {
-  id: number;
-  cartItemId: number;
-  optionId: number;
-  optionValueId: number;
-  priceDelta: number;
-};
 
 export type CartItem = {
   id: number;
@@ -18,7 +11,7 @@ export type CartItem = {
   unitPrice: number;
   total: number;
   note?: string;
-  selections: CartItemSelection[];
+  
   menu?: {
     id: number;
     name?: string;
@@ -44,14 +37,6 @@ export type GetCartRes = {
 const toNum = (v: any, def = 0) =>
   typeof v === "number" ? v : (v == null ? def : Number(v) || def);
 
-const normSelection = (s: any): CartItemSelection => ({
-  id: s.id ?? s.ID,
-  cartItemId: s.cartItemId ?? s.CartItemID,
-  optionId: s.optionId ?? s.OptionID,
-  optionValueId: s.optionValueId ?? s.OptionValueID,
-  priceDelta: toNum(s.priceDelta ?? s.PriceDelta, 0),
-});
-
 const normMenu = (m: any) =>
   !m
     ? undefined
@@ -74,9 +59,6 @@ const normItem = (it: any): CartItem => {
     unitPrice,
     total,
     note: it.note ?? it.Note,
-    selections: Array.isArray(it.selections ?? it.Selections)
-      ? (it.selections ?? it.Selections).map(normSelection)
-      : [],
     menu: normMenu(it.menu ?? it.Menu),
   };
 };
@@ -114,7 +96,6 @@ export type AddToCartPayload = {
   menuId: number;
   qty: number;
   note?: string;
-  selections: { optionValueId: number }[];
 };
 
 // เพิ่ม type ไว้บนสุดใกล้ๆ type อื่น

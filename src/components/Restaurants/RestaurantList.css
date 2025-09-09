@@ -2,10 +2,10 @@
   margin-top: 16px;
 }
 .rest-title {
+  font-size: 2rem;
   font-weight: 700;
-  font-size: 18px;
-  margin: 8px 0 16px;
-  color: #111;
+  color: #f46a30;
+  margin-bottom: 1rem;
 }
 .rest-grid {
   display: grid;

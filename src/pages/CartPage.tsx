@@ -198,7 +198,6 @@ export default function CartPage() {
                     <div className="lineBody">
                       <div className="itemName">{line.menu?.name ?? `เมนู #${line.menuId}`}</div>
                       <div className="itemMeta">
-                        {line.selections?.length ? <span className="itemMetaChip">ตัวเลือก {line.selections.length} รายการ</span> : null}
                         {line.note ? ` • ${line.note}` : null}
                       </div>
                     </div>

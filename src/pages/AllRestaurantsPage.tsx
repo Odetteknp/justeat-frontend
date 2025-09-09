@@ -13,7 +13,7 @@ function toListRestaurant(r: any): listRestaurant {
   };
 }
 
-export default function RestaurantsPage() {
+export default function AllRestaurantsPage() {
   const [restaurants, setRestaurants] = useState<listRestaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);

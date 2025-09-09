@@ -1,36 +1,41 @@
 // src/components/RestaurantMenu.tsx
-import React, { useEffect, useMemo, useRef, useState, createRef } from 'react';
-import './RestaurantMenu.css';
-import MenuItemCard from './MenuItemCard';
-import MenuOptionModal from './MenuOptionModal';
-import { type MenuItem } from '../../types'; // ✅ ใช้ type กลางของ UI
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState, createRef } from "react";
+import "./RestaurantMenu.css";
+import MenuItemCard from "./MenuItemCard";
+import { type SimpleMenuItem } from "../../types";
+import { useNavigate, useParams } from "react-router-dom";
 
-import Header from './ImageRest';
-import { getMenusByRestaurant } from '../../services/menu';
-
-// ใช้ HOOK ฝั่งเซิร์ฟเวอร์
-import { useCartServer } from '../../hooks/useCartServer';
+import Header from "./ImageRest";
+import { getMenusByRestaurant } from "../../services/menu";
+import { getRestaurant } from "../../services/restaurants";
+import { useCartServer } from "../../hooks/useCartServer";
 
 type Section = { id: string; label: string };
 type SectionRefs = Record<string, React.RefObject<HTMLDivElement | null>>;
 
 const fmtTHB = (n: number) =>
-  new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(n);
+  new Intl.NumberFormat("th-TH", {
+    style: "currency",
+    currency: "THB",
+    maximumFractionDigits: 0,
+  }).format(n);
 
 export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>();
   const restId = Number(id);
+  const [restaurant, setRestaurant] = useState<any | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<Section[]>([]);
-  const [itemsBySection, setItemsBySection] = useState<Record<string, MenuItem[]>>({});
+  const [itemsBySection, setItemsBySection] = useState<
+    Record<string, SimpleMenuItem[]>
+  >({});
 
-  const [active, setActive] = useState<string>('');
+  const [active, setActive] = useState<string>("");
   const tabsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  const { add, count, subtotal, refresh } = useCartServer(); // มี refresh สำหรับรีโหลด
+  const { add, count, subtotal } = useCartServer();
 
   const sectionRefs = useMemo<SectionRefs>(() => {
     return sections.reduce<SectionRefs>((acc, s) => {
@@ -39,118 +44,123 @@ export default function RestaurantMenu() {
     }, {} as SectionRefs);
   }, [sections]);
 
-  // ==== Modal ====
-  const [open, setOpen] = useState(false);
-  const [choosing, setChoosing] = useState<MenuItem | null>(null);
-
-  const openOptions = (item: MenuItem) => { setChoosing(item); setOpen(true); };
-  const closeOptions = () => { setOpen(false); setChoosing(null); };
-
-  const handleConfirm = async (payload: { 
-    item: MenuItem; quantity: number; 
-    selected: Record<string,string[]>; note?: string; total: number; 
-  }) => {
-    const optionValueIds = Object.values(payload.selected)
-      .flat()
-      .map((v) => Number(v))
-      .filter((n) => !Number.isNaN(n));
-
-    const menuIdNum = Number(payload.item.id);
-    if (Number.isNaN(menuIdNum) || menuIdNum <= 0) {
-      console.error("[add-to-cart] invalid menuId from item.id =", payload.item.id, payload);
-      alert("เมนูนี้ไม่มีรหัสที่ถูกต้อง (menuId)");
-      return;
-    }
-
-    const body = {
-      restaurantId: restId,
-      menuId: menuIdNum,
-      qty: payload.quantity,
-      note: payload.note,
-      selections: optionValueIds.map((id) => ({ optionValueId: id })),
-    };
-
-    console.log("[add-to-cart] request body =", body);
+  // เพิ่มลงตะกร้า
+  const handleAdd = async (item: SimpleMenuItem) => {
+    const menuId = Number(item.id);
+    if (!menuId) return;
 
     try {
-      await add(body);
-      closeOptions();
+      await add({ restaurantId: restId, menuId, qty: 1 });
+      console.log("[Cart] add item:", { restaurantId: restId, menuId, qty: 1 });
     } catch (e: any) {
       if (e?.response?.status === 409) {
-        if (confirm("ตะกร้าของคุณเป็นร้านอื่น ต้องล้างก่อนเพิ่มรายการนี้ไหม?")) {
-          navigate('/cart');
-        }
-      } else {
-        alert(e?.response?.data?.error || "เพิ่มลงตะกร้าไม่สำเร็จ");
+        navigate("/cart"); // ถ้าต่างร้าน → ไปหน้าตะกร้า
+        return;
       }
+      alert(e?.response?.data?.error || "เพิ่มลงตะกร้าไม่สำเร็จ");
     }
   };
 
-  const goCart = () => navigate('/cart');
+  const goCart = () => navigate("/cart");
 
-  // โหลดเมนูจาก API (ไม่ต้อง adapt อีกแล้ว)
+  // โหลดข้อมูลร้าน
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
+        const { data } = await getRestaurant(restId);
+        if (!mounted) return;
+        setRestaurant(data);
+        console.log("[Restaurant] loaded:", data);
+      } catch (e) {
+        console.error("[Restaurant] load error:", e);
+      }
+    })();
+    return () => { mounted = false; }
+  }, [restId]);
+
+  // โหลดเมนู
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
         setLoading(true);
-        const items = await getMenusByRestaurant(restId); // ← คืน MenuItem[] ที่พร้อมใช้
+        const items = await getMenusByRestaurant(restId);
         if (!mounted) return;
 
-        const ORDER = ['เมนูหลัก', 'ของทานเล่น', 'ของหวาน', 'เครื่องดื่ม'];
-        const labels = Array.from(new Set(items.map(i => i.sectionId)));
+        const PRIORITY = ["เมนูหลัก", "ของทานเล่น", "ของหวาน", "เครื่องดื่ม"];
+        const labels = Array.from(new Set(items.map((i) => i.category)));
+
         labels.sort((a, b) => {
-          const ia = ORDER.indexOf(a);
-          const ib = ORDER.indexOf(b);
+          const ia = PRIORITY.indexOf(a);
+          const ib = PRIORITY.indexOf(b);
           if (ia === -1 && ib === -1) return a.localeCompare(b);
           if (ia === -1) return 1;
           if (ib === -1) return -1;
           return ia - ib;
         });
 
-        const secs: Section[] = labels.map(l => ({ id: l, label: l }));
-        const map: Record<string, MenuItem[]> = {};
+        const secs: Section[] = labels.map((l) => ({ id: l, label: l }));
+        const map: Record<string, SimpleMenuItem[]> = {};
         for (const s of secs) map[s.id] = [];
-        for (const it of items) (map[it.sectionId] ??= []).push(it);
+        for (const it of items) (map[it.category] ??= []).push(it);
 
         setSections(secs);
         setItemsBySection(map);
-        setActive(secs[0]?.id || '');
+        setActive(secs[0]?.id || "");
+
+        console.log("[Menu] loaded:", { sections: secs.length, items: items.length });
       } catch (e) {
-        console.error(e);
+        console.error("[Menu] load error:", e);
       } finally {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+
+    return () => {
+      mounted = false;
+    };
   }, [restId]);
 
-  // ตั้ง active tab ตาม section ที่เลื่อนเข้ามา
+  // Observer → ตั้ง active tab
   useEffect(() => {
     if (sections.length === 0) return;
-    const ob = new IntersectionObserver((entries) => {
-      const vis = entries
-        .filter(e => e.isIntersecting)
-        .sort((a,b)=>a.boundingClientRect.top-b.boundingClientRect.top);
-      if (vis[0]) {
-        const id = (vis[0].target as HTMLDivElement).dataset.sectionId!;
-        setActive(id);
-        const btn = tabsRef.current?.querySelector<HTMLButtonElement>(`button[data-tab-id="${id}"]`);
-        btn?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    const ob = new IntersectionObserver(
+      (entries) => {
+        const vis = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (vis[0]) {
+          const id = (vis[0].target as HTMLDivElement).dataset.sectionId!;
+          setActive(id);
+          const btn = tabsRef.current?.querySelector<HTMLButtonElement>(
+            `button[data-tab-id="${id}"]`
+          );
+          btn?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+        }
+      },
+      {
+        rootMargin: `-${(tabsRef.current?.offsetHeight ?? 0) + 12}px 0px -60% 0px`,
+        threshold: [0.01, 0.25, 0.5],
       }
-    }, {
-      rootMargin: `-${(tabsRef.current?.offsetHeight ?? 0) + 12}px 0px -60% 0px`,
-      threshold: [0.01, 0.25, 0.5],
-    });
-    Object.values(sectionRefs).forEach(r => r.current && ob.observe(r.current));
+    );
+    Object.values(sectionRefs).forEach((r) => r.current && ob.observe(r.current!));
     return () => ob.disconnect();
   }, [sectionRefs, sections]);
 
   return (
     <>
-      <Header/>
+      {/* Header แสดงข้อมูลร้าน */}
+      {restaurant && (
+        <Header
+          name={restaurant.name}
+          cover={restaurant.logo}
+          rating={restaurant.rating}
+        />
+      )}
+
       <div className="menu-layout">
-        {/* LEFT: เมนู + แท็บ */}
         <div className="menu-left">
           {/* Tabs */}
           <div className="category-tabs__holder" ref={tabsRef}>
@@ -159,13 +169,18 @@ export default function RestaurantMenu() {
                 <button
                   key={s.id}
                   data-tab-id={s.id}
-                  className={`category-tab ${active === s.id ? 'is-active' : ''}`}
+                  className={`category-tab ${active === s.id ? "is-active" : ""}`}
                   onClick={() => {
+                    // เปลี่ยน active state Cate
+                    setActive(s.id)
+
+                    // scroll ไปตาม
                     const el = sectionRefs[s.id]?.current;
                     if (!el) return;
                     const stickyH = (tabsRef.current?.offsetHeight ?? 0) + 8;
-                    const top = window.scrollY + el.getBoundingClientRect().top - stickyH;
-                    window.scrollTo({ top, behavior: 'smooth' });
+                    const top =
+                      window.scrollY + el.getBoundingClientRect().top - stickyH;
+                    window.scrollTo({ top, behavior: "smooth" });
                   }}
                 >
                   {s.label}
@@ -187,13 +202,13 @@ export default function RestaurantMenu() {
                 {loading ? (
                   <p className="empty">กำลังโหลดเมนู…</p>
                 ) : itemsBySection[sec.id]?.length ? (
-                  itemsBySection[sec.id].map((item, index) => (
+                  itemsBySection[sec.id].map((item) => (
                     <MenuItemCard
-                      key={`${sec.id}-${index}`}
+                      key={item.id}
                       name={item.name}
-                      price={item.price}
-                      image={item.image}
-                      onAdd={() => openOptions(item)}
+                      price={fmtTHB(item.price)}
+                      image={item.image || ""}
+                      onAdd={() => handleAdd(item)}
                     />
                   ))
                 ) : (
@@ -203,26 +218,15 @@ export default function RestaurantMenu() {
             </section>
           ))}
         </div>
-
-        <MenuOptionModal
-          open={open}
-          item={choosing}
-          onClose={closeOptions}
-          onConfirm={handleConfirm}
-        />
-
       </div>
-        {/* Floating cart จาก BE */}
-        {count > 0 && (
-          <button className="floating-cart" onClick={goCart}>
-            <span className="floating-cart__left">
-              ตะกร้า • {count} รายการ
-            </span>
-            <span className="floating-cart__right">
-              {fmtTHB(subtotal)}
-            </span>
-          </button>
-        )}
+
+      {/* Floating cart */}
+      {count > 0 && (
+        <button className="floating-cart" onClick={goCart}>
+          <span className="floating-cart__left">ตะกร้า • {count} รายการ</span>
+          <span className="floating-cart__right">{fmtTHB(subtotal)}</span>
+        </button>
+      )}
     </>
   );
 }

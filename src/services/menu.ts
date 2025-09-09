@@ -1,6 +1,7 @@
 // src/services/menu.ts
 import { api } from "./api";
-import type { MenuItem, MenuOption, Choice } from "../types";
+import type { SimpleMenuItem  } from "../types";
+
 export interface Menu {
   id: number;
   menuName: string;
@@ -10,28 +11,6 @@ export interface Menu {
   menuTypeId: number;
   menuStatusId: number;
 }
-/** =========================
- * API Types (ตาม Backend)
- * ========================= */
-export type OptionValue = {
-  id: number;
-  name: string;
-  priceAdjustment: number;
-  defaultSelect?: boolean;
-  isAvailable?: boolean;
-  sortOrder?: number;
-};
-
-export type MenuOptionBE = {
-  id: number;
-  name: string;
-  type: "radio" | "checkbox"; // BE
-  minSelect?: number;
-  maxSelect?: number;
-  isRequired?: boolean;
-  sortOrder?: number;
-  optionValues?: OptionValue[];
-};
 
 export type MenuBE = {
   id: number;
@@ -43,12 +22,10 @@ export type MenuBE = {
   menuStatusId: number;
   menuType?: { typeName: string };
   menuStatus?: { statusName: string };
-  options?: MenuOptionBE[];
 };
 
-/** =========================
- * Helpers
- * ========================= */
+
+// Helpers
 const fmtTHB = (n: number) =>
   new Intl.NumberFormat("th-TH", {
     style: "currency",
@@ -62,56 +39,20 @@ function toImgSrc(img?: string) {
   return `data:image/jpeg;base64,${img}`;
 }
 
-/** =========================
- * Adapter: API -> UI MenuItem
- * ========================= */
-// ---- Adapter: BE -> UI ----
-function adaptMenu(be: any): MenuItem {
-  // รองรับทั้ง id และ ID จาก BE
-  const rawId = be?.id ?? be?.ID;
-  const idNum = Number(rawId || 0);
-
-  const sectionName = be?.menuType?.typeName || String(be?.menuTypeId);
-
-  const options: MenuOption[] | undefined = (be?.options ?? []).map((op: any) => ({
-    id: String(op.id),
-    label: op.name,
-    type: op.type === "radio" ? "single" : "multiple",
-    required: !!op.isRequired,
-    max: op.maxSelect ?? (op.type === "radio" ? 1 : undefined),
-    choices: (op.optionValues ?? []).map((v: any) => ({
-      id: String(v.id),
-      name: v.name,
-      price: Number(v.priceAdjustment || 0),
-    })),
-  }));
-
-  return {
-    id: String(idNum),                              // <-- ตรงนี้สำคัญ
-    name: be?.name ?? "",
-    price: fmtTHB(Number(be?.price || 0)),
-    image: toImgSrc(be?.image),
-    sectionId: sectionName,
-    options,
-  };
-}
-
 // ---- API ----
-export async function getMenusByRestaurant(restId: number): Promise<MenuItem[]> {
+export async function getMenusByRestaurant(restId: number): Promise<SimpleMenuItem[]> {
   const res = await api.get<{ items: MenuBE[] }>(`/restaurants/${restId}/menus`);
   const items = res.data.items ?? [];
   return items.map(adaptMenu);
 }
+
 /** =========================
  * Owner / Management APIs
- * (คงรูปแบบเดิมไว้)
  * ========================= */
 export const menu = {
-  // Public (raw)
   listByRestaurant: (restaurantId: number) =>
     api.get<{ items: Menu[] }>(`/restaurants/${restaurantId}/menus`),
 
-  // Owner
   create: (restaurantId: number, body: any, token: string) =>
     api.post(`/owner/restaurants/${restaurantId}/menus`, body, {
       headers: { Authorization: `Bearer ${token}` },
@@ -133,21 +74,6 @@ export const menu = {
       { menuStatusId: statusId },
       { headers: { Authorization: `Bearer ${token}` } }
     ),
-
-  listOptionsByMenu: (menuId: number) => api.get(`/menus/${menuId}/options`),
-
-  // Menu Options
-  attachOption: (menuId: number, optionId: number, token: string) =>
-    api.post(
-      `/owner/menus/${menuId}/options`,
-      { optionId },
-      { headers: { Authorization: `Bearer ${token}` } }
-    ),
-
-  detachOption: (menuId: number, optionId: number, token: string) =>
-    api.delete(`/owner/menus/${menuId}/options/${optionId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    }),
 };
 
 export type MenuDetail = {
@@ -160,4 +86,36 @@ export type MenuDetail = {
 export async function getMenuName(menuId: number): Promise<string> {
   const { data } = await api.get<MenuDetail>(`/menus/${menuId}`);
   return data.name ?? data.menuName ?? `เมนู #${menuId}`;
+}
+
+/** =========================
+ * Adapter: API -> UI MenuItem
+ * ========================= */
+
+// mapping menuTypeId -> ชื่อภาษาไทย
+const MENU_TYPES: Record<number, string> = {
+  1: "เมนูหลัก",
+  2: "ของทานเล่น",
+  3: "ของหวาน",
+  4: "เครื่องดื่ม",
+};
+
+function adaptMenu(be: any): SimpleMenuItem {
+  const rawId = be?.id ?? be?.ID;
+  const idNum = Number(rawId || 0);
+
+  const category =
+    be?.menuType?.typeName ||
+    be?.menuType?.TypeName ||
+    (typeof be?.menuTypeId === "number"
+      ? MENU_TYPES[be.menuTypeId] || String(be.menuTypeId)
+      : "อื่น ๆ");
+
+  return {
+    id: String(idNum),
+    name: be?.name ?? "",
+    price: Number(be?.price || 0),   // number (บาท)
+    image: toImgSrc(be?.image),
+    category, // ใช้ category ที่แปลงแล้ว
+  };
 }

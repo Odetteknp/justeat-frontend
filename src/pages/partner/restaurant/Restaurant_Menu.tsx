@@ -1,3 +1,4 @@
+// src/pages/owner/Restaurant_Menu.tsx
 import { useEffect, useState } from "react";
 import {
   Form,
@@ -15,11 +16,11 @@ import {
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { menu } from "../../../services/menu";
-import { option } from "../../../services/option";
 import { auth } from "../../../services/auth";
 import { getToken } from "../../../services/tokenStore";
-import "./Restaurant_Menu.css"
+import "./Restaurant_Menu.css";
 
+// ประเภทเมนู (lookup table)
 const MENU_TYPES: Record<number, string> = {
   1: "เมนูหลัก",
   2: "ของทานเล่น",
@@ -27,60 +28,55 @@ const MENU_TYPES: Record<number, string> = {
   4: "เครื่องดื่ม",
 };
 
-type OptionItem = {
-  id?: number; ID?: number;
-  name: string;
-  optionValues?: any[];
-};
+// helper: คืน id (รองรับทั้ง id / ID จาก backend)
+const idOf = (x: any) => x?.id ?? x?.ID;
 
+// ==============================
+// Component: จัดการเมนูอาหาร
+// ==============================
 export default function MenuManagementUI() {
   const [menus, setMenus] = useState<any[]>([]);
   const [visible, setVisible] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+
   const [form] = Form.useForm();
+
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [authMissing, setAuthMissing] = useState(false);
 
-  // options
-  const [allOptions, setAllOptions] = useState<OptionItem[]>([]);
-  const [originSelectedOptionIds, setOriginSelectedOptionIds] = useState<number[]>([]); // ใช้ตอนแก้ไข
-
-  // helper
-  const idOf = (x: any) => x?.id ?? x?.ID;
-
-  // โหลดร้าน + เมนู + ออปชัน
+  // โหลดร้าน + เมนู
   useEffect(() => {
     (async () => {
       const token = getToken();
       if (!token) {
         setAuthMissing(true);
-        message.error("กรุณากเข้าสู่ระบบก่อน");
-        console.log("[init] ไม่มี token");
+        message.error("กรุณาเข้าสู่ระบบก่อน");
+        console.warn("[init] missing token");
         return;
       }
+
       try {
-        console.log("[init] โหลด meRestaurant");
+        console.log("[init] โหลดข้อมูลร้าน");
         const meRest = await auth.meRestaurant();
-        console.log("[init] meRestaurant =", meRest);
-        const restId = meRest?.restaurant?.ID ?? meRest?.restaurant?.ID;
+        const restId = meRest?.restaurant?.ID;
+
         if (!restId) throw new Error("ไม่พบร้านของฉัน");
         setRestaurantId(restId);
 
-        console.log("[init] โหลดเมนู + ออปชัน restId=", restId);
-        const [menuRes, optRes] = await Promise.all([
-          menu.listByRestaurant(restId),
-          option.list(),
-        ]);
+        console.log("[init] โหลดเมนู restId =", restId);
+        const menuRes = await menu.listByRestaurant(restId);
 
-        console.log("[init] menu.listByRestaurant res =", menuRes);
-        console.log("[init] option.list res =", optRes);
+        // normalize id ทุก item
+        const items = (menuRes.data.items ?? []).map((m: any) => ({
+          ...m,
+          id: idOf(m),
+        }));
 
-        setMenus(menuRes.data.items);
-        setAllOptions(optRes.data.items ?? optRes.data ?? []);
+        setMenus(items);
       } catch (err: any) {
         console.error("[init] error:", err);
-        message.error("โหลดข้อมูลไม่สำเร็จ: " + (err?.message ?? "unknown error"));
+        message.error("โหลดข้อมูลไม่สำเร็จ");
       }
     })();
   }, []);
@@ -88,17 +84,17 @@ export default function MenuManagementUI() {
   if (authMissing) return <p>กรุณาเข้าสู่ระบบ</p>;
   if (!restaurantId) return <p>กำลังโหลดร้าน...</p>;
 
-  // เปิด modal สร้างเมนู
+  // -------------------------
+  // Action Handlers
+  // -------------------------
+
   const openAddForm = () => {
     console.log("[openAddForm]");
     form.resetFields();
-    form.setFieldsValue({ options: [] });
-    setOriginSelectedOptionIds([]);
     setEditingId(null);
     setVisible(true);
   };
 
-  // เปิด modal แก้ไข + โหลด options ที่ผูกไว้
   const openEditForm = async (record: any) => {
     try {
       console.log("[openEditForm] record =", record);
@@ -120,174 +116,133 @@ export default function MenuManagementUI() {
           : [],
       });
 
-      const menuId = idOf(record);
-      setEditingId(menuId);
+      setEditingId(Number(idOf(record)));
       setVisible(true);
-
-      console.log("[openEditForm] เรียก listOptionsByMenu menuId=", menuId);
-      const res = await menu.listOptionsByMenu(menuId);
-      console.log("[openEditForm] options by menu =", res);
-
-      const opts = res.data.items ?? [];
-      const ids = opts.map((o: any) => idOf(o)).filter(Boolean);
-      form.setFieldsValue({ options: ids });
-      setOriginSelectedOptionIds(ids);
-      console.log("[openEditForm] originSelectedOptionIds =", ids);
     } catch (err: any) {
       console.error("[openEditForm] error:", err);
-      message.error("โหลดตัวเลือกของเมนูไม่สำเร็จ: " + (err?.message ?? "unknown error"));
+      message.error("โหลดเมนูไม่สำเร็จ");
     }
   };
 
-  // ลบเมนู
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (menuId: number) => {
     try {
-      console.log("[handleDelete] id=", id);
+      console.log("[handleDelete] menuId =", menuId);
       const token = getToken()!;
-      const res = await menu.remove(id, token);
-      console.log("[handleDelete] res =", res);
-      setMenus((prev) => prev.filter((m) => idOf(m) !== id));
+
+      await menu.remove(menuId, token);
+      setMenus((prev) => prev.filter((m) => idOf(m) !== menuId));
+
       message.success("ลบเมนูสำเร็จ");
     } catch (err: any) {
       console.error("[handleDelete] error:", err);
-      message.error("ลบเมนูล้มเหลว: " + (err?.message ?? "unknown error"));
+      message.error("ลบเมนูล้มเหลว");
     }
   };
 
-  // toggle สถานะเมนู
-  const handleToggleStatus = async (id: number, newStatusId: number) => {
+  const handleToggleStatus = async (menuId: number, newStatusId: number) => {
     try {
-      console.log("[handleToggleStatus] id=", id, "newStatusId=", newStatusId);
+      console.log("[toggleStatus] menuId =", menuId, "→", newStatusId);
       const token = getToken()!;
-      const res = await menu.updateStatus(id, newStatusId, token);
-      console.log("[handleToggleStatus] res =", res);
-      message.success(newStatusId === 1 ? "เมนูกลับมาขายได้แล้ว" : "ปิดการขายเมนูนี้แล้ว");
+
+      await menu.updateStatus(menuId, newStatusId, token);
+
       const list = await menu.listByRestaurant(restaurantId!);
-      setMenus(list.data.items);
+      const items = (list.data.items ?? []).map((m: any) => ({
+        ...m,
+        id: idOf(m),
+      }));
+      setMenus(items);
+
+      message.success(
+        newStatusId === 1 ? "เมนูเปิดขายแล้ว" : "ปิดการขายเมนูนี้แล้ว"
+      );
     } catch (err: any) {
-      console.error("[handleToggleStatus] error:", err);
-      message.error("เปลี่ยนสถานะล้มเหลว: " + (err?.message ?? "unknown error"));
+      console.error("[toggleStatus] error:", err);
+      message.error("เปลี่ยนสถานะล้มเหลว");
     }
   };
 
-  // base64 helper
   const toBase64 = (file: File): Promise<string> =>
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
-      reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("ไม่สามารถแปลงไฟล์ได้"));
+      reader.onload = () =>
+        typeof reader.result === "string"
+          ? resolve(reader.result)
+          : reject(new Error("ไม่สามารถแปลงไฟล์ได้"));
       reader.onerror = (err) => reject(err);
     });
 
-  // แนบ/ถอด option ให้เมนู
-  const syncMenuOptions = async (menuId: number, selectedIds: number[]) => {
-    console.log("[syncMenuOptions] menuId=", menuId, "selectedIds=", selectedIds);
-    const token = getToken()!;
-
-    const toAttachOrUpdate = selectedIds; // เรียก attach เพื่ออัปเดต sortOrder ด้วย
-    const toDetach = originSelectedOptionIds.filter((oldId) => !selectedIds.includes(oldId));
-
-    console.log("[syncMenuOptions] toAttachOrUpdate=", toAttachOrUpdate, "toDetach=", toDetach);
-
-    // ทำแบบ sequential เพื่อง่ายต่อการ debug (จะเห็น log ทีละตัวชัด ๆ)
-    for (let i = 0; i < toAttachOrUpdate.length; i++) {
-      const optId = toAttachOrUpdate[i];
-      try {
-        console.log(`[syncMenuOptions] ATTACH optionId=${optId}`);
-const res = await menu.attachOption(menuId, optId, token);
-        console.log("[syncMenuOptions] attach res =", res);
-      } catch (err) {
-        console.error("[syncMenuOptions] attach error:", err);
-        throw err;
-      }
-    }
-
-    for (const optId of toDetach) {
-      try {
-        console.log(`[syncMenuOptions] DETACH optionId=${optId}`);
-        const res = await menu.detachOption(menuId, optId, token);
-        console.log("[syncMenuOptions] detach res =", res);
-      } catch (err) {
-        console.error("[syncMenuOptions] detach error:", err);
-        throw err;
-      }
-    }
-
-    console.log("[syncMenuOptions] เสร็จสิ้น");
-  };
-
-  // บันทึกข้อมูลเมนู + options
   const handleSave = async () => {
     try {
-      console.log("[handleSave] เริ่มบันทึกฟอร์ม");
-
       const values = await form.validateFields();
-      console.log("[handleSave] form values =", values);
+      console.log("[handleSave] values =", values);
 
-      // Image
+      // จัดการรูปภาพ
       let image = "";
       if (values.image && values.image.length > 0) {
         const fileObj = values.image[0].originFileObj;
-        image = fileObj ? await toBase64(fileObj as File) : (values.image[0].url ?? "");
+        image = fileObj
+          ? await toBase64(fileObj as File)
+          : values.image[0].url ?? "";
       }
-      console.log("[handleSave] image:", image ? "มีรูป" : "ไม่มีรูป");
 
       const payload = {
         name: values.name,
         price: values.price,
         detail: values.detail ?? "",
-        image: image ?? "",
+        image,
         menuTypeId: values.type,
         menuStatusId: 1,
       };
-      console.log("[handleSave] payload =", payload);
-
-      const selectedOptionIds: number[] = (values.options ?? []).map((n: any) => Number(n));
-      console.log("[handleSave] selectedOptionIds =", selectedOptionIds);
 
       setLoading(true);
       const token = getToken()!;
-      let menuId = editingId;
 
       if (editingId) {
-        console.log("[handleSave] UPDATE เมนู id =", editingId);
-        const res = await menu.update(editingId, payload, token);
-        console.log("[handleSave] update res =", res);
+        console.log("[handleSave] UPDATE menu id =", editingId);
+        await menu.update(editingId, payload, token);
       } else {
-        console.log("[handleSave] CREATE เมนูใหม่");
-        const created = await menu.create(restaurantId!, payload, token);
-        console.log("[handleSave] create res =", created);
-        menuId = created?.data?.id ?? created?.data?.ID ?? created?.data?.item?.id ?? created?.data?.item?.ID;
-        console.log("[handleSave] menuId ใหม่ =", menuId);
-        if (!menuId) throw new Error("ไม่พบรหัสเมนูที่สร้างใหม่");
-        setOriginSelectedOptionIds([]); // ครั้งแรกให้ sync แนบทั้งหมด
+        console.log("[handleSave] CREATE new menu");
+        await menu.create(restaurantId!, payload, token);
       }
 
-      console.log("[handleSave] call syncMenuOptions");
-      await syncMenuOptions(menuId!, selectedOptionIds);
-
-      console.log("[handleSave] reload list");
       const res = await menu.listByRestaurant(restaurantId!);
-      setMenus(res.data.items);
+      const items = (res.data.items ?? []).map((m: any) => ({
+        ...m,
+        id: idOf(m),
+      }));
+      setMenus(items);
 
       message.success(editingId ? "แก้ไขเมนูสำเร็จ" : "เพิ่มเมนูสำเร็จ");
       setVisible(false);
     } catch (err: any) {
       console.error("[handleSave] error:", err);
-      message.error("เกิดข้อผิดพลาด: " + (err?.message ?? "unknown error"));
+      message.error("เกิดข้อผิดพลาด");
     } finally {
-      console.log("[handleSave] จบการทำงาน");
       setLoading(false);
     }
   };
 
+  // -------------------------
+  // Table Columns
+  // -------------------------
   const columns = [
     {
       title: "รูป",
       dataIndex: "image",
       render: (val: string) =>
         val ? (
-          <img src={val} alt="menu" style={{ width: 60, height: 60, borderRadius: 8, objectFit: "cover" }} />
+          <img
+            src={val}
+            alt="menu"
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 8,
+              objectFit: "cover",
+            }}
+          />
         ) : (
           "-"
         ),
@@ -303,12 +258,16 @@ const res = await menu.attachOption(menuId, optId, token);
       title: "สถานะ",
       dataIndex: "menuStatusId",
       render: (val: number) =>
-        val === 1 ? <span style={{ color: "green" }}>พร้อมขาย</span> : <span style={{ color: "red" }}>หมด</span>,
+        val === 1 ? (
+          <span style={{ color: "green" }}>พร้อมขาย</span>
+        ) : (
+          <span style={{ color: "red" }}>หมด</span>
+        ),
     },
     {
       title: "การจัดการ",
       render: (_: any, record: any) => {
-        const id = idOf(record);
+        const id = Number(idOf(record));
         return (
           <Space>
             <Button onClick={() => openEditForm(record)}>แก้ไข</Button>
@@ -328,18 +287,26 @@ const res = await menu.attachOption(menuId, optId, token);
     },
   ];
 
+  // -------------------------
+  // Render
+  // -------------------------
   return (
     <div style={{ padding: 24, maxWidth: 1440, margin: "0 auto" }}>
       <Card>
         <Typography.Title level={2}>จัดการเมนูอาหาร</Typography.Title>
-        <Button type="primary" onClick={openAddForm} style={{ marginBottom: 16 }}>
+
+        <Button
+          type="primary"
+          onClick={openAddForm}
+          style={{ marginBottom: 16 }}
+        >
           + เพิ่มเมนูใหม่
         </Button>
 
         <Table
           dataSource={menus}
           columns={columns}
-          rowKey={(r) => idOf(r)}
+          rowKey={(r) => String(idOf(r))}
           bordered
           pagination={{ pageSize: 5 }}
         />
@@ -348,10 +315,7 @@ const res = await menu.attachOption(menuId, optId, token);
       <Modal
         title={editingId ? "แก้ไขเมนู" : "เพิ่มเมนูใหม่"}
         open={visible}
-        onCancel={() => {
-          console.log("[modal] cancel");
-          setVisible(false);
-        }}
+        onCancel={() => setVisible(false)}
         onOk={handleSave}
         okText="บันทึก"
         cancelText="ยกเลิก"
@@ -401,22 +365,6 @@ const res = await menu.attachOption(menuId, optId, token);
             <Upload listType="picture" maxCount={1} beforeUpload={() => false}>
               <Button icon={<UploadOutlined />}>อัปโหลดรูป</Button>
             </Upload>
-          </Form.Item>
-
-          {/* เลือก Options (หลายตัว) ใช้ลำดับที่เลือกเป็น sortOrder */}
-          <Form.Item label="ตัวเลือกเพิ่มเติม (Options)" name="options">
-            <Select
-              mode="multiple"
-              placeholder="เลือกตัวเลือกที่ต้องการ"
-              optionFilterProp="label"
-              showSearch
-              maxTagCount="responsive"
-              allowClear
-              options={allOptions.map((o) => ({
-                label: o.name,
-                value: Number(idOf(o)),
-              }))}
-            />
           </Form.Item>
         </Form>
       </Modal>

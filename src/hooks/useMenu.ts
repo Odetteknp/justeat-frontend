@@ -1,11 +1,10 @@
-// src/hooks/useMenu.ts
 import { useEffect, useState } from "react";
-import type { MenuItem, MenuSection } from "../types";
-import { fetchSections, fetchMenuItems } from "../services/menu";
+import type { SimpleMenuItem, MenuSection } from "../types";
+import { getMenusByRestaurant } from "../services/menu";
 
 export function useMenu(restaurantId?: string) {
   const [sections, setSections] = useState<MenuSection[]>([]);
-  const [items, setItems] = useState<MenuItem[]>([]);
+  const [items, setItems] = useState<SimpleMenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string|null>(null);
 
@@ -14,12 +13,14 @@ export function useMenu(restaurantId?: string) {
     (async () => {
       try {
         setLoading(true);
-        const [s, i] = await Promise.all([
-          fetchSections(restaurantId),
-          fetchMenuItems(restaurantId),
-        ]);
+        const data = await getMenusByRestaurant(Number(restaurantId));
         if (!mounted) return;
-        setSections(s); setItems(i);
+
+        setItems(data);
+
+        // ✅ generate sections จาก category (menuType)
+        const unique = Array.from(new Set(data.map((it) => it.category)));
+        setSections(unique.map((c) => ({ id: c, name: c })));
       } catch (e: any) {
         if (mounted) setError(e?.message ?? "Load failed");
       } finally {

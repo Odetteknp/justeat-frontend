@@ -14,7 +14,7 @@ const RegisterPage = Loadable(lazy(() => import("../pages/register/Register")));
 //  เพจหลัก
 const HomePage = Loadable(lazy(() => import("../pages/HomePage")));
 const MenuPage = Loadable(lazy(() => import("../pages/MenuPage")));
-const RestaurantPage = Loadable(lazy(() => import("../pages/RestaurantsPage")));
+const RestaurantPage = Loadable(lazy(() => import("../pages/AllRestaurantsPage")));
 const PromotionPage = Loadable(lazy(() => import("../pages/PromotionPage")));
 const HelpPage = Loadable(lazy(() => import("../pages/HelpPage")));
 

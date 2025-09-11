@@ -9,6 +9,7 @@ import Header from "./ImageRest";
 import { getMenusByRestaurant } from "../../services/menu";
 import { getRestaurant } from "../../services/restaurants";
 import { useCartServer } from "../../hooks/useCartServer";
+import { fetchRestaurantReviews } from "../../services/reviews";
 
 type Section = { id: string; label: string };
 type SectionRefs = Record<string, React.RefObject<HTMLDivElement | null>>;
@@ -20,9 +21,19 @@ const fmtTHB = (n: number) =>
     maximumFractionDigits: 0,
   }).format(n);
 
+// แปลงอะไรก็ได้ให้เป็น number ถ้าไม่ได้ให้คืน null
+function toNumberOrNull(x: unknown): number | null {
+  const n = typeof x === "string" ? Number(x) : (x as number);
+  return typeof n === "number" && Number.isFinite(n) ? n : null;
+}
+
 export default function RestaurantMenu() {
   const { id } = useParams<{ id: string }>();
+
+  // ทำให้แน่ใจว่าเป็นเลขที่ใช้ได้
   const restId = Number(id);
+  const hasRestId = Number.isFinite(restId) && restId > 0;
+
   const [restaurant, setRestaurant] = useState<any | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -37,6 +48,17 @@ export default function RestaurantMenu() {
 
   const { add, count, subtotal } = useCartServer();
 
+  // rating จาก Reviews API
+  const [avgRating, setAvgRating] = useState<number | null>(null);
+
+  // ค่าที่จะโชว์: เลือก avg ถ้ามี, ไม่งั้น fallback เป็นของร้าน
+  const ratingToShow: number | null = (() => {
+    const fromAvg = toNumberOrNull(avgRating);
+    if (fromAvg !== null) return fromAvg;
+    const fromRest = toNumberOrNull(restaurant?.rating);
+    return fromRest;
+  })();
+
   const sectionRefs = useMemo<SectionRefs>(() => {
     return sections.reduce<SectionRefs>((acc, s) => {
       acc[s.id] = createRef<HTMLDivElement>();
@@ -47,14 +69,14 @@ export default function RestaurantMenu() {
   // เพิ่มลงตะกร้า
   const handleAdd = async (item: SimpleMenuItem) => {
     const menuId = Number(item.id);
-    if (!menuId) return;
+    if (!menuId || !hasRestId) return;
 
     try {
       await add({ restaurantId: restId, menuId, qty: 1 });
       console.log("[Cart] add item:", { restaurantId: restId, menuId, qty: 1 });
     } catch (e: any) {
       if (e?.response?.status === 409) {
-        navigate("/cart"); // ถ้าต่างร้าน → ไปหน้าตะกร้า
+        navigate("/cart");
         return;
       }
       alert(e?.response?.data?.error || "เพิ่มลงตะกร้าไม่สำเร็จ");
@@ -65,6 +87,7 @@ export default function RestaurantMenu() {
 
   // โหลดข้อมูลร้าน
   useEffect(() => {
+    if (!hasRestId) return;
     let mounted = true;
     (async () => {
       try {
@@ -76,11 +99,36 @@ export default function RestaurantMenu() {
         console.error("[Restaurant] load error:", e);
       }
     })();
-    return () => { mounted = false; }
-  }, [restId]);
+    return () => {
+      mounted = false;
+    };
+  }, [restId, hasRestId]);
+
+  // โหลด avg rating (พอสำหรับ header)
+  useEffect(() => {
+    if (!hasRestId) return;
+    const ctrl = new AbortController();
+    (async () => {
+      try {
+        const { avg } = await fetchRestaurantReviews(
+          String(restId),
+          { limit: 1, offset: 0 },
+          ctrl.signal
+        );
+        const n = toNumberOrNull(avg);
+        setAvgRating(n);
+        console.log("[Reviews] rating loaded:", { avg: n });
+      } catch (e) {
+        console.error("[Reviews] load rating error:", e);
+        setAvgRating(null);
+      }
+    })();
+    return () => ctrl.abort();
+  }, [restId, hasRestId]);
 
   // โหลดเมนู
   useEffect(() => {
+    if (!hasRestId) return;
     let mounted = true;
 
     (async () => {
@@ -121,7 +169,7 @@ export default function RestaurantMenu() {
     return () => {
       mounted = false;
     };
-  }, [restId]);
+  }, [restId, hasRestId]);
 
   // Observer → ตั้ง active tab
   useEffect(() => {
@@ -137,7 +185,11 @@ export default function RestaurantMenu() {
           const btn = tabsRef.current?.querySelector<HTMLButtonElement>(
             `button[data-tab-id="${id}"]`
           );
-          btn?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+          btn?.scrollIntoView({
+            inline: "center",
+            block: "nearest",
+            behavior: "smooth",
+          });
         }
       },
       {
@@ -151,12 +203,13 @@ export default function RestaurantMenu() {
 
   return (
     <>
-      {/* Header แสดงข้อมูลร้าน */}
+      {/* Header แสดงข้อมูลร้าน + ดาว (ภายใน ImageRest จะลิงก์ไปหน้ารีวิว) */}
       {restaurant && (
         <Header
           name={restaurant.name}
           cover={restaurant.logo}
-          rating={restaurant.rating}
+          rating={ratingToShow ?? undefined}     // ส่งเฉพาะเมื่อเป็น number แล้ว
+          restaurantId={hasRestId ? restId : undefined}
         />
       )}
 
@@ -171,10 +224,7 @@ export default function RestaurantMenu() {
                   data-tab-id={s.id}
                   className={`category-tab ${active === s.id ? "is-active" : ""}`}
                   onClick={() => {
-                    // เปลี่ยน active state Cate
-                    setActive(s.id)
-
-                    // scroll ไปตาม
+                    setActive(s.id);
                     const el = sectionRefs[s.id]?.current;
                     if (!el) return;
                     const stickyH = (tabsRef.current?.offsetHeight ?? 0) + 8;

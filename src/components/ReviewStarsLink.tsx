@@ -1,3 +1,4 @@
+// src/components/ReviewStarsLink.tsx
 import React from "react";
 import type { KeyboardEvent, MouseEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -5,24 +6,12 @@ import "./ReviewStarsLink.css";
 
 type Props = {
   restaurantId: number | string;
-  rating: number;          // 0..5
-  total?: number;          // จำนวนรีวิวทั้งหมด (ถ้ามี)
+  rating: number;          // ค่าเฉลี่ยที่คำนวณจากรีวิว
+  total?: number;          // จำนวนรีวิวทั้งหมด (optional)
   className?: string;
-  stopPropagation?: boolean; // true ถ้าดาวอยู่ในการ์ดที่ทั้งใบ onClick
+  stopPropagation?: boolean;
   size?: number;           // px (default 14)
 };
-
-function renderStars(rating: number) {
-  const full = Math.floor(rating);
-  const half = rating - full >= 0.5;
-  const nodes: React.ReactNode[] = [];
-  for (let i = 0; i < 5; i++) {
-    if (i < full) nodes.push(<span key={i}>★</span>);
-    else if (i === full && half) nodes.push(<span key={i}>☆</span>); // ไว้ทำครึ่งดาวทีหลัง
-    else nodes.push(<span key={i}>☆</span>);
-  }
-  return nodes;
-}
 
 export default function ReviewStarsLink({
   restaurantId,
@@ -34,11 +23,37 @@ export default function ReviewStarsLink({
 }: Props) {
   const to = `/restaurants/${restaurantId}/reviews`;
   const navigate = useNavigate();
-  const label =
-    `ดูรีวิวร้านนี้ (${(Math.round(rating * 10) / 10).toFixed(1)} ดาว` +
-    (typeof total === "number" ? `, ทั้งหมด ${total} รีวิว` : "") + ")";
 
-  const style: React.CSSProperties = { fontSize: size, lineHeight: 1 };
+  const fixedRating = rating.toFixed(1); // ✅ บังคับ 1 ตำแหน่ง
+
+  const label =
+    `ดูรีวิวร้านนี้ (${fixedRating} ดาว` +
+    (typeof total === "number" ? `, ทั้งหมด ${total} รีวิว` : "") +
+    ")";
+
+  const style: React.CSSProperties = {
+    fontSize: size,
+    lineHeight: 1,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "4 px",
+    color: "black", 
+    textDecoration: "none",
+  };
+
+  const Content = (
+    <>
+      <span className="star">⭐</span>
+      <span className="rating-text" style={{ color: "black" }}>
+        {fixedRating}
+      </span>
+      {typeof total === "number" && (
+        <span className="total" style={{ color: "black" }}>
+          ({total})
+        </span>
+      )}
+    </>
+  );
 
   if (stopPropagation) {
     const go = (e: MouseEvent | KeyboardEvent) => {
@@ -51,6 +66,7 @@ export default function ReviewStarsLink({
         go(e);
       }
     };
+
     return (
       <button
         type="button"
@@ -61,9 +77,7 @@ export default function ReviewStarsLink({
         onKeyDown={onKeyDown}
         style={style}
       >
-        <span className="stars">{renderStars(rating)}</span>
-        <span className="rating-text">{(Math.round(rating * 10) / 10).toFixed(1)}</span>
-        {typeof total === "number" && <span className="total">({total})</span>}
+        {Content}
       </button>
     );
   }
@@ -77,9 +91,7 @@ export default function ReviewStarsLink({
       style={style}
       onClick={(e) => e.stopPropagation?.()}
     >
-      <span className="stars">{renderStars(rating)}</span>
-      <span className="rating-text">{(Math.round(rating * 10) / 10).toFixed(1)}</span>
-      {typeof total === "number" && <span className="total">({total})</span>}
+      {Content}
     </Link>
   );
 }

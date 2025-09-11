@@ -23,6 +23,16 @@
   margin: 0;
 }
 
+.restaurant-rating-link {
+  display: inline-flex;
+  margin-top: 6px;
+  text-decoration: none; /* ไม่ให้มีเส้นใต้ลิงก์ */
+}
+
+.restaurant-rating-link .rating {
+  cursor: pointer;
+}
+
 .restaurant-overlay {
   position: absolute;
   bottom: 16px;

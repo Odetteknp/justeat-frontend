@@ -1,6 +1,4 @@
-// components/RiderCard.tsx  (แก้ให้ไม่ใช้ .module.css)
 import './FoodCard.css'; // ⬅️ เปลี่ยนมาใช้ CSS ปกติ
-//import riderImg from '../assets/image/rider.png';
 import RatingStars from './RatingStars';
 import CommentBox from './CommentBox';
 import { useState } from 'react';
@@ -16,7 +14,6 @@ interface Props {
 }
 
 export default function RiderCard({
-  riderName,
   rating,
   setRating,
   comment,
@@ -37,12 +34,6 @@ export default function RiderCard({
         <button className="closeBtn" onClick={onSkip} aria-label="ปิด">×</button>
       )}
 
-      {/* รูปไรเดอร์ */}
-      <img className="riderImg" src={riderImg} alt={riderName} />
-
-      {/* ชื่อไรเดอร์ */}
-      <p style={{ fontWeight: 600, marginBottom: 8 }}>{riderName}</p>
-
       {/* ดาวให้คะแนน */}
       <div style={{ marginBottom: 10 }}>
         <RatingStars rating={rating} setRating={setRating} />
@@ -50,16 +41,6 @@ export default function RiderCard({
 
       {/* กล่องคอมเมนต์ */}
       <CommentBox comment={comment} setComment={setComment} />
-
-      {/* ไม่ระบุตัวตน */}
-      <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-        <input
-          type="checkbox"
-          checked={anonymous}
-          onChange={(e) => setAnonymous(e.target.checked)}
-        />
-        ไม่ระบุตัวตน
-      </label>
 
       {/* ปุ่มยืนยัน */}
       <button

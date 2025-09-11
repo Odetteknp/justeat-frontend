@@ -1,0 +1,32 @@
+.rvw { max-width: 860px; margin: 0 auto; padding: 20px; }
+.rvw__topbar { margin-bottom: 12px; }
+.rvw__back { color: #2563eb; text-decoration: none; }
+.rvw__back:hover { text-decoration: underline; }
+
+.rvw__title { margin: 0 0 6px; font-size: 22px; }
+.rvw__avg { display: flex; align-items: center; gap: 10px; color: #555; margin-bottom: 16px; }
+.rvw__avgNum { font-weight: 700; font-size: 32px; line-height: 1; }
+.rvw__avgStars { color: #f59e0b; font-size: 18px; }
+.rvw__count { color: #888; }
+
+.rvw__breakdown { display: grid; gap: 8px; margin-bottom: 20px; }
+.rvw__row { display: flex; align-items: center; gap: 10px; }
+.rvw__rowLabel { width: 64px; color: #444; }
+.rvw__bar { flex: 1; height: 8px; background: #eee; border-radius: 999px; overflow: hidden; }
+.rvw__barFill { height: 100%; background: #f59e0b; }
+
+.rvw__list { display: grid; gap: 12px; }
+.rvw__item { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; }
+.rvw__itemHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+
+.rvw__stars { color: #f59e0b; }
+.rvw__starFill { color: #f59e0b; }
+.rvw__starEmpty { color: #ddd; }
+
+.rvw__user { color: #333; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.rvw__date { color: #888; font-weight: 400; }
+
+.rvw__text { margin: 6px 0 0; color: #222; }
+
+.rvw__status { color: #555; }
+.rvw__status--error { color: crimson; }

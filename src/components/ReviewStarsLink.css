@@ -1,0 +1,29 @@
+.stars-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.stars-link:hover .rating-text,
+.stars-link:hover .total {
+  text-decoration: underline;
+}
+
+.stars {
+  letter-spacing: 1px;
+}
+
+.rating-text {
+  font-weight: 600;
+}
+
+.total {
+  color: #666;
+  font-size: 0.95em;
+}

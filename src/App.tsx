@@ -30,6 +30,7 @@ import RestaurantOrder from "./pages/partner/restaurant/Restaurant_Order.tsx";
 import RestaurantAcc from "./pages/partner/restaurant/OwnerRestaurantPage.tsx";
 import RestaurantRegisterForm from './pages/register/RestaurantRegisterForm';
 
+
 // Admin
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./pages/admin/admin_dashboard";
@@ -50,6 +51,7 @@ import PaymentSuccess from "./pages/payment/payment_success";
 
 
 import RestaurantReview from "./pages/RestaurantReview.tsx";
+import RestaurantReviews from "./pages/RestaurantReviews";
 import ThankYouPage from "./pages/ThankYouPage.tsx";
 
 export default function App() {
@@ -71,6 +73,9 @@ export default function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/help" element={<HelpPage />} />
         <Route path="/review" element={<RestaurantReview/>}/>
+        <Route path="/reviews" element={<RestaurantReviews/>}/>
+        <Route path="/restaurants/:id/reviews" element={<RestaurantReviews />} />
+        <Route path="/restaurants/:restaurantId/review" element={<RestaurantReview />} />
         <Route path="/thankyou" element={<ThankYouPage/>}/>
         <Route path="/partner/restaurant/register" element={<RestaurantRegisterForm />} />
         <Route path="/partner/rider/register" element={<RiderRegister/>}/>

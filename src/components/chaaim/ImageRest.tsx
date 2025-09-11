@@ -1,12 +1,14 @@
 import "./ImageRest.css";
+import ReviewStarsLink from "../ReviewStarsLink";
 
 type Props = {
   name: string;
   cover?: string;
   rating?: number;
+  restaurantId?: number;
 };
 
-const ImageRest = ({ name, cover, rating }: Props) => {
+const ImageRest = ({ name, cover, rating, restaurantId }: Props) => {
   return (
     <div className="header">
       <div className="header-image-container">
@@ -17,7 +19,14 @@ const ImageRest = ({ name, cover, rating }: Props) => {
         />
         <div className="restaurant-overlay">
           <h1 className="restaurant-name">{name}</h1>
-          {rating && <span className="rating">⭐ {rating.toFixed(1)}</span>}
+          {typeof rating === "number" && restaurantId && (
+            <ReviewStarsLink
+              restaurantId={restaurantId}
+              rating={rating}
+              size={16}
+              className="rating"
+            />
+          )}
         </div>
       </div>
     </div>
